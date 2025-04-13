@@ -1,0 +1,81 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+
+class CustomBottomNavBar extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onItemTapped;
+
+  const CustomBottomNavBar({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemTapped,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 48, 51, 65).withOpacity(0.3),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color.fromARGB(255, 65, 90, 114).withOpacity(0.2),
+                    blurRadius: 0,
+                    offset: const Offset(0, 0),
+                  ),
+                ],
+              ),
+              child: NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  height: 56,
+                  indicatorShape: const CircleBorder(),
+                  indicatorColor: const Color.fromARGB(255, 21, 134, 226).withOpacity(0.7),
+                ),
+                child: NavigationBar(
+                  backgroundColor: Colors.transparent,
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: onItemTapped,
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, // Hide labels
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.explore),
+                      label: 'Explore', // Label is hidden but tooltip remains
+                      tooltip: 'Explore',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.collections),
+                      label: 'Collections', // Label is hidden but tooltip remains
+                      tooltip: 'Collections',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.favorite),
+                      label: 'Favorites', // Label is hidden but tooltip remains
+                      tooltip: 'Favorites',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.people_alt),
+                      label: 'Community', // Label is hidden but tooltip remains
+                      tooltip: 'Community',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.create),
+                      label: 'Create', // Label is hidden but tooltip remains
+                      tooltip: 'Create',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
