@@ -72,26 +72,26 @@ class _HomePageState extends State<HomePage> {
             
             children: [
               // Background image
-              Image.asset(
-                'assets/background.jpg',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
+              // Image.asset(
+              //   'assets/background.jpg',
+              //   fit: BoxFit.cover,
+              //   width: double.infinity,
+              //   height: double.infinity,
+              // ),
               // Main content
               _pages[_selectedIndex],
               // Search bar
-              Positioned(
-                top: 0,
-                left: 4,
-                right: 4,
-                child: custom.SearchBar(
-                  onChanged: (value) {
-                    // Handle search input
-                    print('Search query: $value');
-                  },
-                ),
-              ),
+              // Positioned(
+              //   top: 0,
+              //   left: 4,
+              //   right: 4,
+              //   child: custom.SearchBar(
+              //     onChanged: (value) {
+              //       // Handle search input
+              //       print('Search query: $value');
+              //     },
+              //   ),
+              // ),
             ],
             
           ),

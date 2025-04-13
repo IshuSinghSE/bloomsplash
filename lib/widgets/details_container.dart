@@ -3,10 +3,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, PlatformException;
 // import 'package:android_content_provider/android_content_provider.dart'; // Add this package for MediaStore API
 import 'package:media_scanner/media_scanner.dart'; // Add this package for MediaScanner
-
+import 'package:async_wallpaper/async_wallpaper.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class DetailsContainer extends StatelessWidget {
   final Map<String, dynamic> wallpaper; // Wallpaper data
@@ -270,11 +271,10 @@ class DetailsContainer extends StatelessWidget {
         try {
           final file = File(filePath);
           // Check if the file exists
-          
+
           // Notify the MediaStore about the new file
           await MediaScanner.loadMedia(path: file.path);
           debugPrint('MediaStore notified about new file: $filePath');
-
         } catch (e) {
           debugPrint('Failed to notify MediaStore: $e');
         }
@@ -298,18 +298,25 @@ class DetailsContainer extends StatelessWidget {
   void _showSetWallpaperDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: true, // Allow dismissing the dialog by tapping outside
+      barrierDismissible:
+          true, // Allow dismissing the dialog by tapping outside
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.transparent, // Make the dialog background transparent
+          backgroundColor:
+              Colors.transparent, // Make the dialog background transparent
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16.0),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Add blur effect
+              filter: ImageFilter.blur(
+                sigmaX: 10,
+                sigmaY: 10,
+              ), // Add blur effect
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7), // Semi-transparent background
+                  color: Colors.black.withOpacity(
+                    0.7,
+                  ), // Semi-transparent background
                   borderRadius: BorderRadius.circular(16.0),
                 ),
                 child: Column(
@@ -336,7 +343,11 @@ class DetailsContainer extends StatelessWidget {
                       label: 'Home Screen',
                       onPressed: () {
                         Navigator.of(context).pop(); // Close the dialog
-                        _setWallpaper(context, WallpaperType.home); // Set to home screen
+                        _setWallpaper(
+                          context,
+                          WallpaperType.home,
+                          wallpaper['image'],
+                        ); // Set to home screen
                       },
                     ),
                     const SizedBox(height: 8),
@@ -345,7 +356,11 @@ class DetailsContainer extends StatelessWidget {
                       label: 'Lock Screen',
                       onPressed: () {
                         Navigator.of(context).pop(); // Close the dialog
-                        _setWallpaper(context, WallpaperType.lock); // Set to lock screen
+                        _setWallpaper(
+                          context,
+                          WallpaperType.lock,
+                          wallpaper['image'],
+                        ); // Set to lock screen
                       },
                     ),
                     const SizedBox(height: 8),
@@ -354,7 +369,11 @@ class DetailsContainer extends StatelessWidget {
                       label: 'Both',
                       onPressed: () {
                         Navigator.of(context).pop(); // Close the dialog
-                        _setWallpaper(context, WallpaperType.both); // Set to both
+                        _setWallpaper(
+                          context,
+                          WallpaperType.both,
+                          wallpaper['image'],
+                        ); // Set to both
                       },
                     ),
                   ],
@@ -367,101 +386,72 @@ class DetailsContainer extends StatelessWidget {
     );
   }
 
-  Future<void> _setWallpaper(BuildContext context, WallpaperType type) async {
-    // try {
-      // String target;
-      // int location;
+  Future<void> _setWallpaper(BuildContext context, WallpaperType type, String url) async {
+    String result;
+    bool goToHome = false; // Set to true or false based on your requirement
 
-      // Determine the target and location
-      // switch (type) {
-      //   case WallpaperType.home:
-      //     target = 'Home Screen';
-      //     location = WallpaperManagerFlutter.HOME_SCREEN;
-      //     break;
-      //   case WallpaperType.lock:
-      //     target = 'Lock Screen';
-      //     location = WallpaperManagerFlutter.LOCK_SCREEN;
-      //     break;
-      //   case WallpaperType.both:
-      //     target = 'Both';
-      //     location = WallpaperManagerFlutter.BOTH_SCREENS;
-      //     break;
-      // }
+    try {
+      // Determine the wallpaper location
+      int wallpaperLocation;
+      String target = 'Unknown'; // Default value for target
+      switch (type) {
+        case WallpaperType.home:
+          wallpaperLocation = AsyncWallpaper.HOME_SCREEN;
+          target = 'Home Screen';
+          break;
+        case WallpaperType.lock:
+          wallpaperLocation = AsyncWallpaper.LOCK_SCREEN;
+          target = 'Lock Screen';
+          break;
+        case WallpaperType.both:
+          wallpaperLocation = AsyncWallpaper.BOTH_SCREENS;
+          target = 'Both';
+          break;
+      }
 
-      // Get the file path of the current wallpaper
-      // final filePath = 'https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1msFQz?w=0&h=0&q=60&m=6&f=jpg&u=t'; // Use the current wallpaper's file path or URL
+      // Use the same logic as _downloadWallpaper to handle URL or asset
+      final filePath = await _getFilePath(context, url);
 
-      // Check if the file is a URL or a local file
-    //   String localFilePath;
-    //   if (filePath.startsWith('http')) {
-    //     // Download the file to a temporary directory
-    //     final tempDir = await getTemporaryDirectory();
-    //     final tempFilePath = '${tempDir.path}/${wallpaper['name']}.jpg';
-    //     final dio = Dio();
-    //     await dio.download(filePath, tempFilePath);
-    //     localFilePath = tempFilePath;
-    //   } else if (filePath.startsWith('assets/')) {
-    //     // Load the local asset and save it to a temporary directory
-    //     final tempDir = await getTemporaryDirectory();
-    //     final tempFilePath = '${tempDir.path}/${wallpaper['name']}.jpg';
-    //     final byteData = await rootBundle.load(filePath); // Load asset
-    //     final file = File(tempFilePath);
-    //     await file.writeAsBytes(byteData.buffer.asUint8List());
-    //     localFilePath = tempFilePath;
-    //   } else {
-    //     // Use the local file path directly
-    //     localFilePath = filePath;
-    //   }
+      // Ensure the file exists
+      final file = File(filePath);
+      if (!await file.exists()) {
+        throw Exception('Wallpaper file does not exist at $filePath');
+      }
 
-    //   // Ensure the file exists
-    //   final file = File(localFilePath);
-    //   if (!await file.exists()) {
-    //     throw Exception('Wallpaper file does not exist at $localFilePath');
-    //   }
+      // Set the wallpaper
+      result = await AsyncWallpaper.setWallpaperFromFile(
+        filePath: file.path,
+        wallpaperLocation: wallpaperLocation,
+        goToHome: goToHome,
+        toastDetails: ToastDetails.success(),
+        errorToastDetails: ToastDetails.error(),
+      )
+          ? 'Wallpaper set'
+          : 'Failed to set wallpaper.';
+    } on PlatformException {
+      result = 'Failed to set wallpaper.';
+    } catch (e) {
+      result = 'Error: $e';
+    }
 
-    //   // Set the wallpaper
-    //  await WallpaperManagerFlutter().setwallpaperfromFile(file, location);
-
-    //   // if (!result) {
-    //   //   // throw Exception('Failed to set wallpaper');
-    //   //   ScaffoldMessenger.of(context).showSnackBar(
-    //   //   const SnackBar(
-    //   //     content: Text('Wallpaper NOT set successfully!'),
-    //   //     duration: Duration(seconds: 2),
-    //   //   ),
-    //   // );
-    //   // }
-      // show snackbar
+    // Show SnackBar for success or failure
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Wallpaper set successfully!'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(result == 'Wallpaper set'
+              ? 'Wallpaper set to successfully!'
+              : 'Failed to set wallpaper: $result'),
+          duration: const Duration(seconds: 2),
         ),
       );
-
-    //   // Show success message
-    //   if (context.mounted) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text('Wallpaper set to $target'),
-    //         duration: const Duration(seconds: 2),
-    //       ),
-    //     );
-    //   }
-    // } catch (e) {
-    //   // Check if context is still mounted before showing error message
-    //   if (context.mounted) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text('Failed to set wallpaper: $e'),
-    //         duration: const Duration(seconds: 2),
-    //       ),
-    //     );
-    //   }
-    // }
+    }
   }
 
-  Widget _buildPillButton(BuildContext context, {required String label, required VoidCallback onPressed}) {
+  Widget _buildPillButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity, // Full width
       child: ElevatedButton(
@@ -475,10 +465,67 @@ class DetailsContainer extends StatelessWidget {
         onPressed: onPressed,
         child: Text(
           label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );
+  }
+
+  Future<String> _getFilePath(BuildContext context, String url) async {
+    try {
+      // Determine the directory based on the platform
+      Directory bloomsplashDir;
+      if (Platform.isLinux) {
+        final homeDir = Platform.environment['HOME'] ?? Directory.current.path;
+        bloomsplashDir = Directory('$homeDir/Downloads/bloomsplash');
+      } else if (Platform.isAndroid) {
+        final directory = Directory('/storage/emulated/0/DCIM/bloomsplash');
+        bloomsplashDir = directory;
+      } else if (Platform.isMacOS | Platform.isWindows) {
+        final downloadsDir = await getDownloadsDirectory();
+        bloomsplashDir = Directory('${downloadsDir!.path}/bloomsplash');
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        bloomsplashDir = Directory('${directory.path}/bloomsplash');
+      }
+
+      // Create the bloomsplash folder if it doesn't exist
+      if (!await bloomsplashDir.exists()) {
+        await bloomsplashDir.create(recursive: true);
+      }
+
+      // Generate the file name
+      final date = DateTime.now();
+      final formattedDate =
+          '${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}${date.year}';
+      final fileName = '${wallpaper['name']}_${wallpaper['author']}_$formattedDate.jpg'
+          .replaceAll(' ', '_');
+
+      // File path
+      final filePath = '${bloomsplashDir.path}/$fileName';
+      File actualFile = File(filePath); // Initialize with a default value
+
+      // Check if the wallpaper path is a local asset or a URL
+      if (url.startsWith('http')) {
+        // Download from URL
+        final dio = Dio();
+        await dio.download(url, filePath);
+      } else {
+        // Load the local asset and save it to the file
+        final byteData = await rootBundle.load(url); // Load asset
+        final file = File(filePath);
+        await file.writeAsBytes(byteData.buffer.asUint8List());
+        actualFile = file;
+      }
+
+      return actualFile.path;
+    } catch (e) {
+      throw Exception('Failed to get file path: $e');
+    }
   }
 }
 
