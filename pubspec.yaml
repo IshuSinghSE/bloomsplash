@@ -35,6 +35,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   palette_generator: ^0.3.3+6
   glassmorphism: ^3.0.0
+  dio: ^5.0.0
+  path_provider: ^2.0.11
 
 dev_dependencies:
   flutter_test:
