@@ -68,7 +68,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> with Single
           ),
           // Navigate Back Icon with Blur Background
           Positioned(
-            top: 16,
+            top: 32,
             left: 16,
             child: ClipOval(
               child: BackdropFilter(

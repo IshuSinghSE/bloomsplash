@@ -37,6 +37,11 @@ dependencies:
   glassmorphism: ^3.0.0
   dio: ^5.0.0
   path_provider: ^2.0.11
+  android_content_provider: ^0.5.2
+  media_scanner: ^2.2.0
+  async_wallpaper: ^2.1.0
+  # wallpaper_manager_flutter: ^0.0.1
+  # android_intent_plus: ^3.0.0
 
 dev_dependencies:
   flutter_test:
