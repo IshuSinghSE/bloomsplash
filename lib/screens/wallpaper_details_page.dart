@@ -21,7 +21,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> with Single
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500),
     );
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1), // Start off-screen
@@ -67,7 +67,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> with Single
           ),
           // Navigate Back Icon with Blur Background
           Positioned(
-            top: 40,
+            top: 16,
             left: 16,
             child: ClipOval(
               child: BackdropFilter(
@@ -122,7 +122,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> with Single
                                       color: Colors.white,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 0),
                                   Text(
                                     wallpaper['author'],
                                     style: const TextStyle(
