@@ -45,4 +45,3 @@ class ExplorePage extends StatelessWidget {
     );
   }
 }
-

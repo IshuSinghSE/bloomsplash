@@ -47,7 +47,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
     // Fetch the wallpaper object using the index
     final wallpaper = wallpapers.firstWhere(
       (wallpaper) => wallpaper['id'] == widget.id,
-      orElse: () => {},
+      orElse: () => {"image": "assets/sample/1744480267990.png", "name": "Untitled", "author": "Unknown"},
     );
 
     if (wallpaper == {}) {
@@ -64,6 +64,8 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
     // Check if the wallpaper is a favorite
     final isFavorite = favoritesProvider.isFavorite(wallpaper);
     final image = wallpaper['image'] ?? 'assets/sample/1744480267990.png';
+    // final name = wallpaper['name'] ?? 'Untitled';
+    // final author = wallpaper['author'] ?? 'Unknown';
 
     return Scaffold(
       body: GestureDetector(

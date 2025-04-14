@@ -123,6 +123,15 @@ class CategoryWallpapersPage extends StatelessWidget {
                       ],
                     ),
                   ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: const Icon(
+                      Icons.category,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                  ),
                 ],
               ),
             ),

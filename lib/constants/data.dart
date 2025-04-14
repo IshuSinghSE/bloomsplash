@@ -2,7 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 
 late final List<Map<String, dynamic>> wallpapers;
-
+/* {
+    "id": "cbaf80ef-c597-47a0-9d02-2816699ae78c",
+    "name": "Wallpaper 98",
+    "image": "assets/sample/1744480268300.png",
+    "thumbnail": "assets/sample/1744480268300.png",
+    "preview": "assets/sample/1744480268300.png",
+    "downloads": 1970,
+    "size": "2.5 MB",
+    "resolution": "2560x1440",
+    "category": "Urban",
+    "author": "Author 98",
+    "authorImage": "assets/avatar/WeatherBug.png",
+    "description": "A mesmerizing view of the night sky."
+  },
+*/
 Future<void> loadWallpapers() async {
   // Load the JSON file
   final file = File('/home/ashu/Code/flutter/flutter_application_1/lib/constants/wallpapers.json');
