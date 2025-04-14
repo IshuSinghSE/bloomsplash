@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../constants/data.dart'; // Import the dummy data
+import '../constants/data.dart'; // Import the wallpapers data
 import '../widgets/wallpaper_card.dart'; // Import the WallpaperCard widget
 import '../providers/favorites_provider.dart';
 
@@ -10,6 +10,9 @@ class ExplorePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
+
+    // Debugging: Print the wallpapers list to ensure it's valid
+    print(wallpapers);
 
     return Scaffold(
       body: CustomScrollView(
@@ -25,14 +28,11 @@ class ExplorePage extends StatelessWidget {
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final wallpaper = wallpapers[index];
+                  final wallpaper = wallpapers[index]; // Fetch the wallpaper object
                   return WallpaperCard(
-                    index: index, // Pass the index
-                    image: wallpaper['image'],
-                    name: wallpaper['name'],
-                    author: wallpaper['author'],
+                    wallpaper: wallpaper, // Pass the entire wallpaper object
                     onFavoritePressed: () {
-                      favoritesProvider.toggleFavorite(index); // Toggle favorite state
+                      favoritesProvider.toggleFavorite(wallpaper); // Toggle favorite state
                     },
                   );
                 },
@@ -45,3 +45,4 @@ class ExplorePage extends StatelessWidget {
     );
   }
 }
+

@@ -5,32 +5,23 @@ import '../providers/favorites_provider.dart';
 import '../screens/wallpaper_details_page.dart';
 
 class WallpaperCard extends StatelessWidget {
-  final int index;
-  final String image;
-  final String name;
-  final String author;
+  final Map<String, dynamic> wallpaper; // Pass the wallpaper object
   final VoidCallback onFavoritePressed; // Add the onFavoritePressed parameter
 
   const WallpaperCard({
     super.key,
-    required this.index,
-    required this.image,
-    required this.name,
-    required this.author,
+    required this.wallpaper, // Use wallpaper instead of index
     required this.onFavoritePressed, // Include the onFavoritePressed parameter
   });
 
   @override
   Widget build(BuildContext context) {
-    final favoritesProvider = Provider.of<FavoritesProvider>(context);
-    final isFavorite = favoritesProvider.isFavorite(index);
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => WallpaperDetailsPage(index: index),
+            builder: (context) => WallpaperDetailsPage(id: wallpaper['id']), // Pass wallpaper ID
           ),
         );
       },
@@ -45,7 +36,7 @@ class WallpaperCard extends StatelessWidget {
             children: [
               // Wallpaper Image
               Image.asset(
-                image,
+                wallpaper['image'] ?? 'assets/sample/1744480267990.png',
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
@@ -71,14 +62,14 @@ class WallpaperCard extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Wallpaper Name and Author
+                          // Wallpaper Name
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  name,
+                                  wallpaper['name'] ?? 'Untitled',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
@@ -88,7 +79,7 @@ class WallpaperCard extends StatelessWidget {
                                   maxLines: 1,
                                 ),
                                 Text(
-                                  author,
+                                  wallpaper['author'] ?? 'Unknown Author',
                                   style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 12,
@@ -100,12 +91,17 @@ class WallpaperCard extends StatelessWidget {
                             ),
                           ),
                           // Favorite Button
-                          IconButton(
-                            icon: Icon(
-                              isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: Colors.white,
-                            ),
-                            onPressed: onFavoritePressed, // Use the onFavoritePressed callback
+                          Consumer<FavoritesProvider>(
+                            builder: (context, favoritesProvider, child) {
+                              final isFavorite = favoritesProvider.isFavorite(wallpaper);
+                              return IconButton(
+                                icon: Icon(
+                                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                                  color: Colors.white,
+                                ),
+                                onPressed: onFavoritePressed, // Use the onFavoritePressed callback
+                              );
+                            },
                           ),
                         ],
                       ),

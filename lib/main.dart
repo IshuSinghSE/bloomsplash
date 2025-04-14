@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'providers/favorites_provider.dart';
-import 'widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
-// Alias the custom SearchBar widget
-import 'screens/settings_page.dart';
+import 'widgets/custom_bottom_nav_bar.dart';
 import 'screens/explore_page.dart';
 import 'screens/collections_page.dart';
 import 'screens/favorites_page.dart';
-import 'screens/community_page.dart';
-import 'screens/create_page.dart';
+import 'screens/upload_page.dart';
+import 'screens/settings_page.dart';
+import 'constants/data.dart'; // Import the data.dart file
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Open a Hive box for storing favorite wallpapers
+  await Hive.openBox<Map>('favorites');
+
+  // Load wallpapers from the JSON file
+  await loadWallpapers();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()), // Provide FavoritesProvider
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
       child: const MyApp(),
     ),
@@ -27,21 +38,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-      ),
-      themeMode:
-          ThemeMode.system, // Automatically switches based on system settings
+      title: 'Wallpaper App',
+      theme: ThemeData.dark(),
       home: const HomePage(),
     );
   }
@@ -61,8 +59,7 @@ class _HomePageState extends State<HomePage> {
     const ExplorePage(),
     const CollectionsPage(),
     const FavoritesPage(),
-    const CommunityPage(),
-    const CreatePage(),
+    const UploadPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -110,7 +107,7 @@ class _HomePageState extends State<HomePage> {
           'Wallpapers',
           style: TextStyle(
             fontSize: 32,
-            fontWeight: FontWeight.normal,
+          fontWeight: FontWeight.normal,
             fontFamily: 'Raleway',
           ),
         ),
@@ -127,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SettingsPage(),
+                      builder: (context) =>const SettingsPage(),
                     ),
                   );
                 },

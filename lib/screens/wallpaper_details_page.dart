@@ -6,9 +6,9 @@ import '../providers/favorites_provider.dart';
 import '../widgets/details_container.dart'; // Import the new DetailsContainer widget
 
 class WallpaperDetailsPage extends StatefulWidget {
-  final int index; // Receive the index of the wallpaper
+  final String id; // Receive the index of the wallpaper
 
-  const WallpaperDetailsPage({super.key, required this.index});
+  const WallpaperDetailsPage({super.key, required this.id});
 
   @override
   State<WallpaperDetailsPage> createState() => _WallpaperDetailsPageState();
@@ -43,10 +43,27 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
-    final isFavorite = favoritesProvider.isFavorite(widget.index);
 
-    // Fetch the wallpaper data using the index
-    final wallpaper = wallpapers[widget.index];
+    // Fetch the wallpaper object using the index
+    final wallpaper = wallpapers.firstWhere(
+      (wallpaper) => wallpaper['id'] == widget.id,
+      orElse: () => {},
+    );
+
+    if (wallpaper == {}) {
+      return Scaffold(
+        body: Center(
+          child: Text(
+            'Wallpaper not found!',
+            style: TextStyle(color: Colors.white70, fontSize: 18),
+          ),
+        ),
+      );
+    }
+
+    // Check if the wallpaper is a favorite
+    final isFavorite = favoritesProvider.isFavorite(wallpaper);
+    final image = wallpaper['image'] ?? 'assets/sample/1744480267990.png';
 
     return Scaffold(
       body: GestureDetector(
@@ -70,7 +87,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
           children: [
             // Full-Screen Wallpaper
             Image.asset(
-              wallpaper['image'],
+              image,
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
@@ -88,7 +105,10 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                       child: Container(
                         color: Colors.black.withOpacity(0.5),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () {
                             Navigator.pop(context); // Navigate back
                           },
@@ -112,10 +132,13 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                         color: Colors.black.withOpacity(0.5),
                         child: IconButton(
                           icon: Icon(
-                            _showDetails ? Icons.visibility_off : Icons.visibility,
+                            _showDetails
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.white,
                           ),
-                          onPressed: _toggleDetailsAndButtons, // Toggle details and buttons
+                          onPressed:
+                              _toggleDetailsAndButtons, // Toggle details and buttons
                         ),
                       ),
                     ),
@@ -130,15 +153,27 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                   // Prevent closing metadata when tapping inside the container
                 },
                 child: AnimatedSlide(
-                  offset: _showDetails ? Offset.zero : const Offset(0, 1), // Slide up or down
-                  duration: const Duration(milliseconds: 300), // Animation duration
+                  offset:
+                      _showDetails
+                          ? Offset.zero
+                          : const Offset(0, 1), // Slide up or down
+                  duration: const Duration(
+                    milliseconds: 300,
+                  ), // Animation duration
                   curve: Curves.easeInOut, // Smooth animation curve
                   child: DetailsContainer(
                     wallpaper: wallpaper,
-                    showMetadata: _showMetadata, // Pass metadata visibility state
-                    slideAnimation: const AlwaysStoppedAnimation(Offset.zero), // No sliding animation for metadata
-                    toggleMetadata: _toggleMetadata, isFavorite: isFavorite, toggleFavorite: () {
-                      favoritesProvider.toggleFavorite(widget.index);
+                    showMetadata:
+                        _showMetadata, // Pass metadata visibility state
+                    slideAnimation: const AlwaysStoppedAnimation(
+                      Offset.zero,
+                    ), // No sliding animation for metadata
+                    toggleMetadata: _toggleMetadata,
+                    isFavorite: isFavorite,
+                    toggleFavorite: () {
+                      favoritesProvider.toggleFavorite(
+                        wallpaper,
+                      ); // Pass wallpaper object
                     }, // Pass toggle function
                   ),
                 ),

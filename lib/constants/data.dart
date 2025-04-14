@@ -1,75 +1,264 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
 
-final List<Map<String, dynamic>> wallpapers = List.generate(100, (index) {
-  final sampleImages = [
-    "assets/sample/1744480267976.png",
-    "assets/sample/1744480267990.png",
-    "assets/sample/1744480268003.png",
-    "assets/sample/1744480268028.png",
-    "assets/sample/1744480268040.png",
-    "assets/sample/1744480268053.png",
-    "assets/sample/1744480268070.png",
-    "assets/sample/1744480268085.png",
-    "assets/sample/1744480268103.png",
-    "assets/sample/1744480268117.png",
-    "assets/sample/1744480268142.png",
-    "assets/sample/1744480268170.png",
-    "assets/sample/1744480268188.png",
-    "assets/sample/1744480268211.png",
-    "assets/sample/1744480268231.png",
-    "assets/sample/1744480268259.png",
-    "assets/sample/1744480268279.png",
-    "assets/sample/1744480268300.png",
-    "assets/sample/1744480268319.png",
-    "assets/sample/1744480268333.png",
-  ];
+late final List<Map<String, dynamic>> wallpapers;
 
-  final authorImages = [
-    "assets/avatar/Itsycal.png",
-    "assets/avatar/Bear.png",
-    "assets/avatar/Carto.png",
-    "assets/avatar/BlueJ.png",
-    "assets/avatar/Cyberduck.png",
-    "assets/avatar/DuckieTV.png",
-    "assets/avatar/NightOwl.png",
-    "assets/avatar/PopcornTIme.png",
-    "assets/avatar/Vysor.png",
-    "assets/avatar/WeatherBug.png",
-  ];
+Future<void> loadWallpapers() async {
+  // Load the JSON file
+  final file = File('/home/ashu/Code/flutter/flutter_application_1/lib/constants/wallpapers.json');
+  final jsonString = await file.readAsString();
 
-  final categories = [
-    "Nature",
-    "Abstract",
-    "Urban",
-    "Adventure",
-    "Space",
-  ];
+  // Parse the JSON string into a list of wallpapers
+  wallpapers = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
+}
 
-  final descriptions = [
-    "A beautiful and serene wallpaper to enhance your screen.",
-    "A vibrant and colorful design to brighten your day.",
-    "A mesmerizing view of the night sky.",
-    "A breathtaking view of nature's beauty.",
-    "A relaxing and calming wallpaper for your device.",
-  ];
+// Generate wallpapers for each category
+final Map<String, List<Map<String, dynamic>>> categoryWallpapers = {
+  for (var category in ["Nature", "Abstract", "Urban", "Adventure", "Space"])
+    category: wallpapers.where((wallpaper) => wallpaper["category"] == category).toList(),
+};
 
-  return {
-    "name": "Wallpaper ${index + 1}",
-    "image": sampleImages[index % sampleImages.length],
-    "thumbnail": sampleImages[index % sampleImages.length],
-    "preview": sampleImages[index % sampleImages.length],
-    "downloads": (500 + index * 10) % 5000 + 500, // Random downloads
-    "size": "${(1.5 + (index % 5) * 0.5).toStringAsFixed(1)} MB", // Random size
-    "resolution": "${1920 + (index % 3) * 640}x${1080 + (index % 3) * 360}", // Random resolution
-    "category": categories[index % categories.length],
-    "author": "Author ${index + 1}",
-    "authorImage": authorImages[index % authorImages.length],
-    "description": descriptions[index % descriptions.length],
-    "favorites": (100 + index * 5) % 1000 + 100, // Random favorites
-    "paletteColors": [
-      const Color(0xFFFFA726), // Orange
-      const Color(0xFFFB8C00), // Deep Orange
-      const Color(0xFFEF6C00), // Dark Orange
-    ],
-  };
-});
+final List<Map<String, String>> categories = [
+  {
+    "title": "Nature",
+    "image": "assets/sample/1744480267976.png",
+  },
+  {
+    "title": "Abstract",
+    "image": "assets/sample/1744480267990.png",
+  },
+  {
+    "title": "Urban",
+    "image": "assets/sample/1744480268003.png",
+  },
+  {
+    "title": "Adventure",
+    "image": "assets/sample/1744480268028.png",
+  },
+  {
+    "title": "Space",
+    "image": "assets/sample/1744480268040.png",
+  },
+];
+
+final Map<String, List<Map<String, dynamic>>> collections = {
+  "Featured": [
+    {
+      "title": "Autumn Hues",
+      "image": "assets/sample/1744480267976.png",
+      "author": "Author 1",
+      "wallpapers": wallpapers.sublist(0, 5), // Wallpapers to display
+    },
+    {
+      "title": "Monochrome Series",
+      "image": "assets/sample/1744480267990.png",
+      "author": "Author 2",
+      "wallpapers": wallpapers.sublist(5, 10), // Wallpapers to display
+    },
+    {
+      "title": "Dreamy Landscapes",
+      "image": "assets/sample/1744480268003.png",
+      "author": "Author 3",
+      "wallpapers": wallpapers.sublist(10, 15), // Wallpapers to display
+    },
+    {
+      "title": "Urban Vibes",
+      "image": "assets/sample/1744480268028.png",
+      "author": "Author 4",
+      "wallpapers": wallpapers.sublist(15, 20), // Wallpapers to display
+    },
+    {
+      "title": "Abstract Art",
+      "image": "assets/sample/1744480268040.png",
+      "author": "Author 5",
+      "wallpapers": wallpapers.sublist(20, 25), // Wallpapers to display
+    },
+  ],
+  "Popular": [
+    {
+      "title": "Nature Escapes",
+      "image": "assets/sample/1744480268053.png",
+      "author": "Author 6",
+      "wallpapers": wallpapers.sublist(25, 30), // Wallpapers to display
+    },
+    {
+      "title": "Cyber Aesthetic",
+      "image": "assets/sample/1744480268070.png",
+      "author": "Author 7",
+      "wallpapers": wallpapers.sublist(30, 35), // Wallpapers to display
+    },
+    {
+      "title": "Space Wonders",
+      "image": "assets/sample/1744480268085.png",
+      "author": "Author 8",
+      "wallpapers": wallpapers.sublist(35, 40), // Wallpapers to display
+    },
+    {
+      "title": "Minimalist Designs",
+      "image": "assets/sample/1744480268103.png",
+      "author": "Author 9",
+      "wallpapers": wallpapers.sublist(40, 45), // Wallpapers to display
+    },
+    {
+      "title": "Colorful Patterns",
+      "image": "assets/sample/1744480268117.png",
+      "author": "Author 10",
+      "wallpapers": wallpapers.sublist(45, 50), // Wallpapers to display
+    },
+  ],
+  "Monochrome": [
+    {
+      "title": "Black & White",
+      "image": "assets/sample/1744480268142.png",
+      "author": "Author 11",
+      "wallpapers": wallpapers.sublist(50, 55), // Wallpapers to display
+    },
+    {
+      "title": "Shades of Grey",
+      "image": "assets/sample/1744480268170.png",
+      "author": "Author 12",
+      "wallpapers": wallpapers.sublist(55, 60), // Wallpapers to display
+    },
+    {
+      "title": "Classic Monochrome",
+      "image": "assets/sample/1744480268188.png",
+      "author": "Author 13",
+      "wallpapers": wallpapers.sublist(60, 65), // Wallpapers to display
+    },
+    {
+      "title": "Dark Elegance",
+      "image": "assets/sample/1744480268211.png",
+      "author": "Author 14",
+      "wallpapers": wallpapers.sublist(65, 70), // Wallpapers to display
+    },
+    {
+      "title": "Light & Shadow",
+      "image": "assets/sample/1744480268231.png",
+      "author": "Author 15",
+      "wallpapers": wallpapers.sublist(70, 75), // Wallpapers to display
+    },
+  ],
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+// TODO: Add more curated collections as needed
+final List<Map<String, String>> curatedCollections = [
+  {
+    "title": "Bloom Vibes",
+    "image": "assets/sample/1744480267976.png", // Replace with actual image paths
+  },
+  {
+    "title": "Cyber Aesthetic",
+    "image": "assets/sample/1744480267990.png", // Replace with actual image paths
+  },
+  {
+    "title": "Nature Escapes",
+    "image": "assets/sample/1744480268003.png", // Replace with actual image paths
+  },
+  {
+    "title": "Abstract Art",
+    "image": "assets/sample/1744480268028.png", // Replace with actual image paths
+  },
+  {
+    "title": "Urban Vibes",
+    "image": "assets/sample/1744480268040.png", // Replace with actual image paths
+  },
+  {
+    "title": "Adventure Awaits",
+    "image": "assets/sample/1744480268053.png", // Replace with actual image paths
+  },
+  {
+    "title": "Space Wonders",
+    "image": "assets/sample/1744480268070.png", // Replace with actual image paths
+  },
+  {
+    "title": "Minimalist Designs",
+    "image": "assets/sample/1744480268085.png", // Replace with actual image paths
+  },
+  {
+    "title": "Colorful Patterns",
+    "image": "assets/sample/1744480268103.png", // Replace with actual image paths
+  },
+  {
+    "title": "Vintage Aesthetic",
+    "image": "assets/sample/1744480268117.png", // Replace with actual image paths
+  },
+  {
+    "title": "Fantasy Worlds",
+    "image": "assets/sample/1744480268142.png", // Replace with actual image paths
+  },
+  {
+    "title": "Dark Themes",
+    "image": "assets/sample/1744480268170.png", // Replace with actual image paths
+  },
+  {
+    "title": "Light Themes",
+    "image": "assets/sample/1744480268188.png", // Replace with actual image paths
+  },
+  {
+    "title": "Nature's Beauty",
+    "image": "assets/sample/1744480268211.png", // Replace with actual image paths
+  },
+  {
+    "title": "Artistic Expressions",
+    "image": "assets/sample/1744480268231.png", // Replace with actual image paths
+  },
+  {
+    "title": "Tech Inspirations",
+    "image": "assets/sample/1744480268259.png", // Replace with actual image paths
+  },  
+  {
+    "title": "Dreamy Landscapes",
+    "image": "assets/sample/1744480268279.png", // Replace with actual image paths
+  },
+  {
+    "title": "Ocean Views",
+    "image": "assets/sample/1744480268300.png", // Replace with actual image paths
+  },
+  {
+    "title": "Mountain Peaks",
+    "image": "assets/sample/1744480268319.png", // Replace with actual image paths
+  },
+  {
+    "title": "City Lights",
+    "image": "assets/sample/1744480268333.png", // Replace with actual image paths
+  },
+];
+
+// TODO: Add more curated collections as needed
+final Map<String, List<Map<String, dynamic>>> curatedCollectionsWallpapers = {
+  "Bloom Vibes": List.generate(10, (index) {
+    return {
+      "title": "Boom Vibes ${index + 1}",
+      "image": "assets/sample/17444802680${10 + index}.png",
+    };
+  }),
+  "Cyber Aesthetic": List.generate(10, (index) {
+    return {
+      "title": "Cyber Wallpaper ${index + 1}",
+      "image": "assets/sample/17444802680${10 + index}.png",
+    };
+  }),
+  "Nature Escapes": List.generate(10, (index) {
+    return {
+      "title": "Nature Wallpaper ${index + 1}",
+      "image": "assets/sample/17444802681${10 + index}.png",
+    };
+  }),
+  "Abstract Art": List.generate(10, (index) {
+    return {
+      "title": "Abstract Wallpaper ${index + 1}",
+      "image": "assets/sample/17444802682${10 + index}.png",
+    };
+  }),
+  "Urban Vibes": List.generate(10, (index) {
+    return {
+      "title": "Urban Wallpaper ${index + 1}",
+      "image": "assets/sample/17444802683${10 + index}.png",
+    };
+  }),
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////

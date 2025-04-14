@@ -24,6 +24,16 @@ class DetailsContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final name = wallpaper['name'] ?? 'Untitled';
+    final author = wallpaper['author'] ?? 'unknown author';
+    final description = wallpaper['description'] ?? 'No description available';
+    final authorImage = wallpaper['authorImage'] ?? 'assets/sample/1744480267990.png';
+    final image = wallpaper['image'] ?? 'assets/sample/1744480267990.png';
+    final size = wallpaper['size'] ?? 'Unknown size';
+    final download = wallpaper['download'] ?? '0';
+    final resolution = wallpaper['resolution'] ?? 'Unknown resolution';
+    final isFavorite = wallpaper['isFavorite'] ?? false; // Get the favorite state
+
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: BackdropFilter(
@@ -43,7 +53,7 @@ class DetailsContainer extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundImage: AssetImage(wallpaper['authorImage']),
+                      backgroundImage: AssetImage(authorImage),
                       radius: 24,
                     ),
                     const SizedBox(width: 16),
@@ -52,7 +62,7 @@ class DetailsContainer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            wallpaper['name'],
+                            name,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -61,7 +71,7 @@ class DetailsContainer extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            wallpaper['author'],
+                           author,
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.white70,
@@ -81,7 +91,7 @@ class DetailsContainer extends StatelessWidget {
                 const SizedBox(height: 16),
                 // Description
                 Text(
-                  wallpaper['description'],
+                 description,
                   style: const TextStyle(fontSize: 14, color: Colors.white70),
                 ),
                 const SizedBox(height: 16),
@@ -90,7 +100,7 @@ class DetailsContainer extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     buildCircularActionButton(Icons.download, 'Download', () {
-                      downloadWallpaper(context, wallpaper['image']);
+                      downloadWallpaper(context, image);
                     }),
                     buildCircularActionButton(
                       isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -98,7 +108,7 @@ class DetailsContainer extends StatelessWidget {
                       toggleFavorite, // Use the toggleFavorite callback
                     ),
                     buildCircularActionButton(Icons.image, 'Set', () {
-                      showSetWallpaperDialog(context, wallpaper['image']);
+                      showSetWallpaperDialog(context, image);
                     }),
                     buildCircularActionButton(
                       Icons.info_outline,
@@ -124,13 +134,13 @@ class DetailsContainer extends StatelessWidget {
                           children: [
                             buildMetadataBox(
                               'Downloads',
-                              '${wallpaper['downloads']}',
+                              download,
                             ),
                             buildMetadataBox(
                               'Resolution',
-                              wallpaper['resolution'],
+                              resolution,
                             ),
-                            buildMetadataBox('Size', wallpaper['size']),
+                            buildMetadataBox('Size', size),
                           ],
                         ),
                       ),
