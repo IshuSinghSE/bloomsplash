@@ -44,6 +44,7 @@ dependencies:
       url: https://github.com/IshuSinghSE/async_wallpaper.git
       ref: main
   flutter_cache_manager: ^3.4.1
+  provider: ^6.1.4
   # wallpaper_manager_flutter: ^1.0.1
 
 dev_dependencies:

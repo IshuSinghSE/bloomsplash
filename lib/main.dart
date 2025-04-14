@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/favorites_provider.dart';
 import 'widgets/custom_bottom_nav_bar.dart'; // Import the custom bottom nav bar
-import 'widgets/search_bar.dart' as custom; // Alias the custom SearchBar widget
+// Alias the custom SearchBar widget
 import 'screens/settings_page.dart';
 import 'screens/explore_page.dart';
 import 'screens/collections_page.dart';
@@ -9,7 +11,14 @@ import 'screens/community_page.dart';
 import 'screens/create_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()), // Provide FavoritesProvider
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

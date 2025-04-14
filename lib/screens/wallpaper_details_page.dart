@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/data.dart'; // Import the wallpapers list
+import '../providers/favorites_provider.dart';
 import '../widgets/details_container.dart'; // Import the new DetailsContainer widget
 
 class WallpaperDetailsPage extends StatefulWidget {
@@ -12,90 +14,138 @@ class WallpaperDetailsPage extends StatefulWidget {
   State<WallpaperDetailsPage> createState() => _WallpaperDetailsPageState();
 }
 
-class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> with SingleTickerProviderStateMixin {
+class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
+  bool _showDetails = true; // Track whether the details container is visible
+  bool _showButtons = true; // Track whether the buttons are visible
   bool _showMetadata = false; // Track whether the metadata row is visible
-  late AnimationController _animationController;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1), // Start off-screen
-      end: Offset.zero, // Slide into view
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
 
   void _toggleMetadata() {
-    if (_animationController.isAnimating) return; // Prevent toggling during animation
     setState(() {
-      if (_showMetadata) {
-        _animationController.reverse(); // Slide out
-      } else {
-        _animationController.forward(); // Slide in
-      }
-      _showMetadata = !_showMetadata;
+      _showMetadata = !_showMetadata; // Toggle metadata visibility
+    });
+  }
+
+  void _closeMetadata() {
+    if (_showMetadata) {
+      setState(() {
+        _showMetadata = false; // Close metadata if it's open
+      });
+    }
+  }
+
+  void _toggleDetailsAndButtons() {
+    setState(() {
+      _showDetails = !_showDetails; // Toggle details container visibility
+      _showButtons = _showDetails; // Ensure buttons visibility matches details
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isFavorite(widget.index);
+
     // Fetch the wallpaper data using the index
     final wallpaper = wallpapers[widget.index];
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Full-Screen Wallpaper
-          Image.asset(
-            wallpaper['image'],
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          // Navigate Back Icon with Blur Background
-          Positioned(
-            top: 32,
-            left: 16,
-            child: ClipOval(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context); // Navigate back
-                    },
+      body: GestureDetector(
+        onTap: () {
+          setState(() {
+            if (_showMetadata) {
+              // If metadata is open, close it
+              _closeMetadata();
+            } else if (_showButtons && _showDetails) {
+              // If metadata is closed and both buttons and details are visible, hide them
+              _showButtons = false;
+              _showDetails = false;
+            } else {
+              // Otherwise, show both buttons and details
+              _showButtons = true;
+              _showDetails = true;
+            }
+          });
+        },
+        child: Stack(
+          children: [
+            // Full-Screen Wallpaper
+            Image.asset(
+              wallpaper['image'],
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            // Navigate Back Icon with Blur Background
+            if (_showButtons)
+              Positioned(
+                top: 32,
+                left: 16,
+                child: ClipOval(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Tooltip(
+                      message: "Back", // Show label/hint on hover
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () {
+                            Navigator.pop(context); // Navigate back
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            // Eye Icon to Toggle Details Visibility
+            if (_showButtons)
+              Positioned(
+                top: 32,
+                right: 16,
+                child: ClipOval(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Tooltip(
+                      message: "Preview", // Show label/hint on hover
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        child: IconButton(
+                          icon: Icon(
+                            _showDetails ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.white,
+                          ),
+                          onPressed: _toggleDetailsAndButtons, // Toggle details and buttons
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            // Animated Sliding Details Container
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: GestureDetector(
+                onTap: () {
+                  // Prevent closing metadata when tapping inside the container
+                },
+                child: AnimatedSlide(
+                  offset: _showDetails ? Offset.zero : const Offset(0, 1), // Slide up or down
+                  duration: const Duration(milliseconds: 300), // Animation duration
+                  curve: Curves.easeInOut, // Smooth animation curve
+                  child: DetailsContainer(
+                    wallpaper: wallpaper,
+                    showMetadata: _showMetadata, // Pass metadata visibility state
+                    slideAnimation: const AlwaysStoppedAnimation(Offset.zero), // No sliding animation for metadata
+                    toggleMetadata: _toggleMetadata, isFavorite: isFavorite, toggleFavorite: () {
+                      favoritesProvider.toggleFavorite(widget.index);
+                    }, // Pass toggle function
                   ),
                 ),
               ),
             ),
-          ),
-          // Blurred Overlay for Details
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: DetailsContainer(
-              wallpaper: wallpaper,
-              showMetadata: _showMetadata,
-              slideAnimation: _slideAnimation,
-              toggleMetadata: _toggleMetadata,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

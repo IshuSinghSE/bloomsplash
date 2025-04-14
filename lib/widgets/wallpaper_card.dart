@@ -1,13 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/favorites_provider.dart';
 import '../screens/wallpaper_details_page.dart';
 
 class WallpaperCard extends StatelessWidget {
-  final int index; // Pass the index of the wallpaper
+  final int index;
   final String image;
   final String name;
   final String author;
-  final VoidCallback onFavoritePressed;
+  final VoidCallback onFavoritePressed; // Add the onFavoritePressed parameter
 
   const WallpaperCard({
     super.key,
@@ -15,17 +17,20 @@ class WallpaperCard extends StatelessWidget {
     required this.image,
     required this.name,
     required this.author,
-    required this.onFavoritePressed,
+    required this.onFavoritePressed, // Include the onFavoritePressed parameter
   });
 
   @override
   Widget build(BuildContext context) {
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isFavorite(index);
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => WallpaperDetailsPage(index: index), // Pass only the index
+            builder: (context) => WallpaperDetailsPage(index: index),
           ),
         );
       },
@@ -79,8 +84,8 @@ class WallpaperCard extends StatelessWidget {
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  overflow: TextOverflow.ellipsis, // Truncate text
-                                  maxLines: 1, // Ensure single line
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                                 Text(
                                   author,
@@ -88,19 +93,19 @@ class WallpaperCard extends StatelessWidget {
                                     color: Colors.white70,
                                     fontSize: 12,
                                   ),
-                                  overflow: TextOverflow.ellipsis, // Truncate text
-                                  maxLines: 1, // Ensure single line
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ],
                             ),
                           ),
                           // Favorite Button
                           IconButton(
-                            icon: const Icon(
-                              Icons.favorite_border,
+                            icon: Icon(
+                              isFavorite ? Icons.favorite : Icons.favorite_border,
                               color: Colors.white,
                             ),
-                            onPressed: onFavoritePressed,
+                            onPressed: onFavoritePressed, // Use the onFavoritePressed callback
                           ),
                         ],
                       ),

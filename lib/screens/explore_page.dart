@@ -1,35 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/data.dart'; // Import the dummy data
 import '../widgets/wallpaper_card.dart'; // Import the WallpaperCard widget
+import '../providers/favorites_provider.dart';
 
 class ExplorePage extends StatelessWidget {
   const ExplorePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Add a SearchBar with dynamic visibility on scroll
-          // SliverAppBar(
-          //   pinned: true,
-          //   floating: false,
-          //   expandedHeight: 60.0,
-          //   flexibleSpace: FlexibleSpaceBar(
-          //     background: Container(
-          //       padding: const EdgeInsets.all(8.0),
-                
-          //       // child: const TextField(
-          //       //   decoration: InputDecoration(
-          //       //     hintText: 'Search wallpapers',
-          //       //     prefixIcon: Icon(Icons.search),
-          //       //     border: OutlineInputBorder(),
-          //       //   ),
-          //       // ),
-          //     ),
-          //   ),
-          // ),
-          // SliverGrid to display the wallpapers
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
             sliver: SliverGrid(
@@ -48,7 +32,7 @@ class ExplorePage extends StatelessWidget {
                     name: wallpaper['name'],
                     author: wallpaper['author'],
                     onFavoritePressed: () {
-                      // Handle favorite button press
+                      favoritesProvider.toggleFavorite(index); // Toggle favorite state
                     },
                   );
                 },
