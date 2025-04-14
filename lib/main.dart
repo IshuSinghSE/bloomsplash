@@ -7,8 +7,7 @@ import 'screens/explore_page.dart';
 import 'screens/collections_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/upload_page.dart';
-import 'screens/settings_page.dart';
-import 'constants/data.dart'; // Import the data.dart file
+import 'constants/data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +19,12 @@ void main() async {
   await Hive.openBox<Map>('favorites');
 
   // Load wallpapers from the JSON file
-  await loadWallpapers();
+  try {
+    await loadWallpapers();
+    print('Wallpapers loaded successfully'); // Debug statement
+  } catch (e) {
+    print('Error loading wallpapers: $e'); // Debug statement
+  }
 
   runApp(
     MultiProvider(
@@ -106,7 +110,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text(
           'Wallpapers',
           style: TextStyle(
-            fontSize: 32,
+            fontSize: 28,
           fontWeight: FontWeight.normal,
             fontFamily: 'Raleway',
           ),
@@ -120,14 +124,14 @@ class _HomePageState extends State<HomePage> {
             child: Tooltip(
               message: 'Settings',
               child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>const SettingsPage(),
-                    ),
-                  );
-                },
+                // onTap: () {
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) =>const SettingsPage(),
+                //     ),
+                //   );
+                // },
                 child: Container(
                   width: 48,
                   height: 48,

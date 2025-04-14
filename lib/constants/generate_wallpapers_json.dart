@@ -92,7 +92,7 @@ void generateWallpapersJson() {
   final file = File('/home/ashu/Code/flutter/flutter_application_1/lib/constants/wallpapers.json');
   file.writeAsStringSync(jsonString);
 
-  print('wallpapers.json has been generated successfully!');
+  // print('wallpapers.json has been generated successfully!');
 }
 
 

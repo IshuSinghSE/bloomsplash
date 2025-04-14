@@ -38,13 +38,13 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           const Center(
             child: Text(
-              'Ishu King',
+              'Ishu Singh',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           const Center(
             child: Text(
-              'candyking1002263@gmail.com',
+              'example@email.com',
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ),
@@ -54,16 +54,16 @@ class SettingsPage extends StatelessWidget {
           //   title: const Text('Auto Switch (Pro)'),
           //   trailing: Switch(value: true, onChanged: (value) {}),
           // ),
-          ListTile(
-            leading: const Icon(Icons.upload),
-            title: const Text('My Uploads'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.favorite),
-            title: const Text('My Favorites'),
-            onTap: () {},
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.upload),
+          //   title: const Text('My Uploads'),
+          //   onTap: () {},
+          // ),
+          // ListTile(
+          //   leading: const Icon(Icons.favorite),
+          //   title: const Text('My Favorites'),
+          //   onTap: () {},
+          // ),
           ListTile(
             leading: const Icon(Icons.clear),
             title: const Text('Clear Cache'),

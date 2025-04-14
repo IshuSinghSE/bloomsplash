@@ -72,23 +72,27 @@ Future<void> downloadWallpaper(BuildContext context, String url) async {
       await MediaScanner.loadMedia(path: filePath);
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Wallpaper downloaded to "$directoryName"',
-          style: TextStyle(fontSize: 12),
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Wallpaper downloaded to "$directoryName"',
+            style: TextStyle(fontSize: 12),
+          ),
         ),
-      ),
-    );
+      );
+    }
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Failed to download wallpaper',
-          style: TextStyle(fontSize: 12),
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to download wallpaper',
+            style: TextStyle(fontSize: 12),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
 

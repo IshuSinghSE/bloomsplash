@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
@@ -12,7 +11,7 @@ class FavoritesPage extends StatelessWidget {
     final favoriteWallpapers = favoritesProvider.favorites.reversed.toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favorites')),
+      // appBar: AppBar(title: const Text('Favorites')),
       body:
           favoriteWallpapers.isEmpty
               ? const Center(

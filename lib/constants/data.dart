@@ -19,7 +19,7 @@ late final List<Map<String, dynamic>> wallpapers;
 */
 Future<void> loadWallpapers() async {
   // Load the JSON file
-  final file = File('/home/ashu/Code/flutter/flutter_application_1/lib/constants/wallpapers.json');
+  final file = File('lib/constants/wallpapers.json');
   final jsonString = await file.readAsString();
 
   // Parse the JSON string into a list of wallpapers
@@ -241,7 +241,6 @@ final List<Map<String, String>> curatedCollections = [
   },
 ];
 
-// TODO: Add more curated collections as needed
 final Map<String, List<Map<String, dynamic>>> curatedCollectionsWallpapers = {
   "Bloom Vibes": List.generate(10, (index) {
     return {

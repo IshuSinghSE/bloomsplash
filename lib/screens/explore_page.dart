@@ -12,7 +12,7 @@ class ExplorePage extends StatelessWidget {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
 
     // Debugging: Print the wallpapers list to ensure it's valid
-    print(wallpapers);
+    // print(wallpapers);
 
     return Scaffold(
       body: CustomScrollView(

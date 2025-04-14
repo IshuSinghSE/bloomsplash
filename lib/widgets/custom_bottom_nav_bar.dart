@@ -64,11 +64,11 @@ class CustomBottomNavBar extends StatelessWidget {
                     //   label: 'Community', // Label is hidden but tooltip remains
                     //   tooltip: 'Community',
                     // ),
-                    NavigationDestination(
-                      icon: Icon(Icons.upload_rounded),
-                      label: 'Upload', // Label is hidden but tooltip remains
-                      tooltip: 'Upload',
-                    ),
+                    // NavigationDestination(
+                    //   icon: Icon(Icons.upload_rounded),
+                    //   label: 'Upload', // Label is hidden but tooltip remains
+                    //   tooltip: 'Upload',
+                    // ),
                   ],
                 ),
               ),
