@@ -50,6 +50,23 @@ void generateWallpapersJson() {
     "A relaxing and calming wallpaper for your device.",
   ];
 
+  final authorImages = [
+    "assets/avatar/Balsamiq.png",
+    "assets/avatar/Bear.png",
+    "assets/avatar/BlueJ.png",
+    "assets/avatar/Itsycal.png",
+    "assets/avatar/Carto.png",
+    "assets/avatar/Cyberduck.png",
+    "assets/avatar/HandShaker.png",
+    "assets/avatar/HazeOver.png",
+    "assets/avatar/Ivory.png",
+    "assets/avatar/LanScan.png",
+    "assets/avatar/NightOwl.png",
+    "assets/avatar/PopcornTime.png",
+    "assets/avatar/Vysor.png",
+    "assets/avatar/WeatherBug.png",
+  ];
+
   // Generate 100 wallpapers
   final wallpapers = List.generate(100, (index) {
     return {
@@ -63,6 +80,7 @@ void generateWallpapersJson() {
       "resolution": "${1920 + (index % 3) * 640}x${1080 + (index % 3) * 360}", // Random resolution
       "category": categories[index % categories.length],
       "author": "Author ${index + 1}",
+      "authorImage": authorImages[index % authorImages.length],
       "description": descriptions[index % descriptions.length],
     };
   });
