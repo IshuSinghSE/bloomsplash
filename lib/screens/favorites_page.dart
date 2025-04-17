@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
+import '../screens/wallpaper_details_page.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
@@ -48,94 +49,108 @@ class FavoritesPage extends StatelessWidget {
                         return ClipRRect(
                           borderRadius: BorderRadius.circular(16),
 
-                          child: Stack(
-                            children: [
-                              // Wallpaper Image
-                              Image.asset(
-                                image,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
-                              // Gradient Overlay
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.black.withOpacity(0.6),
-                                        Colors.transparent,
-                                      ],
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => WallpaperDetailsPage(
+                                        id: wallpaper['id'],
+                                      ), // Pass wallpaper ID
+                                ),
+                              );
+                            },
+
+                            child: Stack(
+                              children: [
+                                // Wallpaper Image
+                                Image.asset(
+                                  image,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
+                                // Gradient Overlay
+                                Positioned.fill(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.black.withOpacity(0.6),
+                                          Colors.transparent,
+                                        ],
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              // Wallpaper Title
-                              Positioned(
-                                bottom: 8,
-                                left: 8,
-                                right: 8,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            title,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
+                                // Wallpaper Title
+                                Positioned(
+                                  bottom: 8,
+                                  left: 8,
+                                  right: 8,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              title,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            author,
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 12,
+                                            Text(
+                                              author,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    Consumer<FavoritesProvider>(
-                                      builder: (
-                                        context,
-                                        favoritesProvider,
-                                        child,
-                                      ) {
-                                        final isFavorite = favoritesProvider
-                                            .isFavorite(wallpaper);
-                                        return IconButton(
-                                          icon: Icon(
-                                            isFavorite
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color: Colors.white,
-                                          ),
-                                          onPressed: () {
-                                            favoritesProvider.toggleFavorite(
-                                              wallpaper,
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ],
+                                      Consumer<FavoritesProvider>(
+                                        builder: (
+                                          context,
+                                          favoritesProvider,
+                                          child,
+                                        ) {
+                                          final isFavorite = favoritesProvider
+                                              .isFavorite(wallpaper);
+                                          return IconButton(
+                                            icon: Icon(
+                                              isFavorite
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
+                                              color: Colors.white,
+                                            ),
+                                            onPressed: () {
+                                              favoritesProvider.toggleFavorite(
+                                                wallpaper,
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       },

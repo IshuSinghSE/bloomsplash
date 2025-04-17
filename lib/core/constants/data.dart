@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:developer';
+
+import 'package:flutter/services.dart';
 
 late final List<Map<String, dynamic>> wallpapers;
 /* {
@@ -18,19 +20,26 @@ late final List<Map<String, dynamic>> wallpapers;
   },
 */
 Future<void> loadWallpapers() async {
-  // Load the JSON file
-  final file = File('lib/constants/wallpapers.json');
-  final jsonString = await file.readAsString();
+  try {
+    log('Loading wallpapers...');
+    final jsonString = await rootBundle.loadString('assets/wallpapers.json');
+    log('JSON file loaded successfully.');
 
-  // Parse the JSON string into a list of wallpapers
-  wallpapers = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
+    wallpapers = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
+    log('Wallpapers parsed successfully. Count: ${wallpapers.length}');
+
+    categoryWallpapers.addAll({
+      for (var category in ["Nature", "Abstract", "Urban", "Adventure", "Space"])
+        category: wallpapers.where((wallpaper) => wallpaper["category"] == category).toList(),
+    });
+    log('Category wallpapers generated successfully.');
+  } catch (e) {
+    log('Error loading wallpapers: $e'); // Debugging statement
+    wallpapers = []; // Fallback to an empty list
+  }
 }
 
-// Generate wallpapers for each category
-final Map<String, List<Map<String, dynamic>>> categoryWallpapers = {
-  for (var category in ["Nature", "Abstract", "Urban", "Adventure", "Space"])
-    category: wallpapers.where((wallpaper) => wallpaper["category"] == category).toList(),
-};
+final Map<String, List<Map<String, dynamic>>> categoryWallpapers = {};
 
 final List<Map<String, String>> categories = [
   {
@@ -55,37 +64,39 @@ final List<Map<String, String>> categories = [
   },
 ];
 
+
+
 final Map<String, List<Map<String, dynamic>>> collections = {
   "Featured": [
     {
       "title": "Autumn Hues",
       "image": "assets/sample/1744480267976.png",
       "author": "Author 1",
-      "wallpapers": wallpapers.sublist(0, 5), // Wallpapers to display
+      "wallpapers": wallpapers.take(4).toList(), // Dynamically take up to 4 wallpapers
     },
     {
       "title": "Monochrome Series",
       "image": "assets/sample/1744480267990.png",
       "author": "Author 2",
-      "wallpapers": wallpapers.sublist(5, 10), // Wallpapers to display
+      "wallpapers": wallpapers.skip(4).take(5).toList(), // Skip first 4, take next 5
     },
     {
       "title": "Dreamy Landscapes",
       "image": "assets/sample/1744480268003.png",
       "author": "Author 3",
-      "wallpapers": wallpapers.sublist(10, 15), // Wallpapers to display
+      "wallpapers": wallpapers.skip(9).take(5).toList(), // Skip first 9, take next 5
     },
     {
       "title": "Urban Vibes",
       "image": "assets/sample/1744480268028.png",
       "author": "Author 4",
-      "wallpapers": wallpapers.sublist(15, 20), // Wallpapers to display
+      "wallpapers": wallpapers.skip(14).take(5).toList(), // Skip first 14, take next 5
     },
     {
       "title": "Abstract Art",
       "image": "assets/sample/1744480268040.png",
       "author": "Author 5",
-      "wallpapers": wallpapers.sublist(20, 25), // Wallpapers to display
+      "wallpapers": wallpapers.skip(19).take(5).toList(), // Skip first 19, take next 5
     },
   ],
   "Popular": [
@@ -93,31 +104,31 @@ final Map<String, List<Map<String, dynamic>>> collections = {
       "title": "Nature Escapes",
       "image": "assets/sample/1744480268053.png",
       "author": "Author 6",
-      "wallpapers": wallpapers.sublist(25, 30), // Wallpapers to display
+      "wallpapers": wallpapers.skip(24).take(5).toList(), // Skip first 24, take next 5
     },
     {
       "title": "Cyber Aesthetic",
       "image": "assets/sample/1744480268070.png",
       "author": "Author 7",
-      "wallpapers": wallpapers.sublist(30, 35), // Wallpapers to display
+      "wallpapers": wallpapers.skip(29).take(5).toList(), // Skip first 29, take next 5
     },
     {
       "title": "Space Wonders",
       "image": "assets/sample/1744480268085.png",
       "author": "Author 8",
-      "wallpapers": wallpapers.sublist(35, 40), // Wallpapers to display
+      "wallpapers": wallpapers.skip(34).take(5).toList(), // Skip first 34, take next 5
     },
     {
       "title": "Minimalist Designs",
       "image": "assets/sample/1744480268103.png",
       "author": "Author 9",
-      "wallpapers": wallpapers.sublist(40, 45), // Wallpapers to display
+      "wallpapers": wallpapers.skip(39).take(5).toList(), // Skip first 39, take next 5
     },
     {
       "title": "Colorful Patterns",
       "image": "assets/sample/1744480268117.png",
       "author": "Author 10",
-      "wallpapers": wallpapers.sublist(45, 50), // Wallpapers to display
+      "wallpapers": wallpapers.skip(44).take(5).toList(), // Skip first 44, take next 5
     },
   ],
   "Monochrome": [
@@ -125,31 +136,31 @@ final Map<String, List<Map<String, dynamic>>> collections = {
       "title": "Black & White",
       "image": "assets/sample/1744480268142.png",
       "author": "Author 11",
-      "wallpapers": wallpapers.sublist(50, 55), // Wallpapers to display
+      "wallpapers": wallpapers.skip(49).take(5).toList(), // Skip first 49, take next 5
     },
     {
       "title": "Shades of Grey",
       "image": "assets/sample/1744480268170.png",
       "author": "Author 12",
-      "wallpapers": wallpapers.sublist(55, 60), // Wallpapers to display
+      "wallpapers": wallpapers.skip(54).take(5).toList(), // Skip first 54, take next 5
     },
     {
       "title": "Classic Monochrome",
       "image": "assets/sample/1744480268188.png",
       "author": "Author 13",
-      "wallpapers": wallpapers.sublist(60, 65), // Wallpapers to display
+      "wallpapers": wallpapers.skip(59).take(5).toList(), // Skip first 59, take next 5
     },
     {
       "title": "Dark Elegance",
       "image": "assets/sample/1744480268211.png",
       "author": "Author 14",
-      "wallpapers": wallpapers.sublist(65, 70), // Wallpapers to display
+      "wallpapers": wallpapers.skip(64).take(5).toList(), // Skip first 64, take next 5
     },
     {
       "title": "Light & Shadow",
       "image": "assets/sample/1744480268231.png",
       "author": "Author 15",
-      "wallpapers": wallpapers.sublist(70, 75), // Wallpapers to display
+      "wallpapers": wallpapers.skip(69).take(5).toList(), // Skip first 69, take next 5
     },
   ],
 };

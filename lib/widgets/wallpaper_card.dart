@@ -99,7 +99,9 @@ class WallpaperCard extends StatelessWidget {
                                   isFavorite ? Icons.favorite : Icons.favorite_border,
                                   color: Colors.white,
                                 ),
-                                onPressed: onFavoritePressed, // Use the onFavoritePressed callback
+                                onPressed: () {
+                                  favoritesProvider.toggleFavorite(wallpaper); // Toggle favorite state
+                                },
                               );
                             },
                           ),

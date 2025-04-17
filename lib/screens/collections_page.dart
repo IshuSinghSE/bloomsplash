@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../constants/data.dart'; // Import the dummy data
+import '../core/constants/data.dart'; // Import the dummy data
 import 'collection_wallpapers_page.dart'; // Import the collection wallpapers page
 import 'category_wallpapers_page.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../constants/data.dart'; // Import the wallpapers data
+import '../core/constants/data.dart'; // Import the wallpapers data
 import '../widgets/wallpaper_card.dart'; // Import the WallpaperCard widget
 import '../providers/favorites_provider.dart';
 

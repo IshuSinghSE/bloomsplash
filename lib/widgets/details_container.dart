@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'wallpaper_utils.dart' show downloadWallpaper, showSetWallpaperDialog;
 import 'metadata_box.dart' show buildMetadataBox;
 import 'shared_widgets.dart' show buildCircularActionButton;
+import '../providers/favorites_provider.dart';
+import 'package:provider/provider.dart';
 
 class DetailsContainer extends StatelessWidget {
   final Map<String, dynamic> wallpaper;
@@ -32,7 +34,6 @@ class DetailsContainer extends StatelessWidget {
     final size = wallpaper['size'] ?? 'Unknown size';
     final download = wallpaper['download'] ?? '0';
     final resolution = wallpaper['resolution'] ?? 'Unknown resolution';
-    final isFavorite = wallpaper['isFavorite'] ?? false; // Get the favorite state
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -80,12 +81,12 @@ class DetailsContainer extends StatelessWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.share, color: Colors.white),
-                      onPressed: () {
-                        // Handle share action
-                      },
-                    ),
+                    // IconButton(
+                    //   icon: const Icon(Icons.share, color: Colors.white),
+                    //   onPressed: () {
+                    //     // Handle share action
+                    //   },
+                    // ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -103,9 +104,9 @@ class DetailsContainer extends StatelessWidget {
                       downloadWallpaper(context, image);
                     }),
                     buildCircularActionButton(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      FavoritesProvider().isFavorite(wallpaper) ? Icons.favorite : Icons.favorite_border,
                       'Like',
-                      toggleFavorite, // Use the toggleFavorite callback
+                     () => Provider.of<FavoritesProvider>(context, listen: false).toggleFavorite(wallpaper), // Use the toggleFavorite callback
                     ),
                     buildCircularActionButton(Icons.image, 'Set', () {
                       showSetWallpaperDialog(context, image);

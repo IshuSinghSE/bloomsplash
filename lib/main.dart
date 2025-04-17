@@ -7,7 +7,8 @@ import 'screens/explore_page.dart';
 import 'screens/collections_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/upload_page.dart';
-import 'constants/data.dart';
+import 'core/constants/data.dart';
+import 'dart:developer';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,9 +22,9 @@ void main() async {
   // Load wallpapers from the JSON file
   try {
     await loadWallpapers();
-    print('Wallpapers loaded successfully'); // Debug statement
+    log('Wallpapers loaded successfully'); // Debug statement
   } catch (e) {
-    print('Error loading wallpapers: $e'); // Debug statement
+    log('Error loading wallpapers: $e'); // Debug statement
   }
 
   runApp(
@@ -98,7 +99,7 @@ class _HomePageState extends State<HomePage> {
               //   child: custom.SearchBar(
               //     onChanged: (value) {
               //       // Handle search input
-              //       print('Search query: $value');
+              //       log('Search query: $value');
               //     },
               //   ),
               // ),

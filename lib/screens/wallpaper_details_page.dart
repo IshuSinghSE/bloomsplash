@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../constants/data.dart'; // Import the wallpapers list
+import '../core/constants/data.dart'; // Import the wallpapers list
 import '../providers/favorites_provider.dart';
 import '../widgets/details_container.dart'; // Import the new DetailsContainer widget
 
