@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'explore_page.dart';
+import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import 'favorites_page.dart';
+
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var preferencesBox = Hive.box('preferences');
+    var userData = preferencesBox.get('userData', defaultValue: {});
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -16,36 +25,40 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-            Stack(
+          Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
             children: [
               CircleAvatar(
-              radius: 52, // Outer circle radius
-              backgroundColor: Colors.white, // White border color
-              child: CircleAvatar(
-                radius: 50, // Inner circle radius
-                backgroundColor: const Color.fromARGB(255, 56, 91, 114),
+                radius: 52,
+                backgroundColor: Colors.white,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: const Color.fromARGB(255, 56, 91, 114),
+                ),
               ),
-              ),
-              const CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage('assets/avatar/Itsycal.png'),
+              CircleAvatar(
+                radius: 50,
+                backgroundImage:
+                    userData['photoUrl'] != null &&
+                            userData['photoUrl']!.isNotEmpty
+                        ? NetworkImage(userData['photoUrl']!)
+                        : const AssetImage('assets/avatar/Itsycal.png')
+                            as ImageProvider,
               ),
             ],
-            ),
-
+          ),
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Text(
-              'Ishu Singh',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              userData['displayName'] ?? 'Guest User',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          const Center(
+          Center(
             child: Text(
-              'example@email.com',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              userData['email'] ?? 'No email available',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ),
           const SizedBox(height: 24),
@@ -54,32 +67,41 @@ class SettingsPage extends StatelessWidget {
           //   title: const Text('Auto Switch (Pro)'),
           //   trailing: Switch(value: true, onChanged: (value) {}),
           // ),
-          // ListTile(
-          //   leading: const Icon(Icons.upload),
-          //   title: const Text('My Uploads'),
-          //   onTap: () {},
-          // ),
-          // ListTile(
-          //   leading: const Icon(Icons.favorite),
-          //   title: const Text('My Favorites'),
-          //   onTap: () {},
-          // ),
+          ListTile(
+            leading: const Icon(Icons.upload),
+            title: const Text('My Uploads'),
+           onTap: () {
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.favorite),
+            title: const Text('My Favorites'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FavoritesPage(showAppBar: true),
+                ),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.clear),
             title: const Text('Clear Cache'),
             subtitle: const Text('Current size: 60.2 kB'),
-            onTap: () {},
+            onTap: () {
+            },
           ),
-          // ListTile(
-          //   leading: const Icon(Icons.sync),
-          //   title: const Text('Sync Favorites'),
-          //   onTap: () {},
-          // ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Sign Out'),
-            onTap: () {},
+            onTap: () {
+              Provider.of<AuthProvider>(
+                context,
+                listen: false,
+              ).signOut(context);
+            },
           ),
         ],
       ),

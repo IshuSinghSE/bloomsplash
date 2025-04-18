@@ -17,23 +17,6 @@ class CollectionWallpapersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: TextStyle(fontSize: 20)),
-            // const SizedBox(height: 4),
-            Text(
-              author, // Replace with the actual author name if needed
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w400,
-                color: Colors.white70,
-              ),
-            ),
-          ],
-        ),
-      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(8.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

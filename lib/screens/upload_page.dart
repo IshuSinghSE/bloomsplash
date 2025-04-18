@@ -175,18 +175,6 @@ class _UploadPageState extends State<UploadPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Wallpaper'),
-        backgroundColor: Colors.black,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              Navigator.maybePop(context); // Attempts to pop the current route if possible
-            },
-          ),
-        ],
-      ),
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus(); // Unfocus when tapping outside

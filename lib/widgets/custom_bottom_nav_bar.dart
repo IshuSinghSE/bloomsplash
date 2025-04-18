@@ -73,7 +73,7 @@ class CustomBottomNavBar extends StatelessWidget {
                         break;
                     }
                   },
-                  labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, // Hide labels
+                  // labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, // Hide labels
                   destinations: const [
                     NavigationDestination(
                       icon: Icon(Icons.explore),

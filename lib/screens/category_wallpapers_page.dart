@@ -16,9 +16,6 @@ class CategoryWallpapersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(category),
-      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(8.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -32,8 +29,10 @@ class CategoryWallpapersPage extends StatelessWidget {
           final wallpaper = wallpapers[index];
           final image = wallpaper["image"] ?? "assets/sample/1744480268028.png";
           final author = wallpaper["author"] ?? "Unknown";
-          final title = wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
-          final id = wallpaper["id"] ?? "unknown-id"; // Fallback to a default ID
+          final title =
+              wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
+          final id =
+              wallpaper["id"] ?? "unknown-id"; // Fallback to a default ID
 
           return GestureDetector(
             onTap: () {
@@ -41,7 +40,9 @@ class CategoryWallpapersPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => WallpaperDetailsPage(id: id), // Pass wallpaper ID
+                  builder:
+                      (context) =>
+                          WallpaperDetailsPage(id: id), // Pass wallpaper ID
                 ),
               );
             },
@@ -108,10 +109,14 @@ class CategoryWallpapersPage extends StatelessWidget {
                         ),
                         Consumer<FavoritesProvider>(
                           builder: (context, favoritesProvider, child) {
-                            final isFavorite = favoritesProvider.isFavorite(wallpaper);
+                            final isFavorite = favoritesProvider.isFavorite(
+                              wallpaper,
+                            );
                             return IconButton(
                               icon: Icon(
-                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
                                 color: Colors.white,
                               ),
                               onPressed: () {

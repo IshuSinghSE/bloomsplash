@@ -6,9 +6,6 @@ class CreatePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create'),
-      ),
       body: const Center(
         child: Text(
           'Create Page',

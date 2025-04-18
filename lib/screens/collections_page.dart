@@ -17,14 +17,6 @@ class _CollectionsPageState extends State<CollectionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Collections'),
-        centerTitle: true,
-        backgroundColor: Colors.black,
-      ),
-      // appBar: AppBar(
-      //   title: const Text('Collections'),
-      // ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
