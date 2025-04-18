@@ -15,39 +15,39 @@ import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // Initialize Hive
-  await Hive.initFlutter();
-
-  // Open a Hive box for storing app preferences
-  var preferencesBox = await Hive.openBox('preferences');
-
-  // Open a Hive box for storing favorite wallpapers
-  await Hive.openBox<Map>('favorites');
-
-  // Load wallpapers from the JSON file
   try {
-    await loadWallpapers();
+    // Perform initialization tasks
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Hive.initFlutter();
+    var preferencesBox = await Hive.openBox('preferences');
+    await Hive.openBox<Map>('favorites');
+    await loadWallpapers(); // Load wallpapers only once
     log('Wallpapers loaded successfully'); // Debug statement
-  } catch (e) {
-    log('Error loading wallpapers: $e'); // Debug statement
-  }
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider()..checkLoginState(),
-        ),
-      ],
-      child: MyApp(preferencesBox: preferencesBox),
-    ),
-  );
+    // Run the app after initialization is complete
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+          ChangeNotifierProvider(
+            create: (_) => AuthProvider()..checkLoginState(),
+          ),
+        ],
+        child: MyApp(preferencesBox: preferencesBox),
+      ),
+    );
+  } catch (e) {
+    log('Error during initialization: $e'); // Debug statement
+  } finally {
+    // Remove the splash screen after initialization
+    FlutterNativeSplash.remove();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -96,6 +96,12 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Removed redundant loadWallpapers call
   }
 
   @override
@@ -150,30 +156,9 @@ class _HomePageState extends State<HomePage> {
       // Main content
       Stack(
         children: [
-          // Background image
-          // Image.asset(
-          //   'assets/background.jpg',
-          //   fit: BoxFit.cover,
-          //   width: double.infinity,
-          //   height: double.infinity,
-          // ),
-          // Main content
           _pages[_selectedIndex],
-          // Search bar
-          // Positioned(
-          //   top: 0,
-          //   left: 4,
-          //   right: 4,
-          //   child: custom.SearchBar(
-          //     onChanged: (value) {
-          //       // Handle search input
-          //       log('Search query: $value');
-          //     },
-          //   ),
-          // ),
         ],
       ),
-
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
