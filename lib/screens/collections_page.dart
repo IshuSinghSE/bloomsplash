@@ -17,6 +17,11 @@ class _CollectionsPageState extends State<CollectionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Collections'),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+      ),
       // appBar: AppBar(
       //   title: const Text('Collections'),
       // ),
@@ -165,6 +170,8 @@ class _CollectionsPageState extends State<CollectionsPage> {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: ChoiceChip(
+        backgroundColor: const Color.fromARGB(255, 56, 91, 114).withOpacity(0.1),
+        selectedColor: const Color.fromARGB(255, 56, 91, 114).withOpacity(0.7),
         label: Text(label),
         selected: selectedCategory == label,
         onSelected: (isSelected) {
@@ -183,7 +190,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
     List<Map<String, dynamic>> wallpapers,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -195,11 +202,10 @@ class _CollectionsPageState extends State<CollectionsPage> {
           Column(
             children:
                 wallpapers.take(3).map((wallpaper) {
-                  final image = wallpaper["image"] ?? "assets/sample/1744480267990.png";
-                  final title =
-                      wallpaper["title"] ?? "Untitled";
-                  final author =
-                      wallpaper["author"] ?? "Unknown";
+                  final image =
+                      wallpaper["image"] ?? "assets/sample/1744480267990.png";
+                  final title = wallpaper["title"] ?? "Untitled";
+                  final author = wallpaper["author"] ?? "Unknown";
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
@@ -257,7 +263,8 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                       (context) => CollectionWallpapersPage(
                                         title: title ?? "Untitled",
                                         author: author ?? "Unknown",
-                                        wallpapers: wallpaper["wallpapers"] ?? [],
+                                        wallpapers:
+                                            wallpaper["wallpapers"] ?? [],
                                       ),
                                 ),
                               );
@@ -287,17 +294,19 @@ class _CollectionsPageState extends State<CollectionsPage> {
                 );
               },
               style: TextButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).bottomNavigationBarTheme.backgroundColor,
+                
+                // backgroundColor: const Color.fromARGB(20, 56, 91, 114),
+                side: const BorderSide(color:Color.fromARGB(200, 56, 91, 114), width: 1),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
                   vertical: 8.0,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
                 ),
               ),
               child: const Text(
+                
                 'Show All',
                 style: TextStyle(color: Colors.white),
               ),

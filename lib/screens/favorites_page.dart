@@ -12,7 +12,10 @@ class FavoritesPage extends StatelessWidget {
     final favoriteWallpapers = favoritesProvider.favorites.reversed.toList();
 
     return Scaffold(
-      // appBar: AppBar(title: const Text('Favorites')),
+      appBar: AppBar(title: const Text('Favorites'),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+      ),
       body:
           favoriteWallpapers.isEmpty
               ? const Center(

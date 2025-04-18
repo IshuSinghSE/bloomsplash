@@ -9,9 +9,12 @@ import 'screens/favorites_page.dart';
 import 'screens/upload_page.dart';
 import 'core/constants/data.dart';
 import 'dart:developer';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -29,9 +32,7 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => FavoritesProvider())],
       child: const MyApp(),
     ),
   );
@@ -46,6 +47,8 @@ class MyApp extends StatelessWidget {
       title: 'Wallpaper App',
       theme: ThemeData.dark(),
       home: const HomePage(),
+      debugShowCheckedModeBanner: false,
+      
     );
   }
 }
@@ -76,83 +79,36 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // Ensures the bottom navigation bar floats over the background
+      extendBody:
+          true, // Ensures the bottom navigation bar floats over the background
       body:
+      // Main content
+      Stack(
+        children: [
+          // Background image
+          // Image.asset(
+          //   'assets/background.jpg',
+          //   fit: BoxFit.cover,
+          //   width: double.infinity,
+          //   height: double.infinity,
+          // ),
           // Main content
-          Stack(
-            
-            children: [
-              // Background image
-              // Image.asset(
-              //   'assets/background.jpg',
-              //   fit: BoxFit.cover,
-              //   width: double.infinity,
-              //   height: double.infinity,
-              // ),
-              // Main content
-              _pages[_selectedIndex],
-              // Search bar
-              // Positioned(
-              //   top: 0,
-              //   left: 4,
-              //   right: 4,
-              //   child: custom.SearchBar(
-              //     onChanged: (value) {
-              //       // Handle search input
-              //       log('Search query: $value');
-              //     },
-              //   ),
-              // ),
-            ],
-            
-          ),
-      
-      appBar: AppBar(
-        title: const Text(
-          'Wallpapers',
-          style: TextStyle(
-            fontSize: 28,
-          fontWeight: FontWeight.normal,
-            fontFamily: 'Raleway',
-          ),
-        ),
-        backgroundColor: const Color.fromARGB(239, 14, 128, 241).withOpacity(0.1),
-        elevation: 0,
-        centerTitle: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Tooltip(
-              message: 'Settings',
-              child: GestureDetector(
-                // onTap: () {
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) =>const SettingsPage(),
-                //     ),
-                //   );
-                // },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color.fromARGB(255, 56, 91, 114),
-                      width: 2.0,
-                    ),
-                  ),
-                  child: const CircleAvatar(
-                    radius: 50,
-                    backgroundImage: AssetImage('assets/avatar/Itsycal.png'),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _pages[_selectedIndex],
+          // Search bar
+          // Positioned(
+          //   top: 0,
+          //   left: 4,
+          //   right: 4,
+          //   child: custom.SearchBar(
+          //     onChanged: (value) {
+          //       // Handle search input
+          //       log('Search query: $value');
+          //     },
+          //   ),
+          // ),
         ],
       ),
+
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,

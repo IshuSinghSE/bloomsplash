@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1035240251094",
+    "project_id": "roomdesign-7",
+    "storage_bucket": "roomdesign-7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1035240251094:android:3f2bb1d7af2d645699b377",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1035240251094-4ritt7dqrlcc24po30rbbkhtcvlbjtvp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKV29cOiUjdK3KH1XSoEDWMGAmi1I2gSo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1035240251094-4ritt7dqrlcc24po30rbbkhtcvlbjtvp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1035240251094-10g72p73oumh2vmf7tklrp9a2vnubbps.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flutterApplication1"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

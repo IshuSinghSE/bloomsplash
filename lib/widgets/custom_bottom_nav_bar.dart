@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -13,9 +14,21 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent, // Make navigation bar transparent
+        systemNavigationBarIconBrightness: Brightness.light, // Adjust icon brightness if needed
+        statusBarColor: Colors.transparent, // Make status bar transparent
+        statusBarIconBrightness: Brightness.light, // Adjust status bar icon brightness if needed
+        systemStatusBarContrastEnforced: false, // Disable contrast enforcement
+        systemNavigationBarContrastEnforced: false, // Disable contrast enforcement
+        systemNavigationBarDividerColor: Colors.transparent, // Make navigation bar divider transparent
+      ),
+    );
+
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
           child: BackdropFilter(
@@ -41,7 +54,25 @@ class CustomBottomNavBar extends StatelessWidget {
                 child: NavigationBar(
                   backgroundColor: Colors.transparent,
                   selectedIndex: selectedIndex,
-                  onDestinationSelected: onItemTapped,
+                  onDestinationSelected: (index) {
+                    onItemTapped(index);
+                    switch (index) {
+                      case 0:
+                        Navigator.pushNamed(context, '/explore');
+                        break;
+                      case 1:
+                        Navigator.pushNamed(context, '/collections');
+                        break;
+                      case 2:
+                        Navigator.pushNamed(context, '/favorites');
+                        break;
+                      case 3:
+                        Navigator.pushNamed(context, '/upload');
+                        break;
+                      default:
+                        break;
+                    }
+                  },
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, // Hide labels
                   destinations: const [
                     NavigationDestination(
@@ -59,16 +90,11 @@ class CustomBottomNavBar extends StatelessWidget {
                       label: 'Favorites', // Label is hidden but tooltip remains
                       tooltip: 'Favorites',
                     ),
-                    // NavigationDestination(
-                    //   icon: Icon(Icons.people_alt),
-                    //   label: 'Community', // Label is hidden but tooltip remains
-                    //   tooltip: 'Community',
-                    // ),
-                    // NavigationDestination(
-                    //   icon: Icon(Icons.upload_rounded),
-                    //   label: 'Upload', // Label is hidden but tooltip remains
-                    //   tooltip: 'Upload',
-                    // ),
+                    NavigationDestination(
+                      icon: Icon(Icons.upload_rounded),
+                      label: 'Upload', // Label is hidden but tooltip remains
+                      tooltip: 'Upload',
+                    ),
                   ],
                 ),
               ),

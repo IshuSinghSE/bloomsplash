@@ -15,6 +15,11 @@ class ExplorePage extends StatelessWidget {
     // print(wallpapers);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Explore Wallpapers'),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+      ),
       body: CustomScrollView(
         slivers: [
           SliverPadding(
