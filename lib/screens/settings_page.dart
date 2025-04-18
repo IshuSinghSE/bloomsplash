@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'explore_page.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
