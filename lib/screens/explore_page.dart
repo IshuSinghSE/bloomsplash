@@ -4,18 +4,59 @@ import '../core/constants/data.dart'; // Import the wallpapers data
 import '../widgets/wallpaper_card.dart'; // Import the WallpaperCard widget
 import '../providers/favorites_provider.dart';
 
-class ExplorePage extends StatelessWidget {
+class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
+
+  @override
+  State<ExplorePage> createState() => _ExplorePageState();
+}
+
+class _ExplorePageState extends State<ExplorePage> {
+  final ScrollController _scrollController = ScrollController();
+  int _loadedWallpapers = 20; // Initial number of wallpapers to load
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore) {
+      _loadMoreWallpapers();
+    }
+  }
+
+  Future<void> _loadMoreWallpapers() async {
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Simulate a delay for loading more wallpapers
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _loadedWallpapers += 10; // Load 10 more wallpapers
+      _isLoadingMore = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
 
-    // Debugging: Print the wallpapers list to ensure it's valid
-    // print(wallpapers);
-
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
@@ -28,42 +69,42 @@ class ExplorePage extends StatelessWidget {
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final wallpaper =
-                      wallpapers[index]; // Fetch the wallpaper object
+                  if (index >= wallpapers.length) return null;
+                  final wallpaper = wallpapers[index];
                   return WallpaperCard(
-                    wallpaper: wallpaper, // Pass the entire wallpaper object
+                    wallpaper: wallpaper,
                     onFavoritePressed: () {
-                      favoritesProvider.toggleFavorite(
-                        wallpaper,
-                      ); // Toggle favorite state
+                      favoritesProvider.toggleFavorite(wallpaper);
                     },
                   );
                 },
-                childCount: wallpapers.length, // Number of wallpapers
+                childCount: _loadedWallpapers.clamp(0, wallpapers.length),
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Center(
+          if (_isLoadingMore)
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  '✨ end of the exploring...',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontSize: 16,
-                    color: const Color.fromARGB(
-                      255,
-                      246,
-                      251,
-                      255,
-                    ).withValues(alpha: 0.75),
-                    fontWeight: FontWeight.w500,
-                  ),
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: CircularProgressIndicator(),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(child: SizedBox(height: 80)),
+            if (_loadedWallpapers >= wallpapers.length)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text("No more wallpapers to load"),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 80), 
+              
+              // Add some space at the end
+            ),
         ],
       ),
     );

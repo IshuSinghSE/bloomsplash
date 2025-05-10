@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import '../screens/welcome_page.dart';
+import '../core/constants/data.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -124,6 +125,11 @@ class AuthProvider with ChangeNotifier {
         if (_user != null) {
           userData['photoUrl'] = _user?.photoURL;
           preferencesBox.put('userData', userData);
+
+          // Load wallpapers after login
+          debugPrint('User is logged in. Loading wallpapers...');
+          await loadWallpapers();
+          debugPrint('Wallpapers loaded successfully.');
         }
       }
     }

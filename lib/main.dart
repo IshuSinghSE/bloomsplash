@@ -23,7 +23,9 @@ void main() async {
 
   try {
     debugPrint('Initializing Firebase...');
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     debugPrint('Firebase initialized successfully.');
 
     debugPrint('Initializing Hive...');
@@ -32,9 +34,14 @@ void main() async {
     await Hive.openBox<Map>('favorites');
     debugPrint('Hive initialized successfully.');
 
-    debugPrint('Loading wallpapers...');
-    await loadWallpapers();
-    debugPrint('Wallpapers loaded successfully.');
+    var userData = preferencesBox.get('userData', defaultValue: {});
+    if (userData != null && userData.isNotEmpty) {
+      debugPrint('User is logged in. Loading wallpapers...');
+      await loadWallpapers();
+      debugPrint('Wallpapers loaded successfully.');
+    } else {
+      debugPrint('User is not logged in.');
+    }
 
     runApp(
       MultiProvider(
@@ -69,9 +76,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Wallpaper App',
       theme: ThemeData.dark(),
-      home: isFirstLaunch
-          ? WelcomePage(preferencesBox: preferencesBox)
-          : HomePage(preferencesBox: preferencesBox),
+      home:
+          isFirstLaunch
+              ? WelcomePage(preferencesBox: preferencesBox)
+              : HomePage(preferencesBox: preferencesBox),
       debugShowCheckedModeBanner: false,
       routes: {
         '/explore': (context) => const ExplorePage(),
@@ -145,7 +153,8 @@ class _HomePageState extends State<HomePage> {
                             userData['photoUrl'] != null &&
                             userData['photoUrl']!.isNotEmpty
                         ? NetworkImage(userData['photoUrl']!)
-                        : const AssetImage('assets/icons/avatar.png') as ImageProvider,
+                        : const AssetImage('assets/icons/avatar.png')
+                            as ImageProvider,
               ),
               onPressed: () {
                 // Handle account action
@@ -162,11 +171,7 @@ class _HomePageState extends State<HomePage> {
           true, // Ensures the bottom navigation bar floats over the background
       body:
       // Main content
-      Stack(
-        children: [
-          _pages[_selectedIndex],
-        ],
-      ),
+      Stack(children: [_pages[_selectedIndex]]),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
