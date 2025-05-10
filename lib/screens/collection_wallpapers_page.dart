@@ -33,8 +33,7 @@ class CollectionWallpapersPage extends StatelessWidget {
               "assets/sample/1744480267990.png"; // Fallback to sample image
           final name =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
-          final id =
-              wallpaper["id"] ?? "unknown-id"; // Fallback to a default ID
+         
 
           return GestureDetector(
             onTap: () {
@@ -44,7 +43,7 @@ class CollectionWallpapersPage extends StatelessWidget {
                 MaterialPageRoute(
                   builder:
                       (context) =>
-                          WallpaperDetailsPage(id: id), // Pass wallpaper ID
+                          WallpaperDetailsPage( wallpaper: wallpaper), // Pass wallpaper ID and wallpaper object
                 ),
               );
             },

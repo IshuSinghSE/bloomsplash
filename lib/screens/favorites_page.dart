@@ -42,7 +42,7 @@ class FavoritesPage extends StatelessWidget {
                     itemCount: favoriteWallpapers.length,
                     itemBuilder: (context, index) {
                       final wallpaper = favoriteWallpapers[index];
-                      final image = wallpaper['image'] ?? 'assets/sample/1744480268028.png';
+                      final image = wallpaper['image'] ?? 'assets/images/placeholder.png';
                       final author = wallpaper['author'] ?? 'Unknown';
                       final title = wallpaper['title'] ?? 'Untitled';
 
@@ -53,13 +53,13 @@ class FavoritesPage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => WallpaperDetailsPage(id: wallpaper['id']),
+                                builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
                               ),
                             );
                           },
                           child: Stack(
                             children: [
-                              Image.asset(
+                              Image.network(
                                 image,
                                 fit: BoxFit.cover,
                                 width: double.infinity,

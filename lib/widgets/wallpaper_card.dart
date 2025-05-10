@@ -16,12 +16,14 @@ class WallpaperCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String? thumbnailUrl = wallpaper['thumbnail'];
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => WallpaperDetailsPage(id: wallpaper['id']), // Pass wallpaper ID
+            builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper), // Pass wallpaper object
           ),
         );
       },
@@ -35,12 +37,28 @@ class WallpaperCard extends StatelessWidget {
           child: Stack(
             children: [
               // Wallpaper Image
-              Image.asset(
-                wallpaper['image'] ?? 'assets/sample/1744480267990.png',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
+              if (thumbnailUrl != null && thumbnailUrl.startsWith('http'))
+                Image.network(
+                  thumbnailUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  },
+                )
+              else
+                const Center(
+                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                ),
               // Wallpaper Details with Blur Background
               Positioned(
                 bottom: 0,
@@ -54,7 +72,7 @@ class WallpaperCard extends StatelessWidget {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      color: Colors.black.withValues(alpha:0.1),
+                      color: Colors.black.withOpacity(0.1),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 8,

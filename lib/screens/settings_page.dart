@@ -1,12 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../providers/auth_provider.dart';
 import 'favorites_page.dart';
 
-
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  int _cacheSize = 0; // Cache size in bytes
+
+  @override
+  void initState() {
+    super.initState();
+    _updateCacheSize(); // Calculate cache size on initialization
+  }
+
+  Future<void> _updateCacheSize() async {
+    try {
+      final cacheDirPath = await getTemporaryDirectory(); // Get the temporary directory path
+      final cacheDir = Directory(cacheDirPath.path); // Create a Directory object
+      if (await cacheDir.exists()) {
+        final size = cacheDir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .fold<int>(0, (sum, file) => sum + file.lengthSync());
+        setState(() {
+          _cacheSize = size; // Update the cache size
+        });
+      } else {
+        setState(() {
+          _cacheSize = 0; // Set cache size to 0 if directory doesn't exist
+        });
+      }
+    } catch (e) {
+      debugPrint('Error calculating cache size: $e');
+      setState(() {
+        _cacheSize = 0; // Fallback to 0 on error
+      });
+    }
+  }
+
+  Future<void> _clearCache() async {
+    try {
+      final cacheDir = Directory((await getTemporaryDirectory()).path); // Get the cache directory
+      if (await cacheDir.exists()) {
+        await cacheDir.delete(recursive: true);
+        await _updateCacheSize(); // Recalculate cache size after clearing
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image cache cleared successfully!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No cache to clear!')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error clearing cache: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to clear cache!')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,15 +123,10 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          // ListTile(
-          //   leading: const Icon(Icons.auto_awesome),
-          //   title: const Text('Auto Switch (Pro)'),
-          //   trailing: Switch(value: true, onChanged: (value) {}),
-          // ),
           ListTile(
             leading: const Icon(Icons.upload),
             title: const Text('My Uploads'),
-           onTap: () {
+            onTap: () {
             },
           ),
           ListTile(
@@ -85,11 +142,17 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.clear),
-            title: const Text('Clear Cache'),
-            subtitle: const Text('Current size: 60.2 kB'),
-            onTap: () {
-            },
+            leading: const Icon(Icons.storage),
+            title: const Text('Image Cache'),
+            subtitle: Text(
+              _cacheSize > 1024 * 1024
+                  ? 'Cache size: ${(_cacheSize / (1024 * 1024)).toStringAsFixed(2)} MB'
+                  : 'Cache size: ${(_cacheSize / 1024).toStringAsFixed(2)} KB',
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _clearCache, // Call the clear cache function
+            ),
           ),
           const Divider(),
           ListTile(

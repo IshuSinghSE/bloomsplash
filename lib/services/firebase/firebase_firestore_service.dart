@@ -1,56 +1,26 @@
 import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../models/wallpaper_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final CollectionReference _wallpapersCollection =
+  //     FirebaseFirestore.instance.collection('wallpapers');
 
-  Future<void> addImageDetailsToFirestore({
-    required String id,
-    required String name,
-    required String? imageUrl,
-    required String? thumbnailUrl,
-    required String? previewUrl,
-    required int downloads,
-    required int size,
-    required String resolution,
-    required String category,
-    required String author,
-    required String authorImage,
-    required String description,
-  }) async {
+  Future<void> addImageDetailsToFirestore(Wallpaper wallpaper) async {
     try {
-
-      log('Adding image details to Firestore: $id');
-      log('Image URL: $imageUrl');
-      log('Downloads: $downloads');
-      log('Size: $size');
-      log('Resolution: $resolution');
-      log('Category: $category');
-      log('Author: $author');
-      log('Author Image: $authorImage');
-      log('Description: $description');
-      // Check if the document already exists
-      await _firestore.collection('wallpapers').doc(id).set({
-        'id': id,
-        'name': name,
-        'image': imageUrl,
-        'thumbnail': thumbnailUrl,
-        'preview': previewUrl,
-        'downloads': downloads,
-        'size': size,
-        'resolution': resolution,
-        'category': category,
-        'author': author,
-        'authorImage': authorImage,
-        'description': description,
-      });
-      log('Image details added to Firestore successfully: $id');
+      log('Adding wallpaper to Firestore: ${wallpaper.id}');
+      final batch = FirebaseFirestore.instance.batch();
+      final docRef = FirebaseFirestore.instance.collection('wallpapers').doc(wallpaper.id);
+      batch.set(docRef, wallpaper.toJson());
+      await batch.commit();
+      log('Wallpaper added to Firestore successfully: ${wallpaper.id}');
     } catch (e) {
-      log('Error adding image details to Firestore: $e');
-      throw Exception('Error adding image details to Firestore: $e');
+      log('Error adding wallpaper to Firestore: $e');
+      throw Exception('Error adding wallpaper to Firestore: $e');
     }
   }
+
   Future<void> updateImageDetailsInFirestore({
     required String id,
     required String name,
@@ -86,6 +56,7 @@ class FirestoreService {
       throw Exception('Error updating image details in Firestore: $e');
     }
   }
+
   Future<void> deleteImageDetailsFromFirestore(String id) async {
     try {
       log('Deleting image details from Firestore: $id');
@@ -96,6 +67,7 @@ class FirestoreService {
       throw Exception('Error deleting image details from Firestore: $e');
     }
   }
+
   Future<Map<String, dynamic>?> getImageDetailsFromFirestore(String id) async {
     try {
       log('Fetching image details from Firestore: $id');
@@ -112,6 +84,7 @@ class FirestoreService {
       throw Exception('Error fetching image details from Firestore: $e');
     }
   }
+
   Future<List<Map<String, dynamic>>> getAllImageDetailsFromFirestore() async {
     try {
       log('Fetching all image details from Firestore');
@@ -127,6 +100,7 @@ class FirestoreService {
       throw Exception('Error fetching all image details from Firestore: $e');
     }
   }
+
   Future<void> addImageToFavorites(String id) async {
     try {
       log('Adding image to favorites: $id');
@@ -139,6 +113,7 @@ class FirestoreService {
       throw Exception('Error adding image to favorites: $e');
     }
   }
+
   Future<void> removeImageFromFavorites(String id) async {
     try {
       log('Removing image from favorites: $id');
@@ -149,6 +124,7 @@ class FirestoreService {
       throw Exception('Error removing image from favorites: $e');
     }
   }
+
   Future<List<Map<String, dynamic>>> getFavoriteImages() async {
     try {
       log('Fetching favorite images');
@@ -164,6 +140,7 @@ class FirestoreService {
       throw Exception('Error fetching favorite images: $e');
     }
   }
+
   Future<void> clearFavorites() async {
     try {
       log('Clearing all favorites');

@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/services.dart';
 
-late List<Map<String, dynamic>> wallpapers = []; // Remove 'final' to allow reassignment
+List<Map<String, dynamic>> wallpapers = []; // Remove 'final' to allow reassignment
 
 Future<void> loadWallpapers() async {
   try {

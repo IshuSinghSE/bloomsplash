@@ -16,6 +16,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,14 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('Firebase initialized successfully.');
+
+    // Initialize Firebase App Check
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity, // Use Play Integrity for Android
+      // appleProvider: AppleProvider.deviceCheck, // Use DeviceCheck for iOS
+      //  webRecaptchaSiteKey: 'your-recaptcha-site-key', // Only for web
+    );
+    debugPrint('Firebase App Check activated.');
 
     debugPrint('Initializing Hive...');
     await Hive.initFlutter();
@@ -104,7 +113,6 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const ExplorePage(),
-    // const CollectionsPage(),
     const FavoritesPage(),
     const UploadPage(),
   ];
@@ -113,12 +121,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Removed redundant loadWallpapers call
   }
 
   @override
@@ -167,11 +169,11 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      extendBody:
-          true, // Ensures the bottom navigation bar floats over the background
-      body:
-      // Main content
-      Stack(children: [_pages[_selectedIndex]]),
+      extendBody: true, // Ensures the bottom navigation bar floats over the background
+      body: IndexedStack(
+        index: _selectedIndex, // Show the selected tab
+        children: _pages, // Preserve the state of all tabs
+      ),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,

@@ -29,11 +29,11 @@ class DetailsContainer extends StatelessWidget {
     final name = wallpaper['name'] ?? 'Untitled';
     final author = wallpaper['author'] ?? 'unknown author';
     final description = wallpaper['description'] ?? 'No description available';
-    final authorImage = wallpaper['authorImage'] ?? 'assets/sample/1744480267990.png';
-    final image = wallpaper['image'] ?? 'assets/sample/1744480267990.png';
-    final size = wallpaper['size'] ?? 'Unknown size';
+    final authorImage = wallpaper['authorImage'] ?? 'assets/icons/author1.png';
+    final image = wallpaper['image'] ?? 'assets/images/placeholder.png';
+    final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
-    final resolution = wallpaper['resolution'] ?? 'Unknown resolution';
+    final resolution = wallpaper['resolution'] ?? 'Unknown';
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -131,8 +131,8 @@ class DetailsContainer extends StatelessWidget {
                       SlideTransition(
                         position: slideAnimation,
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                             buildMetadataBox(
                               'Downloads',
                               download,
@@ -141,7 +141,12 @@ class DetailsContainer extends StatelessWidget {
                               'Resolution',
                               resolution,
                             ),
-                            buildMetadataBox('Size', size),
+                            buildMetadataBox(
+                              'Size',
+                              size != null
+                              ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
+                              : 'Unknown',
+                            ),
                           ],
                         ),
                       ),

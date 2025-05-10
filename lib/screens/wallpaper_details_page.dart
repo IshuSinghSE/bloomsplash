@@ -1,14 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/constants/data.dart'; // Import the wallpapers list
 import '../providers/favorites_provider.dart';
 import '../widgets/details_container.dart'; // Import the new DetailsContainer widget
 
 class WallpaperDetailsPage extends StatefulWidget {
-  final String id; // Receive the index of the wallpaper
+  final Map<String, dynamic> wallpaper; // Pass the wallpaper object
 
-  const WallpaperDetailsPage({super.key, required this.id});
+  const WallpaperDetailsPage({super.key, required this.wallpaper});
 
   @override
   State<WallpaperDetailsPage> createState() => _WallpaperDetailsPageState();
@@ -44,28 +43,14 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
 
-    // Fetch the wallpaper object using the index
-    final wallpaper = wallpapers.firstWhere(
-      (wallpaper) => wallpaper['id'] == widget.id,
-      orElse: () => {"image": "assets/sample/1744480267990.png", "name": "Untitled", "author": "Unknown"},
-    );
-
-    if (wallpaper == {}) {
-      return Scaffold(
-        body: Center(
-          child: Text(
-            'Wallpaper not found!',
-            style: TextStyle(color: Colors.white70, fontSize: 18),
-          ),
-        ),
-      );
-    }
+    // Extract wallpaper details
+    final wallpaper = widget.wallpaper;
+    final String imageUrl = wallpaper['preview'] ?? '';
+    // final String name = wallpaper['name'] ?? 'Untitled';
+    // final String author = wallpaper['author'] ?? 'Unknown';
 
     // Check if the wallpaper is a favorite
     final isFavorite = favoritesProvider.isFavorite(wallpaper);
-    final image = wallpaper['image'] ?? 'assets/sample/1744480267990.png';
-    // final name = wallpaper['name'] ?? 'Untitled';
-    // final author = wallpaper['author'] ?? 'Unknown';
 
     return Scaffold(
       body: GestureDetector(
@@ -88,11 +73,22 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
         child: Stack(
           children: [
             // Full-Screen Wallpaper
-            Image.asset(
-              image,
+            Image.network(
+              imageUrl,
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              },
             ),
             // Navigate Back Icon with Blur Background
             if (_showButtons)
@@ -105,7 +101,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                     child: Tooltip(
                       message: "Back", // Show label/hint on hover
                       child: Container(
-                        color: Colors.black.withValues(alpha:0.5),
+                        color: Colors.black.withValues(alpha: .5),
                         child: IconButton(
                           icon: const Icon(
                             Icons.arrow_back,
@@ -131,7 +127,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                     child: Tooltip(
                       message: "Preview", // Show label/hint on hover
                       child: Container(
-                        color: Colors.black.withValues(alpha:0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         child: IconButton(
                           icon: Icon(
                             _showDetails

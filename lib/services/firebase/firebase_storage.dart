@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
+// import 'package:blurhash/blurhash.dart';
 
 final storageRef = FirebaseStorage.instance.ref();
 
@@ -21,30 +22,46 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       throw Exception('Failed to decode image');
     }
 
+    // Generate blur hash
+    // final blurHash = BlurHash.encode(
+    //   originalImage.getBytes().buffer.asUint8List(),
+    //   originalImage.width,
+    //   originalImage.height,
+    // );
+
     // Get original image size and resolution
     final originalSize = file.lengthSync();
     final originalResolution = '${originalImage.width}x${originalImage.height}';
 
-    // Resize for thumbnail (400x400)
-    final thumbnailImage = img.copyResize(originalImage, width: 400, height: 400);
+    // Resize for thumbnail (200 width while maintaining aspect ratio)
+    final thumbnailImage = img.copyResize(
+      originalImage,
+      width: 200,
+      height: (200 * originalImage.height / originalImage.width).round(),
+    );
     final thumbnailFile = File('${file.parent.path}/thumbnail_$fileName.png');
     await thumbnailFile.writeAsBytes(img.encodePng(thumbnailImage));
 
-    // Resize for preview (1080x720)
-    final previewImage = img.copyResize(originalImage, width: 1080, height: 720);
+    // Resize for preview (800 width while maintaining aspect ratio)
+    final previewImage = img.copyResize(
+      originalImage,
+      width: 800,
+      height: (800 * originalImage.height / originalImage.width).round(),
+    );
     final previewFile = File('${file.parent.path}/preview_$fileName.png');
     await previewFile.writeAsBytes(img.encodePng(previewImage));
 
-    // Upload original image
-    await originalRef.putFile(file);
+    // Parallelize uploads
+    final uploadTasks = [
+      originalRef.putData(originalBytes),
+      thumbnailRef.putData(img.encodeJpg(thumbnailImage)),
+      previewRef.putData(img.encodeJpg(previewImage)),
+    ];
+
+    await Future.wait(uploadTasks);
+
     final originalUrl = await originalRef.getDownloadURL();
-
-    // Upload thumbnail image
-    await thumbnailRef.putFile(thumbnailFile);
     final thumbnailUrl = await thumbnailRef.getDownloadURL();
-
-    // Upload preview image
-    await previewRef.putFile(previewFile);
     final previewUrl = await previewRef.getDownloadURL();
 
     log('Original URL: $originalUrl');
@@ -61,6 +78,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       'previewUrl': previewUrl,
       'originalSize': originalSize,
       'originalResolution': originalResolution,
+      // 'blurHash': blurHash, // Include the blur hash
     };
   } catch (e) {
     log('Error uploading file: $e');

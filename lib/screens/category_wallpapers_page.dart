@@ -27,12 +27,12 @@ class CategoryWallpapersPage extends StatelessWidget {
         itemCount: wallpapers.length,
         itemBuilder: (context, index) {
           final wallpaper = wallpapers[index];
-          final image = wallpaper["image"] ?? "assets/sample/1744480268028.png";
+          final image = wallpaper["image"] ?? "assets/images/placeholder.png";
           final author = wallpaper["author"] ?? "Unknown";
           final title =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
-          final id =
-              wallpaper["id"] ?? "unknown-id"; // Fallback to a default ID
+          // final id =
+          //     wallpaper["id"] ?? "unknown-id"; // Fallback to a default ID
 
           return GestureDetector(
             onTap: () {
@@ -42,7 +42,7 @@ class CategoryWallpapersPage extends StatelessWidget {
                 MaterialPageRoute(
                   builder:
                       (context) =>
-                          WallpaperDetailsPage(id: id), // Pass wallpaper ID
+                          WallpaperDetailsPage(wallpaper: wallpaper), // Pass wallpaper and ID
                 ),
               );
             },
