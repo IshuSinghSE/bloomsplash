@@ -105,7 +105,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                     child: Tooltip(
                       message: "Back", // Show label/hint on hover
                       child: Container(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha:0.5),
                         child: IconButton(
                           icon: const Icon(
                             Icons.arrow_back,
@@ -131,7 +131,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                     child: Tooltip(
                       message: "Preview", // Show label/hint on hover
                       child: Container(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha:0.5),
                         child: IconButton(
                           icon: Icon(
                             _showDetails

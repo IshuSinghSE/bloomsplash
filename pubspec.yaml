@@ -53,6 +53,7 @@ dependencies:
   image: ^3.2.1
   google_sign_in: ^6.3.0
   flutter_native_splash: ^2.2.16
+  fluttertoast: ^8.2.12
 
 dev_dependencies:
   flutter_test:

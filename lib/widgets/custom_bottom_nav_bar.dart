@@ -35,11 +35,11 @@ class CustomBottomNavBar extends StatelessWidget {
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 48, 51, 65).withOpacity(0.3),
+                color: const Color.fromARGB(255, 48, 51, 65).withValues(alpha:0.3),
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color.fromARGB(255, 65, 90, 114).withOpacity(0.2),
+                    color: const Color.fromARGB(255, 65, 90, 114).withValues(alpha:0.2),
                     blurRadius: 0,
                     offset: const Offset(0, 0),
                   ),
@@ -49,7 +49,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 data: NavigationBarThemeData(
                   height: 64,
                   indicatorShape: const CircleBorder(),
-                  indicatorColor: const Color.fromARGB(255, 21, 134, 226).withOpacity(0.7),
+                  indicatorColor: const Color.fromARGB(255, 21, 134, 226).withValues(alpha:0.7),
                 ),
                 child: NavigationBar(
                   backgroundColor: Colors.transparent,

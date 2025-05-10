@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
       padding: const EdgeInsets.all(8.0),
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha:0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: SingleChildScrollView( // Wrap the content in a scrollable view(

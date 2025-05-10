@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../main.dart';
 import '../providers/auth_provider.dart';
 
@@ -12,6 +13,8 @@ class WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         systemNavigationBarColor: Colors.transparent, // Make navigation bar transparent
@@ -23,106 +26,150 @@ class WelcomePage extends StatelessWidget {
         systemNavigationBarDividerColor: Colors.transparent, // Make navigation bar divider transparent
       ),
     );
-    return Scaffold(
-      body: Stack(
+
+    return WillPopScope(
+      onWillPop: () async {
+        if (authProvider.isLoading) {
+          await authProvider.cancelLogin(); // Abort the login process
+          Future.delayed(Duration.zero, () {
+            Fluttertoast.cancel(); // Clear any previous toasts
+            Fluttertoast.showToast(
+              msg: "Login interrupted. Please try again.",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            );
+          });
+          return false; // Prevent navigating back during login
+        }
+        return true; // Allow back navigation if not logging in
+      },
+      child: Stack(
         children: [
-          // Background image grid
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/welcome.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          // Overlay with content
-
-          // Content
-          Center(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withAlpha(0), // Replacing withOpacity(0.1)
-                    Colors.black.withAlpha(0), // Replacing withOpacity(0.5)
-                    Colors.black.withAlpha(255), // Replacing withOpacity(1)
-                    Colors.black.withAlpha(255), // Replacing withOpacity(1)
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Explore 4K Wallpapers',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          Scaffold(
+            body: Stack(
+              children: [
+                // Background image grid
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/welcome.png'),
+                      fit: BoxFit.cover,
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Explore, Create, Share\nUltra 4K Wallpapers Now!',
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 30),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 36),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                       
-                        minimumSize: const Size(
-                          280,
-                          50,
-                        ), // Set width and height directly
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      onPressed: () async {
-                        await Provider.of<AuthProvider>(context, listen: false).signInWithGoogle();
+                ),
+                // Overlay with content
 
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => HomePage(preferencesBox: preferencesBox), // Pass preferencesBox here
+                // Content
+                Center(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withAlpha(0), // Replacing withValues(alpha:0.1)
+                          Colors.black.withAlpha(0), // Replacing withValues(alpha:0.5)
+                          Colors.black.withAlpha(255), // Replacing withValues(alpha:1)
+                          Colors.black.withAlpha(255), // Replacing withValues(alpha:1)
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Explore 4K Wallpapers',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                        );
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/icons/google.png', // Ensure this path is correct
-                            height: 24,
-                            width: 24,
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Continue With Google',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Explore, Create, Share\nUltra 4K Wallpapers Now!',
+                          style: TextStyle(fontSize: 16, color: Colors.white70),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 30),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 36),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              minimumSize: const Size(280, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              disabledBackgroundColor: Colors.white, // Retain color when disabled
+                              disabledForegroundColor: Colors.black54, // Retain text color when disabled
+                            ),
+                            onPressed: authProvider.isLoading
+                                ? null // Disable button while loading
+                                : () async {
+                                    await authProvider.signInWithGoogle();
+                                    if (!authProvider.isLoading && authProvider.isLoggedIn) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => HomePage(preferencesBox: preferencesBox),
+                                        ),
+                                      );
+                                    }
+                                  },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (authProvider.isLoading)
+                                  const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.black,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                else
+                                  Image.asset(
+                                    'assets/icons/google.png',
+                                    height: 24,
+                                    width: 24,
+                                  ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Continue With Google',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 80),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 80),
-                ],
-              ),
+                ),
+                // Bottom navigation bar
+              ],
             ),
           ),
-          // Bottom navigation bar
+          if (authProvider.isLoading)
+            Container(
+              color: Colors.black.withValues(alpha:0.5),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              ),
+            ),
         ],
       ),
     );

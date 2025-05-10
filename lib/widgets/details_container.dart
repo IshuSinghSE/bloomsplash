@@ -44,7 +44,7 @@ class DetailsContainer extends StatelessWidget {
           curve: Curves.easeInOut,
           child: Container(
             width: double.infinity,
-            color: Colors.black.withOpacity(0.6),
+            color: Colors.black.withValues(alpha:0.6),
             padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,

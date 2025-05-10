@@ -54,7 +54,7 @@ class WallpaperCard extends StatelessWidget {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha:0.1),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 8,

@@ -199,7 +199,7 @@ class _UploadPageState extends State<UploadPage> {
                           
                           decoration: BoxDecoration(
                             color: Color.fromARGB(255, 48, 51, 65)
-                                .withOpacity(0.3), // Background color with opacity
+                                .withValues(alpha:0.3), // Background color with opacity
                             
                             borderRadius: BorderRadius.circular(24),
                            
@@ -230,7 +230,7 @@ class _UploadPageState extends State<UploadPage> {
                             height: 300,
                             width: 300,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(
+                              color: Colors.black.withValues(alpha:
                                 0.5,
                               ), // Add blur effect
                               borderRadius: BorderRadius.circular(24),

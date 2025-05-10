@@ -28,11 +28,14 @@ class ExplorePage extends StatelessWidget {
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final wallpaper = wallpapers[index]; // Fetch the wallpaper object
+                  final wallpaper =
+                      wallpapers[index]; // Fetch the wallpaper object
                   return WallpaperCard(
                     wallpaper: wallpaper, // Pass the entire wallpaper object
                     onFavoritePressed: () {
-                      favoritesProvider.toggleFavorite(wallpaper); // Toggle favorite state
+                      favoritesProvider.toggleFavorite(
+                        wallpaper,
+                      ); // Toggle favorite state
                     },
                   );
                 },
@@ -40,6 +43,27 @@ class ExplorePage extends StatelessWidget {
               ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '✨ end of the exploring...',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontSize: 16,
+                    color: const Color.fromARGB(
+                      255,
+                      246,
+                      251,
+                      255,
+                    ).withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
     );

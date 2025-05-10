@@ -25,7 +25,7 @@ Future<void> loadWallpapers() async {
     final jsonString = await rootBundle.loadString('assets/wallpapers.json');
     log('JSON file loaded successfully.');
 
-    wallpapers = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
+    wallpapers = List<Map<String, dynamic>>.from(jsonDecode(jsonString)).take(10).toList();
     log('Wallpapers parsed successfully. Count: ${wallpapers.length}');
 
     categoryWallpapers.addAll({

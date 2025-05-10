@@ -110,7 +110,7 @@ void showSetWallpaperDialog(BuildContext context, String wallpaperImage) {
             child: Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha:0.7),
                 borderRadius: BorderRadius.circular(16.0),
               ),
               child: Column(

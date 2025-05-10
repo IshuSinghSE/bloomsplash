@@ -101,8 +101,8 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                     borderRadius: BorderRadius.circular(16),
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withOpacity(0.6),
-                                        Colors.black.withOpacity(0.1),
+                                        Colors.black.withValues(alpha: .6),
+                                        Colors.black.withValues(alpha: .1),
                                         Colors.transparent,
                                       ],
                                       begin: Alignment.bottomCenter,
@@ -162,8 +162,8 @@ class _CollectionsPageState extends State<CollectionsPage> {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: ChoiceChip(
-        backgroundColor: const Color.fromARGB(255, 56, 91, 114).withOpacity(0.1),
-        selectedColor: const Color.fromARGB(255, 56, 91, 114).withOpacity(0.7),
+        backgroundColor: const Color.fromARGB(255, 56, 91, 114).withValues(alpha: 0.1),
+        selectedColor: const Color.fromARGB(255, 56, 91, 114).withValues(alpha: 0.7),
         label: Text(label),
         selected: selectedCategory == label,
         onSelected: (isSelected) {
@@ -223,7 +223,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                   56,
                                   91,
                                   114,
-                                ).withOpacity(0.15),
+                                ).withValues(alpha: 0.15),
                               ),
                             ),
                           ),
