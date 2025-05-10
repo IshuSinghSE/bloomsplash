@@ -8,6 +8,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../services/firebase/firebase_firestore_service.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import '../models/wallpaper_model.dart';
+import 'package:image/image.dart' as img; // Add this for image processing
 // import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class UploadPage extends StatefulWidget {
@@ -45,6 +47,45 @@ class _UploadPageState extends State<UploadPage> {
     await fixedImageFile.writeAsBytes(byteData!.buffer.asUint8List());
 
     return fixedImageFile;
+  }
+
+  /// Utility function to compute perceptual hash (pHash) of an image
+  String computeImageHash(File imageFile) {
+    final image = img.decodeImage(imageFile.readAsBytesSync());
+    if (image == null) {
+      throw Exception("Failed to decode image.");
+    }
+
+    // Resize to 8x8 and convert to grayscale
+    final resized = img.copyResize(image, width: 8, height: 8);
+    final grayscale = img.grayscale(resized);
+
+    // Compute average pixel value
+    final avgPixelValue = grayscale.data != null
+        ? grayscale.data!.map((pixel) => img.getLuminance(pixel)).reduce((a, b) => a + b) ~/ grayscale.data!.length
+        : 0; // Default to 0 if data is null
+
+    // Generate hash based on whether pixel values are above or below the average
+    final hash =
+        grayscale.data!.map((pixel) => img.getLuminance(pixel) > avgPixelValue ? '1' : '0').join();
+    return hash;
+  }
+
+  /// Function to check for duplicate wallpapers
+  Future<bool> isDuplicateWallpaper(File newImage) async {
+    final newImageHash = computeImageHash(newImage);
+
+    // Fetch existing hashes from Firestore
+    final firestoreService = FirestoreService();
+    final existingWallpapers =
+        await firestoreService.getAllImageDetailsFromFirestore();
+
+    for (var wallpaper in existingWallpapers) {
+      if (wallpaper['hash'] == newImageHash) {
+        return true; // Duplicate found
+      }
+    }
+    return false; // No duplicates
   }
 
   Future<void> _pickImage() async {
@@ -116,12 +157,29 @@ class _UploadPageState extends State<UploadPage> {
       });
 
       try {
+        debugPrint("Starting image upload process...");
+
+        // Check for duplicates
+        final isDuplicate = await isDuplicateWallpaper(_selectedImage!);
+        if (isDuplicate) {
+          debugPrint("Duplicate wallpaper detected.");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Duplicate wallpaper detected!')),
+          );
+          setState(() {
+            _isUploading = false; // Hide loading indicator
+          });
+          return;
+        }
+
         // Upload the file to Firebase Storage
+        debugPrint("Uploading image to Firebase Storage...");
         final result = await uploadFileToFirebase(_selectedImage!);
 
         if (result == null) {
           throw Exception('Failed to upload images');
         }
+        debugPrint("Image uploaded successfully. Firebase result: $result");
 
         // Extract URLs, size, and resolution
         final originalUrl = result['originalUrl'];
@@ -129,13 +187,20 @@ class _UploadPageState extends State<UploadPage> {
         final previewUrl = result['previewUrl'];
         final originalSize = result['originalSize'];
         final originalResolution = result['originalResolution'];
+        debugPrint("Extracted image details: originalUrl=$originalUrl, thumbnailUrl=$thumbnailUrl, previewUrl=$previewUrl");
 
         // Generate a unique ID for the document
         final id = const Uuid().v4();
+        debugPrint("Generated unique ID for wallpaper: $id");
 
-        // Add image details to Firestore
-        final firestoreService = FirestoreService();
-        await firestoreService.addImageDetailsToFirestore(
+        // Compute perceptual hash for the uploaded image
+        debugPrint("Computing perceptual hash...");
+        final imageHash = computeImageHash(_selectedImage!);
+        debugPrint("Perceptual hash computed: $imageHash");
+
+        // Create a Wallpaper object
+        debugPrint("Creating Wallpaper object...");
+        final wallpaper = Wallpaper(
           id: id,
           name: _wallpaperNameController.text.isNotEmpty
               ? _wallpaperNameController.text
@@ -144,13 +209,32 @@ class _UploadPageState extends State<UploadPage> {
           thumbnailUrl: thumbnailUrl,
           previewUrl: previewUrl,
           downloads: 0,
+          likes: 0,
           size: originalSize,
           resolution: originalResolution,
+          aspectRatio: 1.78, // Replace with dynamic aspect ratio if needed
+          orientation: 'landscape', // Replace with dynamic orientation if needed
           category: 'Urban', // Replace with dynamic category if needed
+          tags: ['example', 'tag'], // Replace with dynamic tags if needed
+          colors: ['#FFFFFF', '#000000'], // Replace with extracted colors if needed
           author: 'Author $id',
-          authorImage: 'assets/avatar/WeatherBug.png', // Replace with actual author image
+          authorImage: '/assets/icons/author1.png', // Replace with actual author image
+          uploadedBy: 'system', // Replace with dynamic uploader if needed
           description: 'A mesmerizing view of the night sky.', // Replace with dynamic description
+          isPremium: false,
+          isAIgenerated: false,
+          status: 'approved',
+          createdAt: DateTime.now().toIso8601String(),
+          license: 'free-commercial',
+          hash: imageHash, // Add the computed hash
         );
+        debugPrint("Wallpaper object created successfully.");
+
+        // Add wallpaper to Firestore
+        debugPrint("Adding wallpaper details to Firestore...");
+        final firestoreService = FirestoreService();
+        await firestoreService.addImageDetailsToFirestore(wallpaper);
+        debugPrint("Wallpaper details added to Firestore successfully.");
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Image uploaded successfully!')),
@@ -160,7 +244,9 @@ class _UploadPageState extends State<UploadPage> {
           _selectedImage = null; // Reset the selected image after upload
           _wallpaperNameController.clear(); // Clear the wallpaper name field
         });
-      } catch (e) {
+      } catch (e, stack) {
+        debugPrint("Error during image upload: $e");
+        debugPrint("Stack trace: $stack");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error uploading image: $e')),
         );
