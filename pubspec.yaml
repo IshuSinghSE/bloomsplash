@@ -1,14 +1,12 @@
 name: flutter_application_1
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
   sdk: ^3.7.2
 
-
 dependencies:
-
   # Flutter SDK dependency
   flutter:
     sdk: flutter
@@ -69,11 +67,10 @@ flutter:
 
   # To add custom platform-specific implementations of your plugin, add the
   assets:
-    - assets/avatar/
     - assets/sample/
     - assets/icons/
-    - assets/
     - assets/wallpapers.json
+    - assets/welcome.png
 
   # To add custom platform-specific implementations of your plugin, add the
   # fonts:

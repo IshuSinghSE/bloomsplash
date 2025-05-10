@@ -5,13 +5,13 @@ import 'providers/favorites_provider.dart';
 import 'providers/auth_provider.dart';
 import 'widgets/custom_bottom_nav_bar.dart';
 import 'screens/explore_page.dart';
-import 'screens/collections_page.dart';
+// import 'screens/collections_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/upload_page.dart';
 import 'screens/welcome_page.dart';
 import 'screens/settings_page.dart';
 import 'core/constants/data.dart';
-import 'dart:developer';
+// import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
@@ -22,15 +22,20 @@ void main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   try {
-    // Perform initialization tasks
+    debugPrint('Initializing Firebase...');
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    debugPrint('Firebase initialized successfully.');
+
+    debugPrint('Initializing Hive...');
     await Hive.initFlutter();
     var preferencesBox = await Hive.openBox('preferences');
     await Hive.openBox<Map>('favorites');
-    await loadWallpapers(); // Load wallpapers only once
-    log('Wallpapers loaded successfully'); // Debug statement
+    debugPrint('Hive initialized successfully.');
 
-    // Run the app after initialization is complete
+    debugPrint('Loading wallpapers...');
+    await loadWallpapers();
+    debugPrint('Wallpapers loaded successfully.');
+
     runApp(
       MultiProvider(
         providers: [
@@ -43,9 +48,8 @@ void main() async {
       ),
     );
   } catch (e) {
-    log('Error during initialization: $e'); // Debug statement
+    debugPrint('Error during initialization: $e');
   } finally {
-    // Remove the splash screen after initialization
     FlutterNativeSplash.remove();
   }
 }
@@ -65,11 +69,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Wallpaper App',
       theme: ThemeData.dark(),
-      home:
-          isFirstLaunch
-              ? WelcomePage(preferencesBox: preferencesBox)
-              : HomePage(preferencesBox: preferencesBox),
+      home: isFirstLaunch
+          ? WelcomePage(preferencesBox: preferencesBox)
+          : HomePage(preferencesBox: preferencesBox),
       debugShowCheckedModeBanner: false,
+      routes: {
+        '/explore': (context) => const ExplorePage(),
+        '/favorites': (context) => const FavoritesPage(),
+        '/upload': (context) => const UploadPage(),
+        '/settings': (context) => const SettingsPage(),
+      },
     );
   }
 }
@@ -87,7 +96,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const ExplorePage(),
-    const CollectionsPage(),
+    // const CollectionsPage(),
     const FavoritesPage(),
     const UploadPage(),
   ];
@@ -136,8 +145,7 @@ class _HomePageState extends State<HomePage> {
                             userData['photoUrl'] != null &&
                             userData['photoUrl']!.isNotEmpty
                         ? NetworkImage(userData['photoUrl']!)
-                        : const AssetImage('assets/avatar/Itsycal.png')
-                            as ImageProvider,
+                        : const AssetImage('assets/icons/avatar.png') as ImageProvider,
               ),
               onPressed: () {
                 // Handle account action

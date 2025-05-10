@@ -47,7 +47,7 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
               child: NavigationBarTheme(
                 data: NavigationBarThemeData(
-                  height: 56,
+                  height: 64,
                   indicatorShape: const CircleBorder(),
                   indicatorColor: const Color.fromARGB(255, 21, 134, 226).withOpacity(0.7),
                 ),
@@ -55,35 +55,15 @@ class CustomBottomNavBar extends StatelessWidget {
                   backgroundColor: Colors.transparent,
                   selectedIndex: selectedIndex,
                   onDestinationSelected: (index) {
-                    onItemTapped(index);
-                    switch (index) {
-                      case 0:
-                        Navigator.pushNamed(context, '/explore');
-                        break;
-                      case 1:
-                        Navigator.pushNamed(context, '/collections');
-                        break;
-                      case 2:
-                        Navigator.pushNamed(context, '/favorites');
-                        break;
-                      case 3:
-                        Navigator.pushNamed(context, '/upload');
-                        break;
-                      default:
-                        break;
+                    if (index != selectedIndex) {
+                      onItemTapped(index); // Update the selected index
                     }
                   },
-                  // labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, // Hide labels
                   destinations: const [
                     NavigationDestination(
                       icon: Icon(Icons.explore),
                       label: 'Explore', // Label is hidden but tooltip remains
                       tooltip: 'Explore',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.collections),
-                      label: 'Collections', // Label is hidden but tooltip remains
-                      tooltip: 'Collections',
                     ),
                     NavigationDestination(
                       icon: Icon(Icons.favorite),

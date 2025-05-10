@@ -33,15 +33,18 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("flutter-app-key.keystore")
+            storePassword = "ishusingh1452" // Ensure this matches your keystore password
+            keyAlias = "ishusinghse"
+            keyPassword = "ishusingh1452" // Ensure this matches your key password
+        }
+    }
+
     buildTypes {
         release {
-            // Use the release keystore for signing
-            signingConfig = signingConfigs.create("release") {
-                storeFile = file("flutter-app-key.keystore")
-                storePassword = "ishusingh1452" // Use the same password here
-                keyAlias = "ishusinghse"
-                keyPassword = "ishusingh1452" // Use the same password here
-            }
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
