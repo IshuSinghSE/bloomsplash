@@ -10,7 +10,7 @@ import 'screens/favorites_page.dart';
 import 'screens/upload_page.dart';
 import 'screens/welcome_page.dart';
 import 'screens/settings_page.dart';
-import 'core/constants/data.dart';
+// import 'core/constants/data.dart';
 // import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -43,14 +43,14 @@ void main() async {
     await Hive.openBox<Map>('favorites');
     debugPrint('Hive initialized successfully.');
 
-    var userData = preferencesBox.get('userData', defaultValue: {});
-    if (userData != null && userData.isNotEmpty) {
-      debugPrint('User is logged in. Loading wallpapers...');
-      await loadWallpapers();
-      debugPrint('Wallpapers loaded successfully.');
-    } else {
-      debugPrint('User is not logged in.');
-    }
+    // var userData = preferencesBox.get('userData', defaultValue: {});
+    // if (userData != null && userData.isNotEmpty) {
+    //   debugPrint('User is logged in. Loading wallpapers...');
+    //   await loadWallpapers();
+    //   debugPrint('Wallpapers loaded successfully.');
+    // } else {
+    //   debugPrint('User is not logged in.');
+    // }
 
     runApp(
       MultiProvider(

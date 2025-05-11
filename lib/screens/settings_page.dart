@@ -3,7 +3,6 @@ import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../providers/auth_provider.dart';
 import 'favorites_page.dart';
 

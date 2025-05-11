@@ -30,7 +30,7 @@ class CollectionWallpapersPage extends StatelessWidget {
           final wallpaper = wallpapers[index];
           final image =
               wallpaper["image"] ??
-              "assets/sample/1744480267990.png"; // Fallback to sample image
+              "assets/images/placeholder.png"; // Fallback to sample image
           final name =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
          

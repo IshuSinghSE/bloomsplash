@@ -195,7 +195,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
             children:
                 wallpapers.take(3).map((wallpaper) {
                   final image =
-                      wallpaper["image"] ?? "assets/sample/1744480267990.png";
+                      wallpaper["image"] ?? "assets/images/placeholder.png";
                   final title = wallpaper["title"] ?? "Untitled";
                   final author = wallpaper["author"] ?? "Unknown";
 

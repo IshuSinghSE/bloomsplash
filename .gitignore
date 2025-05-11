@@ -48,3 +48,4 @@ app.*.map.json
 /assets
 /deb_package
 *.deb
+*.json
