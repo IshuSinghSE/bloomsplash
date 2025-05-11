@@ -5,8 +5,8 @@ import '../services/firebase/firebase_firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/wallpaper_model.dart';
 import 'edit_wallpaper_page.dart';
-import '../widgets/wallpaper_utils.dart'; // Import the utility file
-import '../utils/image_cache_utils.dart'; // Import the utility file
+import '../widgets/wallpaper_utils.dart';
+import '../utils/image_cache_utils.dart';
 
 class MyUploadsPage extends StatefulWidget {
   const MyUploadsPage({super.key});
@@ -18,62 +18,61 @@ class MyUploadsPage extends StatefulWidget {
 class _MyUploadsPageState extends State<MyUploadsPage> {
   final FirestoreService _firestoreService = FirestoreService();
   final ScrollController _scrollController = ScrollController();
-  // Cache manager instance
   List<Wallpaper> _uploadedWallpapers = [];
-  List<Wallpaper> _filteredWallpapers = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
-  String _selectedFilter = 'All'; // Default filter
-  DocumentSnapshot? _lastDocument; // Track the last document for pagination
-  final int _wallpapersPerPage = 10; // Number of wallpapers to load per page
-  late Box _wallpapersBox; // Hive box for storing wallpapers locally
+  DocumentSnapshot? _lastDocument;
+  bool _hasMore = true;
+  String _selectedFilter = 'All';
+  late Box _wallpapersBox;
+
+  static const int _lazyLoadBatchSize = 15; // Load 15 at a time for lazy loading
 
   @override
   void initState() {
     super.initState();
-    _initializeHive();
+    _initHiveAndLoad();
     _scrollController.addListener(_onScroll);
   }
 
-  Future<void> _initializeHive() async {
+  Future<void> _initHiveAndLoad() async {
     _wallpapersBox = await Hive.openBox('uploadedWallpapers');
-    _loadWallpapersFromLocalStorage();
-  }
-
-  void _loadWallpapersFromLocalStorage() {
-    final storedWallpapers = _wallpapersBox.get('wallpapers', defaultValue: []);
-    if (storedWallpapers.isNotEmpty) {
-      setState(() {
-        _uploadedWallpapers =
-            (storedWallpapers as List)
-                .map(
-                  (wallpaperJson) =>
-                      Wallpaper.fromJson(json.decode(wallpaperJson)),
-                )
-                .toList();
-        _applyFilter();
-        _isLoading = false;
-      });
-    } else {
-      _fetchUploadedWallpapers();
+    _loadWallpapersFromLocal();
+    // If no cache, fetch from Firestore
+    if (_uploadedWallpapers.isEmpty) {
+      await _fetchWallpapers(isRefresh: true, forceFetch: true);
     }
   }
 
-  Future<void> _saveWallpapersToLocalStorage() async {
-    final wallpapersJson =
-        _uploadedWallpapers
-            .map((wallpaper) => json.encode(wallpaper.toJson()))
+  void _loadWallpapersFromLocal() {
+    final storedWallpapers = _wallpapersBox.get('wallpapers', defaultValue: []);
+    if (storedWallpapers.isNotEmpty) {
+      setState(() {
+        _uploadedWallpapers = (storedWallpapers as List)
+            .map((wallpaperJson) => Wallpaper.fromJson(json.decode(wallpaperJson)))
             .toList();
+        _isLoading = false;
+      });
+      _cacheImages();
+    }
+  }
+
+  Future<void> _saveWallpapersToLocal(List<Wallpaper> wallpapers) async {
+    final wallpapersJson = wallpapers.map((w) => json.encode(w.toJson())).toList();
     await _wallpapersBox.put('wallpapers', wallpapersJson);
   }
 
-  Future<void> _fetchUploadedWallpapers({bool isRefresh = false}) async {
+  Future<void> _fetchWallpapers({bool isRefresh = false, bool forceFetch = false}) async {
+    // Only fetch if forced, or if pull-to-refresh, or if we have more to load
+    if (!forceFetch && !isRefresh && !_hasMore) return;
+
     try {
       if (isRefresh) {
         setState(() {
           _isLoading = true;
-          _uploadedWallpapers.clear(); // Clear the list on refresh
-          _lastDocument = null; // Reset pagination
+          _uploadedWallpapers.clear();
+          _lastDocument = null;
+          _hasMore = true;
         });
       } else {
         setState(() {
@@ -82,7 +81,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
       }
 
       final result = await _firestoreService.getPaginatedWallpapers(
-        limit: _wallpapersPerPage,
+        limit: _lazyLoadBatchSize, // Use batch size for lazy loading
         lastDocument: isRefresh ? null : _lastDocument,
       );
 
@@ -90,18 +89,19 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
         _lastDocument = result['lastDocument'];
         final newWallpapers = result['wallpapers'];
         if (isRefresh) {
-          _uploadedWallpapers = newWallpapers; // Replace the list on refresh
+          _uploadedWallpapers = newWallpapers;
         } else {
-          _uploadedWallpapers.addAll(newWallpapers); // Append new wallpapers
+          _uploadedWallpapers.addAll(newWallpapers);
         }
-        _applyFilter();
+        if (newWallpapers.length < _lazyLoadBatchSize) {
+          _hasMore = false;
+        }
         _isLoading = false;
         _isLoadingMore = false;
       });
 
-      // Save wallpapers to local storage
-      await _saveWallpapersToLocalStorage();
-      await _cacheImages(); // Cache images locally
+      await _saveWallpapersToLocal(_uploadedWallpapers);
+      await _cacheImages();
     } catch (e) {
       debugPrint('Error fetching uploaded wallpapers: $e');
       setState(() {
@@ -112,41 +112,24 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
   }
 
   Future<void> _cacheImages() async {
-    final imageUrls =
-        _uploadedWallpapers
-            .map((wallpaper) => wallpaper.thumbnailUrl)
-            .where((url) => url.startsWith('http'))
-            .toList();
-    await cacheImages(imageUrls); // Use the utility function
+    final imageUrls = _uploadedWallpapers
+        .map((wallpaper) => wallpaper.thumbnailUrl)
+        .where((url) => url.startsWith('http'))
+        .toList();
+    await cacheImages(imageUrls);
   }
 
-  Future<void> _refreshUploadedWallpapers() async {
-    await _fetchUploadedWallpapers(isRefresh: true);
-  }
-
-  void _applyFilter() {
-    setState(() {
-      if (_selectedFilter == 'All') {
-        _filteredWallpapers = _uploadedWallpapers;
-      } else {
-        _filteredWallpapers =
-            _uploadedWallpapers
-                .where(
-                  (wallpaper) =>
-                      wallpaper.status.toLowerCase() ==
-                      _selectedFilter.toLowerCase(),
-                )
-                .toList();
-      }
-    });
+  Future<void> _refreshWallpapers() async {
+    await _fetchWallpapers(isRefresh: true, forceFetch: true);
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
-        _lastDocument != null) {
-      _fetchUploadedWallpapers();
+        _lastDocument != null &&
+        _hasMore) {
+      _fetchWallpapers(isRefresh: false, forceFetch: true);
     }
   }
 
@@ -155,9 +138,8 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
       await _firestoreService.deleteImageDetailsFromFirestore(id);
       setState(() {
         _uploadedWallpapers.removeWhere((wallpaper) => wallpaper.id == id);
-        _applyFilter();
       });
-      await _saveWallpapersToLocalStorage(); // Update local storage
+      await _saveWallpapersToLocal(_uploadedWallpapers);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Wallpaper deleted successfully!')),
       );
@@ -170,18 +152,28 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
   }
 
   Future<void> _downloadImage(String url) async {
-    await downloadWallpaper(context, url); // Use the existing function
+    await downloadWallpaper(context, url);
   }
 
   void _editWallpaper(Wallpaper wallpaper) {
-    Navigator.push(
+    Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => EditWallpaperPage(wallpaper: wallpaper),
       ),
-    ).then((_) {
-      _applyFilter(); // Reapply filter after returning
+    ).then((didUpdate) async {
+      if (didUpdate == true) {
+        await _refreshWallpapers();
+      }
+      // else do nothing, avoid unnecessary loading
     });
+  }
+
+  List<Wallpaper> get _filteredWallpapers {
+    if (_selectedFilter == 'All') return _uploadedWallpapers;
+    return _uploadedWallpapers
+        .where((w) => w.status.toLowerCase() == _selectedFilter.toLowerCase())
+        .toList();
   }
 
   @override
@@ -192,27 +184,8 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
         centerTitle: true,
         actions: [
           PopupMenuButton<String>(
-            onSelected: (value) {
-              setState(() {
-                _selectedFilter = value;
-                _applyFilter();
-              });
-            },
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(value: 'All', child: Text('All')),
-                  const PopupMenuItem(
-                    value: 'Approved',
-                    child: Text('Approved'),
-                  ),
-                  const PopupMenuItem(value: 'Pending', child: Text('Pending')),
-                  const PopupMenuItem(
-                    value: 'Rejected',
-                    child: Text('Rejected'),
-                  ),
-                ],
-            child: Padding(
-              padding: const EdgeInsets.only(right: 32.0),
+            icon: Padding(
+              padding: const EdgeInsets.only(right: 16.0),
               child: Icon(
                 _selectedFilter == 'Approved'
                     ? Icons.check_circle
@@ -231,86 +204,105 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
                         : Colors.white,
               ),
             ),
+            onSelected: (value) {
+              setState(() {
+                _selectedFilter = value;
+              });
+            },
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(value: 'All', child: Text('All')),
+                  const PopupMenuItem(
+                    value: 'Approved',
+                    child: Text('Approved'),
+                  ),
+                  const PopupMenuItem(value: 'Pending', child: Text('Pending')),
+                  const PopupMenuItem(
+                    value: 'Rejected',
+                    child: Text('Rejected'),
+                  ),
+                ],
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _refreshUploadedWallpapers, // Ensure this calls the refresh method
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _filteredWallpapers.isEmpty
+        onRefresh: _refreshWallpapers,
+        child:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredWallpapers.isEmpty
                 ? const Center(child: Text('No wallpapers found.'))
                 : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _filteredWallpapers.length +
-                        (_isLoadingMore ? 1 : 0), // Add loading indicator
-                    itemBuilder: (context, index) {
-                      if (index == _filteredWallpapers.length) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-                      final wallpaper = _filteredWallpapers[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: ListTile(
-                          leading: GestureDetector(
-                            onTap: () => _editWallpaper(wallpaper),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
-                              child: Image.network(
-                                wallpaper.thumbnailUrl,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            wallpaper.name,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          subtitle: Text(
-                            'Category: ${wallpaper.category}',
-                            style: TextStyle(color: Colors.grey[500]),
-                          ),
-                          trailing: Padding(
-                            padding: const EdgeInsets.fromLTRB(12.0, 0, 0.0, 0),
-                            child: PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _editWallpaper(wallpaper);
-                                } else if (value == 'delete') {
-                                  _deleteWallpaper(wallpaper.id);
-                                } else if (value == 'download') {
-                                  _downloadImage(wallpaper.previewUrl);
-                                }
-                              },
-                              itemBuilder:
-                                  (context) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text('Edit'),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('Delete'),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'download',
-                                      child: Text('Download'),
-                                    ),
-                                  ],
+                  controller: _scrollController,
+                  itemCount:
+                      _filteredWallpapers.length + (_isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _filteredWallpapers.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    final wallpaper = _filteredWallpapers[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: ListTile(
+                        leading: GestureDetector(
+                          onTap: () => _editWallpaper(wallpaper),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: Image.network(
+                              wallpaper.thumbnailUrl,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                        title: Text(
+                          wallpaper.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        subtitle: Text(
+                          'Category: ${wallpaper.category}',
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                        trailing: Padding(
+                          padding: const EdgeInsets.only(left: 12.0),
+                          child: PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'edit') {
+                                _editWallpaper(wallpaper);
+                              } else if (value == 'delete') {
+                                _deleteWallpaper(wallpaper.id);
+                              } else if (value == 'download') {
+                                _downloadImage(wallpaper.previewUrl);
+                              }
+                            },
+                            itemBuilder:
+                                (context) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text('Edit'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Delete'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'download',
+                                    child: Text('Download'),
+                                  ),
+                                ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
       ),
     );
   }

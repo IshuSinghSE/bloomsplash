@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart'; // Import cache manager
+// Import cache manager
 import '../providers/favorites_provider.dart';
 import '../screens/wallpaper_details_page.dart';
 import '../utils/image_cache_utils.dart'; // Import the utility file

@@ -56,23 +56,54 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
       ),
     );
 
-    _cacheImages(); // Pre-cache images
+    _loadThumbnail(); // Only load thumbnail initially
   }
 
-  Future<void> _cacheImages() async {
+  Future<void> _loadThumbnail() async {
     try {
       final thumbnailFile = await _cacheManager.getSingleFile(widget.wallpaper.thumbnailUrl);
-      final previewFile = await _cacheManager.getSingleFile(widget.wallpaper.previewUrl);
-      final originalFile = await _cacheManager.getSingleFile(widget.wallpaper.imageUrl);
-
       setState(() {
         _cachedImages['Thumbnail'] = thumbnailFile;
+      });
+    } catch (e) {
+      debugPrint('Error caching thumbnail: $e');
+    }
+  }
+
+  Future<void> _loadPreview() async {
+    if (_cachedImages['Preview'] != null) return;
+    try {
+      final previewFile = await _cacheManager.getSingleFile(widget.wallpaper.previewUrl);
+      setState(() {
         _cachedImages['Preview'] = previewFile;
+      });
+    } catch (e) {
+      debugPrint('Error caching preview: $e');
+    }
+  }
+
+  Future<void> _loadOriginal() async {
+    if (_cachedImages['Original'] != null) return;
+    try {
+      final originalFile = await _cacheManager.getSingleFile(widget.wallpaper.imageUrl);
+      setState(() {
         _cachedImages['Original'] = originalFile;
       });
     } catch (e) {
-      debugPrint('Error caching images: $e');
+      debugPrint('Error caching original: $e');
     }
+  }
+
+  void _onTabSelected(String tab) {
+    setState(() {
+      _selectedTab = tab;
+    });
+    if (tab == 'Preview') {
+      _loadPreview();
+    } else if (tab == 'Original') {
+      _loadOriginal();
+    }
+    // Thumbnail is loaded in initState
   }
 
   File? _getCachedImage(String tab) {
@@ -169,7 +200,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Wallpaper updated successfully!')),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Pass true to indicate update
       } catch (e) {
         debugPrint('Error updating wallpaper: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -197,11 +228,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: ['Thumbnail', 'Preview', 'Original'].map((tab) {
                 return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedTab = tab;
-                    });
-                  },
+                  onTap: () => _onTabSelected(tab),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(

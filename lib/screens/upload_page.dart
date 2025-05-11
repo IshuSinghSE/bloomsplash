@@ -219,10 +219,7 @@ class _UploadPageState extends State<UploadPage> {
         debugPrint("Creating Wallpaper object...");
         final wallpaper = Wallpaper(
           id: id,
-          name:
-              _wallpaperNameController.text.isNotEmpty
-                  ? _wallpaperNameController.text
-                  : 'Wallpaper $id',
+          name: 'untitled',
           imageUrl: originalUrl,
           thumbnailUrl: thumbnailUrl,
           previewUrl: previewUrl,
@@ -322,7 +319,7 @@ class _UploadPageState extends State<UploadPage> {
           // Create a Wallpaper object
           final wallpaper = Wallpaper(
             id: id,
-            name: 'Wallpaper $id',
+            name: 'untitled',
             imageUrl: originalUrl,
             thumbnailUrl: thumbnailUrl,
             previewUrl: previewUrl,
