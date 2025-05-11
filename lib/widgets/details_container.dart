@@ -29,7 +29,9 @@ class DetailsContainer extends StatelessWidget {
     final name = wallpaper['name'] ?? 'Untitled';
     final author = wallpaper['author'] ?? 'unknown author';
     final description = wallpaper['description'] ?? 'No description available';
-    final authorImage = wallpaper['authorImage'] ?? 'assets/icons/author1.png';
+    final authorImage = wallpaper['authorImage']?.startsWith('http') == true
+        ? wallpaper['authorImage']
+        : 'assets/icons/author1.png'; // Ensure the correct asset path
     final image = wallpaper['image'] ?? 'assets/images/placeholder.png';
     final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
@@ -44,7 +46,7 @@ class DetailsContainer extends StatelessWidget {
           curve: Curves.easeInOut,
           child: Container(
             width: double.infinity,
-            color: Colors.black.withValues(alpha:0.6),
+            color: Colors.black.withAlpha(153),
             padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -54,8 +56,13 @@ class DetailsContainer extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundImage: AssetImage(authorImage),
+                      backgroundImage: authorImage.startsWith('http')
+                          ? NetworkImage(authorImage)
+                          : AssetImage(authorImage) as ImageProvider,
                       radius: 24,
+                      onBackgroundImageError: (_, __) {
+                        debugPrint('Error loading author image: $authorImage');
+                      },
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -72,7 +79,7 @@ class DetailsContainer extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                           author,
+                            author,
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.white70,
@@ -92,7 +99,7 @@ class DetailsContainer extends StatelessWidget {
                 const SizedBox(height: 16),
                 // Description
                 Text(
-                 description,
+                  description,
                   style: const TextStyle(fontSize: 14, color: Colors.white70),
                 ),
                 const SizedBox(height: 16),
@@ -106,7 +113,7 @@ class DetailsContainer extends StatelessWidget {
                     buildCircularActionButton(
                       FavoritesProvider().isFavorite(wallpaper) ? Icons.favorite : Icons.favorite_border,
                       'Like',
-                     () => Provider.of<FavoritesProvider>(context, listen: false).toggleFavorite(wallpaper), // Use the toggleFavorite callback
+                      () => Provider.of<FavoritesProvider>(context, listen: false).toggleFavorite(wallpaper), // Use the toggleFavorite callback
                     ),
                     buildCircularActionButton(Icons.image, 'Set', () {
                       showSetWallpaperDialog(context, image);
@@ -131,8 +138,8 @@ class DetailsContainer extends StatelessWidget {
                       SlideTransition(
                         position: slideAnimation,
                         child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                             buildMetadataBox(
                               'Downloads',
                               download,
@@ -144,8 +151,8 @@ class DetailsContainer extends StatelessWidget {
                             buildMetadataBox(
                               'Size',
                               size != null
-                              ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
-                              : 'Unknown',
+                                  ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
+                                  : 'Unknown',
                             ),
                           ],
                         ),

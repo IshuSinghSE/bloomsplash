@@ -56,6 +56,7 @@ dependencies:
   flutter_native_splash: ^2.2.16
   fluttertoast: ^8.2.12
   google_api_availability: ^5.0.1
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +75,8 @@ flutter:
     - assets/images/
     - assets/wallpapers.json
     - assets/welcome.png
+    - assets/icons/author1.png
+    - assets/images/placeholder.png
 
   # To add custom platform-specific implementations of your plugin, add the
   # fonts:

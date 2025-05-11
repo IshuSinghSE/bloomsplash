@@ -187,5 +187,20 @@ class FirestoreService {
       throw Exception('Error fetching paginated wallpapers: $e');
     }
   }
+
+  Future<void> addBulkImageDetailsToFirestore(List<Wallpaper> wallpapers) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      for (var wallpaper in wallpapers) {
+        final docRef = FirebaseFirestore.instance.collection('wallpapers').doc(wallpaper.id);
+        batch.set(docRef, wallpaper.toJson());
+      }
+      await batch.commit();
+      log('Bulk wallpapers added to Firestore successfully.');
+    } catch (e) {
+      log('Error adding bulk wallpapers to Firestore: $e');
+      throw Exception('Error adding bulk wallpapers to Firestore: $e');
+    }
+  }
 }
 
