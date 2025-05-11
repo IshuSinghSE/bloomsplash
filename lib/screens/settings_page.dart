@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../providers/auth_provider.dart';
 import 'favorites_page.dart';
+import 'my_uploads_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -24,8 +25,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _updateCacheSize() async {
     try {
-      final cacheDirPath = await getTemporaryDirectory(); // Get the temporary directory path
-      final cacheDir = Directory(cacheDirPath.path); // Create a Directory object
+      final cacheDirPath =
+          await getTemporaryDirectory(); // Get the temporary directory path
+      final cacheDir = Directory(
+        cacheDirPath.path,
+      ); // Create a Directory object
       if (await cacheDir.exists()) {
         final size = cacheDir
             .listSync(recursive: true)
@@ -49,7 +53,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _clearCache() async {
     try {
-      final cacheDir = Directory((await getTemporaryDirectory()).path); // Get the cache directory
+      final cacheDir = Directory(
+        (await getTemporaryDirectory()).path,
+      ); // Get the cache directory
       if (await cacheDir.exists()) {
         await cacheDir.delete(recursive: true);
         await _updateCacheSize(); // Recalculate cache size after clearing
@@ -57,15 +63,15 @@ class _SettingsPageState extends State<SettingsPage> {
           const SnackBar(content: Text('Image cache cleared successfully!')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No cache to clear!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No cache to clear!')));
       }
     } catch (e) {
       debugPrint('Error clearing cache: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to clear cache!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to clear cache!')));
     }
   }
 
@@ -84,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: [
+        children: <Widget>[
           Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
@@ -121,13 +127,21 @@ class _SettingsPageState extends State<SettingsPage> {
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ),
-          const SizedBox(height: 24),
-          ListTile(
-            leading: const Icon(Icons.upload),
-            title: const Text('My Uploads'),
-            onTap: () {
-            },
-          ),
+          if (userData['email'] == "ishu.111636@gmail.com") ...[
+            const SizedBox(height: 24),
+            ListTile(
+              leading: const Icon(Icons.upload),
+              title: const Text('My Uploads'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyUploadsPage(),
+                  ),
+                );
+              },
+            ),
+          ],
           ListTile(
             leading: const Icon(Icons.favorite),
             title: const Text('My Favorites'),

@@ -34,6 +34,7 @@ class FirestoreService {
     required String author,
     required String authorImage,
     required String description,
+    required List<String> tags, // Add the tags parameter
   }) async {
     try {
       log('Updating image details in Firestore: $id');
@@ -49,6 +50,7 @@ class FirestoreService {
         'author': author,
         'authorImage': authorImage,
         'description': description,
+        'tags': tags, // Include tags in the update
       });
       log('Image details updated in Firestore successfully: $id');
     } catch (e) {
@@ -152,6 +154,37 @@ class FirestoreService {
     } catch (e) {
       log('Error clearing favorites: $e');
       throw Exception('Error clearing favorites: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getPaginatedWallpapers({
+    required int limit,
+    DocumentSnapshot? lastDocument,
+  }) async {
+    try {
+      Query query = _firestore
+          .collection('wallpapers')
+          .orderBy('createdAt', descending: true)
+          .limit(limit);
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      final QuerySnapshot snapshot = await query.get();
+
+      final List<Wallpaper> wallpapers = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Wallpaper.fromJson(data);
+      }).toList();
+
+      return {
+        'wallpapers': wallpapers,
+        'lastDocument': snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      };
+    } catch (e) {
+      log('Error fetching paginated wallpapers: $e');
+      throw Exception('Error fetching paginated wallpapers: $e');
     }
   }
 }

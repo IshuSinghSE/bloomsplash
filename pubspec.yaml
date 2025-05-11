@@ -55,6 +55,7 @@ dependencies:
   google_sign_in: ^6.3.0
   flutter_native_splash: ^2.2.16
   fluttertoast: ^8.2.12
+  google_api_availability: ^5.0.1
 
 dev_dependencies:
   flutter_test:

@@ -10,7 +10,7 @@ import 'shared_widgets.dart'; // For buildPillButton
 
 enum WallpaperType { home, lock, both }
 
-Future<String> _getFilePath(BuildContext context, String url) async {
+Future<String> _getFilePath(BuildContext context, String url, {String? fileName}) async {
   try {
     Directory bloomsplashDir;
     if (Platform.isLinux) {
@@ -34,8 +34,9 @@ Future<String> _getFilePath(BuildContext context, String url) async {
     final date = DateTime.now();
     final formattedDate =
         '${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}${date.year}';
-    final fileName = 'wallpaper_$formattedDate.jpg';
-    final filePath = '${bloomsplashDir.path}/$fileName';
+    final defaultFileName = 'wallpaper_$formattedDate.jpg';
+    final resolvedFileName = fileName ?? defaultFileName;
+    final filePath = '${bloomsplashDir.path}/$resolvedFileName';
 
     if (url.startsWith('http')) {
       final dio = Dio();
@@ -52,9 +53,9 @@ Future<String> _getFilePath(BuildContext context, String url) async {
   }
 }
 
-Future<void> downloadWallpaper(BuildContext context, String url) async {
+Future<void> downloadWallpaper(BuildContext context, String url, {String? fileName}) async {
   try {
-    final filePath = await _getFilePath(context, url);
+    final filePath = await _getFilePath(context, url, fileName: fileName);
     String directoryName;
 
     if (Platform.isLinux) {
@@ -110,7 +111,7 @@ void showSetWallpaperDialog(BuildContext context, String wallpaperImage) {
             child: Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha:0.7),
+                color: Colors.black.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(16.0),
               ),
               child: Column(

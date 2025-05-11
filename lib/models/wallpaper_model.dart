@@ -1,4 +1,3 @@
-  
 class Wallpaper {
   final String id;
   final String name;
@@ -23,7 +22,6 @@ class Wallpaper {
   final String status;
   final String createdAt;
   final String license;
-  // final String blurHash;
   final String hash;
 
   Wallpaper({
@@ -50,37 +48,37 @@ class Wallpaper {
     required this.status,
     required this.createdAt,
     required this.license,
-    // required this.blurHash,
     required this.hash,
   });
 
   factory Wallpaper.fromJson(Map<String, dynamic> json) {
     return Wallpaper(
-      id: json['id'],
-      name: json['name'],
-      imageUrl: json['image'],
-      thumbnailUrl: json['thumbnail'],
-      previewUrl: json['preview'],
-      downloads: json['downloads'],
-      likes: json['likes'],
-      size: json['size'],
-      resolution: json['resolution'],
-      aspectRatio: json['aspectRatio'],
-      orientation: json['orientation'],
-      category: json['category'],
-      tags: List<String>.from(json['tags']),
-      colors: List<String>.from(json['colors']),
-      author: json['author'],
-      authorImage: json['authorImage'],
-      uploadedBy: json['uploadedBy'],
-      description: json['description'],
-      isPremium: json['isPremium'],
-      isAIgenerated: json['isAIgenerated'],
-      status: json['status'],
-      createdAt: json['createdAt'],
-      license: json['license'],
-      // blurHash: json['blurHash'],
-      hash: json['hash'],
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      imageUrl: json['image'] ?? '',
+      thumbnailUrl: json['thumbnail'] ?? '',
+      previewUrl: json['preview'] ?? '',
+      downloads: json['downloads'] is int ? json['downloads'] : int.tryParse(json['downloads'] ?? '0') ?? 0,
+      likes: json['likes'] is int ? json['likes'] : int.tryParse(json['likes'] ?? '0') ?? 0,
+      size: json['size'] is int ? json['size'] : int.tryParse(json['size'] ?? '0') ?? 0,
+      resolution: json['resolution'] ?? '',
+      aspectRatio: json['aspectRatio'] is double
+          ? json['aspectRatio']
+          : double.tryParse(json['aspectRatio']?.toString() ?? '0.0') ?? 0.0,
+      orientation: json['orientation'] ?? '',
+      category: json['category'] ?? '',
+      tags: json['tags'] != null ? List<String>.from(json['tags']) : [],
+      colors: json['colors'] != null ? List<String>.from(json['colors']) : [],
+      author: json['author'] ?? '',
+      authorImage: json['authorImage'] ?? '',
+      uploadedBy: json['uploadedBy'] ?? '',
+      description: json['description'] ?? '',
+      isPremium: json['isPremium'] ?? false,
+      isAIgenerated: json['isAIgenerated'] ?? false,
+      status: json['status'] ?? '',
+      createdAt: json['createdAt'] ?? '',
+      license: json['license'] ?? '',
+      hash: json['hash'] ?? '',
     );
   }
 
@@ -109,7 +107,6 @@ class Wallpaper {
       'status': status,
       'createdAt': createdAt,
       'license': license,
-      // 'blurHash': blurHash,
       'hash': hash,
     };
   }

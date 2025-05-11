@@ -31,9 +31,7 @@ void main() async {
 
     // Initialize Firebase App Check
     await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.playIntegrity, // Use Play Integrity for Android
-      // appleProvider: AppleProvider.deviceCheck, // Use DeviceCheck for iOS
-      //  webRecaptchaSiteKey: 'your-recaptcha-site-key', // Only for web
+      androidProvider: AndroidProvider.playIntegrity,
     );
     debugPrint('Firebase App Check activated.');
 
@@ -42,15 +40,6 @@ void main() async {
     var preferencesBox = await Hive.openBox('preferences');
     await Hive.openBox<Map>('favorites');
     debugPrint('Hive initialized successfully.');
-
-    // var userData = preferencesBox.get('userData', defaultValue: {});
-    // if (userData != null && userData.isNotEmpty) {
-    //   debugPrint('User is logged in. Loading wallpapers...');
-    //   await loadWallpapers();
-    //   debugPrint('Wallpapers loaded successfully.');
-    // } else {
-    //   debugPrint('User is not logged in.');
-    // }
 
     runApp(
       MultiProvider(
@@ -111,21 +100,23 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const ExplorePage(),
-    const FavoritesPage(),
-    const UploadPage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     var userData = widget.preferencesBox.get('userData', defaultValue: {});
+    final userEmail = userData['email'] ?? '';
+
+    // Conditionally include the UploadPage tab
+    final List<Widget> pages = [
+      const ExplorePage(),
+      const FavoritesPage(),
+      if (userEmail == "ishu.111636@gmail.com") const UploadPage(),
+    ];
+
+    void onItemTapped(int index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -172,11 +163,15 @@ class _HomePageState extends State<HomePage> {
       extendBody: true, // Ensures the bottom navigation bar floats over the background
       body: IndexedStack(
         index: _selectedIndex, // Show the selected tab
-        children: _pages, // Preserve the state of all tabs
+        children: pages, // Preserve the state of all tabs
       ),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+        onItemTapped: (index) {
+          // Prevent selecting the Upload tab if it's not available
+          if (index == 2 && userEmail != "ishu.111636@gmail.com") return;
+          onItemTapped(index);
+        },
       ),
     );
   }

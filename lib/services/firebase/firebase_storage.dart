@@ -3,7 +3,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
-// import 'package:blurhash/blurhash.dart';
 
 final storageRef = FirebaseStorage.instance.ref();
 
@@ -21,13 +20,6 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     if (originalImage == null) {
       throw Exception('Failed to decode image');
     }
-
-    // Generate blur hash
-    // final blurHash = BlurHash.encode(
-    //   originalImage.getBytes().buffer.asUint8List(),
-    //   originalImage.width,
-    //   originalImage.height,
-    // );
 
     // Get original image size and resolution
     final originalSize = file.lengthSync();
@@ -78,7 +70,6 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       'previewUrl': previewUrl,
       'originalSize': originalSize,
       'originalResolution': originalResolution,
-      // 'blurHash': blurHash, // Include the blur hash
     };
   } catch (e) {
     log('Error uploading file: $e');

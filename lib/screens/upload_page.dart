@@ -10,7 +10,7 @@ import '../services/firebase/firebase_firestore_service.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import '../models/wallpaper_model.dart';
 import 'package:image/image.dart' as img; // Add this for image processing
-// import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:hive/hive.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -61,13 +61,10 @@ class _UploadPageState extends State<UploadPage> {
     final grayscale = img.grayscale(resized);
 
     // Compute average pixel value
-    final avgPixelValue = grayscale.data != null
-        ? grayscale.data!.map((pixel) => img.getLuminance(pixel)).reduce((a, b) => a + b) ~/ grayscale.data!.length
-        : 0; // Default to 0 if data is null
+    final avgPixelValue = grayscale.getBytes().map((pixel) => pixel).reduce((a, b) => a + b) ~/ grayscale.getBytes().length;
 
     // Generate hash based on whether pixel values are above or below the average
-    final hash =
-        grayscale.data!.map((pixel) => img.getLuminance(pixel) > avgPixelValue ? '1' : '0').join();
+    final hash = grayscale.getBytes().map((pixel) => pixel > avgPixelValue ? '1' : '0').join();
     return hash;
   }
 
@@ -260,6 +257,22 @@ class _UploadPageState extends State<UploadPage> {
 
   @override
   Widget build(BuildContext context) {
+    var preferencesBox = Hive.box('preferences');
+    var userData = preferencesBox.get('userData', defaultValue: {});
+    final userEmail = userData['email'] ?? '';
+
+    // Restrict access to the page
+    if (userEmail != "ishu.111636@gmail.com") {
+      return Scaffold(
+        body: Center(
+          child: Text(
+            'Access Denied',
+            style: TextStyle(fontSize: 18, color: Colors.red),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: GestureDetector(
         onTap: () {
