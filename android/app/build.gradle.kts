@@ -38,11 +38,18 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePropertiesFile = rootProject.file("../key.properties")
+            val keystorePropertiesFile = rootProject.file("./key.properties")
+            println("Looking for key.properties at: ${keystorePropertiesFile.absolutePath}")
+            println("Does key.properties exist? ${keystorePropertiesFile.exists()}")
             val keystoreProperties = Properties()
             if (keystorePropertiesFile.exists()) {
                 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
             }
+
+            println("storeFile: ${keystoreProperties["storeFile"]}")
+            println("storePassword: ${keystoreProperties["storePassword"]}")
+            println("keyAlias: ${keystoreProperties["keyAlias"]}")
+            println("keyPassword: ${keystoreProperties["keyPassword"]}")
 
             storeFile = file(keystoreProperties["storeFile"] ?: "flutter-app-key.keystore")
             storePassword = keystoreProperties["storePassword"] as String?

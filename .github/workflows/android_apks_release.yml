@@ -37,9 +37,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        # Create the key.properties file in the root project directory (../ relative to android/app)
         run: |
-          echo "storeFile=android/app/flutter-app-key.keystore" > key.properties # Path to keystore relative to build.gradle
+          echo "storeFile=android/app/flutter-app-key.keystore" > key.properties
           echo "storePassword=$KEYSTORE_PASSWORD" >> key.properties
           echo "keyAlias=$KEY_ALIAS" >> key.properties
           echo "keyPassword=$KEY_PASSWORD" >> key.properties
