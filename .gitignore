@@ -45,6 +45,7 @@ app.*.map.json
 /android/app/release
 
 # Custom
+/temp
 /assets
 /deb_package
 *.deb

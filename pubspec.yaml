@@ -57,6 +57,7 @@ dependencies:
   fluttertoast: ^8.2.12
   google_api_availability: ^5.0.1
   cached_network_image: ^3.4.1
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:

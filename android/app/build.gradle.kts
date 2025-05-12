@@ -35,10 +35,16 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("flutter-app-key.keystore")
-            storePassword = "ishusingh1452" // Ensure this matches your keystore password
-            keyAlias = "ishusinghse"
-            keyPassword = "ishusingh1452" // Ensure this matches your key password
+            val keystorePropertiesFile = rootProject.file("../key.properties")
+            val keystoreProperties = java.util.Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+            }
+
+            storeFile = file(keystoreProperties["storeFile"] ?: "flutter-app-key.keystore")
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
         }
     }
 
