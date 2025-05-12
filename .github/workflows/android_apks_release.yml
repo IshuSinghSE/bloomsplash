@@ -94,10 +94,10 @@ jobs:
 
       # --- Build Steps ---
       - name: Build Standard Android Release APK
-        run: flutter build apk --release --build-name=${{ env.APP_VERSION_NAME }} --build-number=${{ env.APP_BUILD_NUMBER }} # Add --flavor if you use flavors
+        run: flutter build apk --release --build-name=${{ env.APP_VERSION_NAME }} --build-number=${{ env.APP_BUILD_NUMBER }}
 
       - name: Build Android Split APKs for Release
-        run: flutter build apk --release --split-per-abi --build-name=${{ env.APP_VERSION_NAME }} --build-number=${{ env.APP_BUILD_NUMBER }} # Corrected variable name here
+        run: flutter build apk --release --split-per-abi --build-name=${{ env.APP_VERSION_NAME }} --build-number=${{ env.APP_BUILD_NUMBER }}
 
       # --- Upload Build Artifacts ---
       - name: Upload Release APKs Artifact
@@ -136,18 +136,17 @@ jobs:
         run: |
           echo "APP_BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
 
-
       # Create a GitHub Release
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1 # Creates a new GitHub Release
+        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token is automatically provided
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ env.APP_VERSION_NAME }}+${{ env.APP_BUILD_NUMBER }} # Tag format
-          release_name: Release ${{ env.APP_VERSION_NAME }}+${{ env.APP_BUILD_NUMBER }}
-          draft: false # Set to true to create a draft release
-          prerelease: false # Set to true for a pre-release
+          tag_name: v${{ env.APP_VERSION_NAME }} # Only version name, no build number
+          release_name: Release ${{ env.APP_VERSION_NAME }}
+          draft: false
+          prerelease: false
 
       # Find and upload all downloaded APKs to the release
       - name: Find and Upload APKs to Release
