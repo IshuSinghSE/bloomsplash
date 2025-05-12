@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../services/firebase/firebase_firestore_service.dart';
+import '../../../services/firebase/firebase_firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/wallpaper_model.dart';
-import 'edit_wallpaper_page.dart';
-import '../widgets/wallpaper_utils.dart';
-import '../utils/image_cache_utils.dart';
+import '../../../models/wallpaper_model.dart';
+import '../../edit_wallpaper/screens/edit_wallpaper_page.dart';
+import '../../wallpaper_details/widgets/wallpaper_utils.dart';
+import '../../../utils/image_cache_utils.dart';
 
 class MyUploadsPage extends StatefulWidget {
   const MyUploadsPage({super.key});

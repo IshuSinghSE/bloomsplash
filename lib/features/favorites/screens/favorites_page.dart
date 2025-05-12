@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// Import cache manager
-import '../providers/favorites_provider.dart';
-import '../screens/wallpaper_details_page.dart';
-import '../utils/image_cache_utils.dart'; // Import the utility file
-import '../core/constants/config.dart';
+import '../../../app/providers/favorites_provider.dart';
+import '../../wallpaper_details/screens/wallpaper_details_page.dart';
+import '../../../utils/image_cache_utils.dart';
+import '../../../app/constants/config.dart';
+
 class FavoritesPage extends StatelessWidget {
   final bool showAppBar;
 
@@ -15,7 +15,7 @@ class FavoritesPage extends StatelessWidget {
         .map((wallpaper) => wallpaper['image'])
         .whereType<String>()
         .toList();
-    await cacheImages(imageUrls); // Use the utility function
+    await cacheImages(imageUrls);
   }
 
   @override
@@ -33,7 +33,7 @@ class FavoritesPage extends StatelessWidget {
           : null,
       body: RefreshIndicator(
         onRefresh: () async {
-          await _cacheImages(favoriteWallpapers); // Cache images locally
+          await _cacheImages(favoriteWallpapers);
         },
         child: favoriteWallpapers.isEmpty
             ? const Center(
@@ -48,10 +48,10 @@ class FavoritesPage extends StatelessWidget {
                     child: GridView.builder(
                       padding: const EdgeInsets.all(8.0),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of wallpapers per row
-                        crossAxisSpacing: 8, // Horizontal spacing
-                        mainAxisSpacing: 8, // Vertical spacing
-                        childAspectRatio: 0.75, // Aspect ratio of the grid items
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.75,
                       ),
                       itemCount: favoriteWallpapers.length,
                       itemBuilder: (context, index) {

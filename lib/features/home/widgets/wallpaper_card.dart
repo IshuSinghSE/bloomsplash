@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/favorites_provider.dart';
-import '../screens/wallpaper_details_page.dart';
+import '../../../app/providers/favorites_provider.dart';
+import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 
 class WallpaperCard extends StatelessWidget {
   final Map<String, dynamic> wallpaper; // Pass the wallpaper object
@@ -72,7 +72,7 @@ class WallpaperCard extends StatelessWidget {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      color: Colors.black.withValues(alpha: .1),
+                      color: Colors.black.withOpacity(0.1),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 8,

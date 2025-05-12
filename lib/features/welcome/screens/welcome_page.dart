@@ -3,9 +3,10 @@ import 'package:hive/hive.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../main.dart';
-import '../providers/auth_provider.dart';
-import '../core/constants/config.dart';
+import '../../../main.dart';
+import '../../../app/providers/auth_provider.dart';
+import '../../../app/constants/config.dart';
+
 class WelcomePage extends StatelessWidget {
   final Box preferencesBox;
 

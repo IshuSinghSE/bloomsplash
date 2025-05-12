@@ -3,7 +3,7 @@ name: Flutter Android APK Release Build & Modular Release
 on:
   push:
     branches:
-      - main # Trigger on pushes to your main development branch
+      - release # Trigger on pushes to your release branch
 
 jobs:
   build_apks:

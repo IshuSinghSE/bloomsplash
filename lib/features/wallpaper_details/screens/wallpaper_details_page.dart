@@ -1,11 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/favorites_provider.dart';
-import '../widgets/details_container.dart'; // Import the new DetailsContainer widget
+import '../../../app/providers/favorites_provider.dart';
+import '../widgets/details_container.dart';
 
 class WallpaperDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> wallpaper; // Pass the wallpaper object
+  final Map<String, dynamic> wallpaper;
 
   const WallpaperDetailsPage({super.key, required this.wallpaper});
 
@@ -14,28 +14,28 @@ class WallpaperDetailsPage extends StatefulWidget {
 }
 
 class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
-  bool _showDetails = true; // Track whether the details container is visible
-  bool _showButtons = true; // Track whether the buttons are visible
-  bool _showMetadata = false; // Track whether the metadata row is visible
+  bool _showDetails = true;
+  bool _showButtons = true;
+  bool _showMetadata = false;
 
   void _toggleMetadata() {
     setState(() {
-      _showMetadata = !_showMetadata; // Toggle metadata visibility
+      _showMetadata = !_showMetadata;
     });
   }
 
   void _closeMetadata() {
     if (_showMetadata) {
       setState(() {
-        _showMetadata = false; // Close metadata if it's open
+        _showMetadata = false;
       });
     }
   }
 
   void _toggleDetailsAndButtons() {
     setState(() {
-      _showDetails = !_showDetails; // Toggle details container visibility
-      _showButtons = _showDetails; // Ensure buttons visibility matches details
+      _showDetails = !_showDetails;
+      _showButtons = _showDetails;
     });
   }
 
@@ -43,13 +43,9 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
 
-    // Extract wallpaper details
     final wallpaper = widget.wallpaper;
     final String imageUrl = wallpaper['preview'] ?? '';
-    // final String name = wallpaper['name'] ?? 'Untitled';
-    // final String author = wallpaper['author'] ?? 'Unknown';
 
-    // Check if the wallpaper is a favorite
     final isFavorite = favoritesProvider.isFavorite(wallpaper);
 
     return Scaffold(
@@ -57,14 +53,11 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
         onTap: () {
           setState(() {
             if (_showMetadata) {
-              // If metadata is open, close it
               _closeMetadata();
             } else if (_showButtons && _showDetails) {
-              // If metadata is closed and both buttons and details are visible, hide them
               _showButtons = false;
               _showDetails = false;
             } else {
-              // Otherwise, show both buttons and details
               _showButtons = true;
               _showDetails = true;
             }
@@ -72,7 +65,6 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
         },
         child: Stack(
           children: [
-            // Full-Screen Wallpaper
             Image.network(
               imageUrl,
               fit: BoxFit.cover,
@@ -90,7 +82,6 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                 );
               },
             ),
-            // Navigate Back Icon with Blur Background
             if (_showButtons)
               Positioned(
                 top: 32,
@@ -99,16 +90,16 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Tooltip(
-                      message: "Back", // Show label/hint on hover
+                      message: "Back",
                       child: Container(
-                        color: Colors.black.withValues(alpha: .5),
+                        color: Colors.black.withOpacity(0.5),
                         child: IconButton(
                           icon: const Icon(
                             Icons.arrow_back,
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            Navigator.pop(context); // Navigate back
+                            Navigator.pop(context);
                           },
                         ),
                       ),
@@ -116,7 +107,6 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                   ),
                 ),
               ),
-            // Eye Icon to Toggle Details Visibility
             if (_showButtons)
               Positioned(
                 top: 32,
@@ -125,9 +115,9 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Tooltip(
-                      message: "Preview", // Show label/hint on hover
+                      message: "Preview",
                       child: Container(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withOpacity(0.5),
                         child: IconButton(
                           icon: Icon(
                             _showDetails
@@ -135,44 +125,32 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                                 : Icons.visibility,
                             color: Colors.white,
                           ),
-                          onPressed:
-                              _toggleDetailsAndButtons, // Toggle details and buttons
+                          onPressed: _toggleDetailsAndButtons,
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            // Animated Sliding Details Container
             Align(
               alignment: Alignment.bottomCenter,
               child: GestureDetector(
-                onTap: () {
-                  // Prevent closing metadata when tapping inside the container
-                },
+                onTap: () {},
                 child: AnimatedSlide(
-                  offset:
-                      _showDetails
-                          ? Offset.zero
-                          : const Offset(0, 1), // Slide up or down
-                  duration: const Duration(
-                    milliseconds: 300,
-                  ), // Animation duration
-                  curve: Curves.easeInOut, // Smooth animation curve
+                  offset: _showDetails ? Offset.zero : const Offset(0, 1),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
                   child: DetailsContainer(
                     wallpaper: wallpaper,
-                    showMetadata:
-                        _showMetadata, // Pass metadata visibility state
+                    showMetadata: _showMetadata,
                     slideAnimation: const AlwaysStoppedAnimation(
                       Offset.zero,
-                    ), // No sliding animation for metadata
+                    ),
                     toggleMetadata: _toggleMetadata,
                     isFavorite: isFavorite,
                     toggleFavorite: () {
-                      favoritesProvider.toggleFavorite(
-                        wallpaper,
-                      ); // Pass wallpaper object
-                    }, // Pass toggle function
+                      favoritesProvider.toggleFavorite(wallpaper);
+                    },
                   ),
                 ),
               ),

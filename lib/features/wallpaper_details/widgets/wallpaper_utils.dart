@@ -6,14 +6,14 @@ import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:media_scanner/media_scanner.dart';
-import 'shared_widgets.dart'; // For buildPillButton
+import '../../shared/widgets/shared_widgets.dart';
 
 enum WallpaperType { home, lock, both }
 
 Future<String> _getFilePath(BuildContext context, String url, {String? fileName}) async {
   try {
     Directory bloomsplashDir;
-    if (Platform.isLinux) {
+  if (Platform.isLinux) {
       final homeDir = Platform.environment['HOME'] ?? Directory.current.path;
       bloomsplashDir = Directory('$homeDir/Downloads/bloomsplash');
     } else if (Platform.isAndroid) {

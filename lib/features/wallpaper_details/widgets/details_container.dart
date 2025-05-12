@@ -1,19 +1,19 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'wallpaper_utils.dart' show downloadWallpaper, showSetWallpaperDialog;
-import 'metadata_box.dart' show buildMetadataBox;
-import 'shared_widgets.dart' show buildCircularActionButton;
-import '../providers/favorites_provider.dart';
+import 'wallpaper_utils.dart';
+import 'metadata_box.dart';
+import '../../shared/widgets/shared_widgets.dart';
+import '../../../app/providers/favorites_provider.dart';
 import 'package:provider/provider.dart';
-import '../core/constants/config.dart';
+import '../../../app/constants/config.dart';
 
 class DetailsContainer extends StatelessWidget {
   final Map<String, dynamic> wallpaper;
   final bool showMetadata;
   final Animation<Offset> slideAnimation;
   final VoidCallback toggleMetadata;
-  final bool isFavorite; // Add a property to track the favorite state
-  final VoidCallback toggleFavorite; // Add a callback to toggle the favorite state
+  final bool isFavorite;
+  final VoidCallback toggleFavorite;
 
   const DetailsContainer({
     super.key,
@@ -21,8 +21,8 @@ class DetailsContainer extends StatelessWidget {
     required this.showMetadata,
     required this.slideAnimation,
     required this.toggleMetadata,
-    required this.isFavorite, // Pass the favorite state
-    required this.toggleFavorite, // Pass the toggle callback
+    required this.isFavorite,
+    required this.toggleFavorite,
   });
 
   @override
@@ -32,7 +32,7 @@ class DetailsContainer extends StatelessWidget {
     final description = wallpaper['description'] ?? 'No description available';
     final authorImage = wallpaper['authorImage']?.startsWith('http') == true
         ? wallpaper['authorImage']
-        : AppConfig.authorIconPath1; // Ensure the correct asset path
+        : AppConfig.authorIconPath1;
     final image = wallpaper['image'] ?? AppConfig.placeholderImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
@@ -53,7 +53,6 @@ class DetailsContainer extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Author Image, Wallpaper Title, and Description
                 Row(
                   children: [
                     CircleAvatar(
@@ -89,22 +88,14 @@ class DetailsContainer extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // IconButton(
-                    //   icon: const Icon(Icons.share, color: Colors.white),
-                    //   onPressed: () {
-                    //     // Handle share action
-                    //   },
-                    // ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Description
                 Text(
                   description,
                   style: const TextStyle(fontSize: 14, color: Colors.white70),
                 ),
                 const SizedBox(height: 16),
-                // Action Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -112,9 +103,12 @@ class DetailsContainer extends StatelessWidget {
                       downloadWallpaper(context, image);
                     }),
                     buildCircularActionButton(
-                      FavoritesProvider().isFavorite(wallpaper) ? Icons.favorite : Icons.favorite_border,
+                      FavoritesProvider().isFavorite(wallpaper)
+                          ? Icons.favorite
+                          : Icons.favorite_border,
                       'Like',
-                      () => Provider.of<FavoritesProvider>(context, listen: false).toggleFavorite(wallpaper), // Use the toggleFavorite callback
+                      () => Provider.of<FavoritesProvider>(context, listen: false)
+                          .toggleFavorite(wallpaper),
                     ),
                     buildCircularActionButton(Icons.image, 'Set', () {
                       showSetWallpaperDialog(context, image);
@@ -127,7 +121,6 @@ class DetailsContainer extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Sliding Metadata Row
                 Stack(
                   children: [
                     AnimatedSize(

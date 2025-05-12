@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'wallpaper_details_page.dart';
-// import '../constants/data.dart'; // Import the wallpapers list
-import '../core/constants/config.dart';
+import '../features/wallpaper_details/screens/wallpaper_details_page.dart';
+import '../app/constants/config.dart';
+import '../core/themes/app_colors.dart'; // <-- Import the theme file
 
 class CollectionWallpapersPage extends StatelessWidget {
   final String title; // Title of the collection or category
@@ -33,7 +33,6 @@ class CollectionWallpapersPage extends StatelessWidget {
               wallpaper["image"] ?? AppConfig.placeholderImagePath; // Fallback to sample image
           final name =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
-         
 
           return GestureDetector(
             onTap: () {
@@ -43,12 +42,12 @@ class CollectionWallpapersPage extends StatelessWidget {
                 MaterialPageRoute(
                   builder:
                       (context) =>
-                          WallpaperDetailsPage( wallpaper: wallpaper), // Pass wallpaper ID and wallpaper object
+                          WallpaperDetailsPage(wallpaper: wallpaper), // Pass wallpaper ID and wallpaper object
                 ),
               );
             },
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.card),
               child: Stack(
                 children: [
                   // Wallpaper Image
@@ -65,8 +64,8 @@ class CollectionWallpapersPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withValues(alpha: .6),
-                            Colors.transparent,
+                            AppColors.gradientStart,
+                            AppColors.gradientEnd,
                           ],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
@@ -81,11 +80,7 @@ class CollectionWallpapersPage extends StatelessWidget {
                     right: 8,
                     child: Text(
                       name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyles.cardTitle.copyWith(fontSize: 14, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -95,7 +90,7 @@ class CollectionWallpapersPage extends StatelessWidget {
                     right: 12,
                     child: const Icon(
                       Icons.auto_awesome_motion,
-                      color: Colors.white70,
+                      color: AppColors.accentSecondary,
                       size: 20,
                     ),
                   ),

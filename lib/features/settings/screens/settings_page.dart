@@ -3,9 +3,9 @@ import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import '../providers/auth_provider.dart';
-import 'favorites_page.dart';
-import 'my_uploads_page.dart';
+import '../../../app/providers/auth_provider.dart';
+import '../../favorites/screens/favorites_page.dart';
+import '../../my_uploads/screens/my_uploads_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

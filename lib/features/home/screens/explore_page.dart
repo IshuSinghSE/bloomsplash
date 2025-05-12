@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/wallpaper_card.dart'; // Import the WallpaperCard widget
-import '../providers/favorites_provider.dart';
-import 'wallpaper_details_page.dart'; // Import the WallpaperDetailsPage
+import '../widgets/wallpaper_card.dart';
+import '../../../app/providers/favorites_provider.dart';
+import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});

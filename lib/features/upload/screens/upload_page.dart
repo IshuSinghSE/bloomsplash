@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
-import '../services/firebase/firebase_storage.dart';
+import '../../../services/firebase/firebase_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
-import '../services/firebase/firebase_firestore_service.dart';
+import '../../../services/firebase/firebase_firestore_service.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
-import '../models/wallpaper_model.dart';
-import 'package:image/image.dart' as img; // Add this for image processing
+import '../../../models/wallpaper_model.dart';
+import 'package:image/image.dart' as img;
 import 'package:hive/hive.dart';
 
 class UploadPage extends StatefulWidget {

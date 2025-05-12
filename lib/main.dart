@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'providers/favorites_provider.dart';
-import 'providers/auth_provider.dart';
-import 'widgets/custom_bottom_nav_bar.dart';
-import 'screens/explore_page.dart';
-// import 'screens/collections_page.dart';
-import 'screens/favorites_page.dart';
-import 'screens/upload_page.dart';
-import 'screens/welcome_page.dart';
-import 'screens/settings_page.dart';
-// import 'core/constants/data.dart';
-// import 'dart:developer';
+import 'app/providers/favorites_provider.dart';
+import 'app/providers/auth_provider.dart';
+import 'features/shared/widgets/custom_bottom_nav_bar.dart';
+import 'features/home/screens/explore_page.dart';
+import 'features/favorites/screens/favorites_page.dart';
+import 'features/upload/screens/upload_page.dart';
+import 'features/welcome/screens/welcome_page.dart';
+import 'features/settings/screens/settings_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'app/config/firebase_options.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'core/constants/config.dart';
+import 'app/constants/config.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

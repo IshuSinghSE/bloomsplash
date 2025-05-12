@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../core/constants/data.dart'; // Import the dummy data
+import '../app/constants/data.dart'; // Import the dummy data
 import 'collection_wallpapers_page.dart'; // Import the collection wallpapers page
 import 'category_wallpapers_page.dart';
-import '../core/constants/config.dart';
+import '../app/constants/config.dart';
+import '../core/themes/app_colors.dart'; // <-- Import the theme file
+
 class CollectionsPage extends StatefulWidget {
   const CollectionsPage({super.key});
 
@@ -52,7 +54,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
               padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: Text(
                 'Categories',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: AppTextStyles.sectionTitle, // Use theme style
               ),
             ),
             Padding(
@@ -86,7 +88,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
                         child: Container(
                           width: 140, // Width of each card
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadius.card),
                             image: DecorationImage(
                               image: AssetImage(category["image"]!),
                               fit: BoxFit.cover,
@@ -98,12 +100,11 @@ class _CollectionsPageState extends State<CollectionsPage> {
                               Positioned.fill(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(AppRadius.card),
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withValues(alpha: .6),
-                                        Colors.black.withValues(alpha: .1),
-                                        Colors.transparent,
+                                        AppColors.gradientStart,
+                                        AppColors.gradientEnd,
                                       ],
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
@@ -123,18 +124,14 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                     Expanded(
                                       child: Text(
                                         category["title"]!,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                        style: AppTextStyles.cardTitle,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     const Icon(
                                       Icons.chevron_right,
-                                      color: Colors.white,
+                                      color: AppColors.accent,
                                       size: 24,
                                     ),
                                   ],
@@ -162,8 +159,8 @@ class _CollectionsPageState extends State<CollectionsPage> {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: ChoiceChip(
-        backgroundColor: const Color.fromARGB(255, 56, 91, 114).withValues(alpha: 0.1),
-        selectedColor: const Color.fromARGB(255, 56, 91, 114).withValues(alpha: 0.7),
+        backgroundColor: AppColors.chipBackground,
+        selectedColor: AppColors.chipSelected,
         label: Text(label),
         selected: selectedCategory == label,
         onSelected: (isSelected) {
@@ -188,7 +185,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: AppTextStyles.sectionTitle,
           ),
           const SizedBox(height: 10),
           Column(
@@ -202,7 +199,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
                       child: Stack(
                         children: [
                           // Background image
@@ -218,19 +215,14 @@ class _CollectionsPageState extends State<CollectionsPage> {
                             child: BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                               child: Container(
-                                color: const Color.fromARGB(
-                                  255,
-                                  56,
-                                  91,
-                                  114,
-                                ).withValues(alpha: 0.15),
+                                color: AppColors.blurOverlay,
                               ),
                             ),
                           ),
                           // Content
                           ListTile(
                             leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppRadius.image),
                               child: Image.asset(
                                 image,
                                 width: 50,
@@ -240,11 +232,11 @@ class _CollectionsPageState extends State<CollectionsPage> {
                             ),
                             title: Text(
                               title,
-                              style: const TextStyle(color: Colors.white),
+                              style: AppTextStyles.cardTitle,
                             ),
                             subtitle: Text(
                               "By $author",
-                              style: const TextStyle(color: Colors.white70),
+                              style: AppTextStyles.cardSubtitle,
                             ),
                             onTap: () {
                               // Navigate to the collection wallpapers page
@@ -288,19 +280,19 @@ class _CollectionsPageState extends State<CollectionsPage> {
               style: TextButton.styleFrom(
                 
                 // backgroundColor: const Color.fromARGB(20, 56, 91, 114),
-                side: const BorderSide(color:Color.fromARGB(200, 56, 91, 114), width: 1),
+                side: const BorderSide(color: AppColors.border, width: 1),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
                   vertical: 8.0,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                 ),
               ),
               child: const Text(
                 
                 'Show All',
-                style: TextStyle(color: Colors.white),
+                style: AppTextStyles.button,
               ),
             ),
           ),

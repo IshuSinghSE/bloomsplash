@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:flutter/services.dart';
 
 List<Map<String, dynamic>> wallpapers = []; // Remove 'final' to allow reassignment

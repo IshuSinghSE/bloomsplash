@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/favorites_provider.dart';
-import 'wallpaper_details_page.dart';
-import '../core/constants/config.dart';
+import '../app/providers/favorites_provider.dart';
+import '../features/wallpaper_details/screens/wallpaper_details_page.dart';
+import '../app/constants/config.dart';
+import '../core/themes/app_colors.dart'; // <-- Import the theme file
 
 class CategoryWallpapersPage extends StatelessWidget {
   final String category;
@@ -32,8 +33,6 @@ class CategoryWallpapersPage extends StatelessWidget {
           final author = wallpaper["author"] ?? "Unknown";
           final title =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
-          // final id =
-          //     wallpaper["id"] ?? "unknown-id"; // Fallback to a default ID
 
           return GestureDetector(
             onTap: () {
@@ -48,7 +47,7 @@ class CategoryWallpapersPage extends StatelessWidget {
               );
             },
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.card),
               child: Stack(
                 children: [
                   // Wallpaper Image
@@ -64,8 +63,8 @@ class CategoryWallpapersPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withValues(alpha: .6),
-                            Colors.transparent,
+                            AppColors.gradientStart,
+                            AppColors.gradientEnd,
                           ],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
@@ -88,8 +87,7 @@ class CategoryWallpapersPage extends StatelessWidget {
                             children: [
                               Text(
                                 title,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: AppTextStyles.cardTitle.copyWith(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -98,10 +96,7 @@ class CategoryWallpapersPage extends StatelessWidget {
                               ),
                               Text(
                                 author,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
+                                style: AppTextStyles.cardSubtitle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -118,7 +113,7 @@ class CategoryWallpapersPage extends StatelessWidget {
                                 isFavorite
                                     ? Icons.favorite
                                     : Icons.favorite_border,
-                                color: Colors.white,
+                                color: AppColors.accent,
                               ),
                               onPressed: () {
                                 favoritesProvider.toggleFavorite(wallpaper);
@@ -134,7 +129,7 @@ class CategoryWallpapersPage extends StatelessWidget {
                     right: 12,
                     child: const Icon(
                       Icons.category,
-                      color: Colors.white70,
+                      color: AppColors.accentSecondary,
                       size: 20,
                     ),
                   ),
