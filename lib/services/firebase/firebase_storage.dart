@@ -31,7 +31,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       width: 200,
       height: (200 * originalImage.height / originalImage.width).round(),
     );
-    final thumbnailFile = File('${file.parent.path}/thumbnail_$fileName.png');
+    final thumbnailFile = File('${file.parent.path}/thumbnail_$fileName.webp');
     await thumbnailFile.writeAsBytes(img.encodePng(thumbnailImage));
 
     // Resize for preview (800 width while maintaining aspect ratio)
@@ -40,7 +40,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       width: 800,
       height: (800 * originalImage.height / originalImage.width).round(),
     );
-    final previewFile = File('${file.parent.path}/preview_$fileName.png');
+    final previewFile = File('${file.parent.path}/preview_$fileName.webp');
     await previewFile.writeAsBytes(img.encodePng(previewImage));
 
     // Parallelize uploads

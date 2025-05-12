@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../main.dart';
 import '../providers/auth_provider.dart';
-
+import '../core/constants/config.dart';
 class WelcomePage extends StatelessWidget {
   final Box preferencesBox;
 
@@ -54,7 +54,7 @@ class WelcomePage extends StatelessWidget {
                 Container(
                   decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage('assets/welcome.png'),
+                      image: AssetImage(AppConfig.welcomeImagePath),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -136,7 +136,7 @@ class WelcomePage extends StatelessWidget {
                                   )
                                 else
                                   Image.asset(
-                                    'assets/icons/google.png',
+                                    'assets/icons/google.webp',
                                     height: 24,
                                     width: 24,
                                   ),

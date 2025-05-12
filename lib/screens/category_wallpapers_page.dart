@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
 import 'wallpaper_details_page.dart';
+import '../core/constants/config.dart';
 
 class CategoryWallpapersPage extends StatelessWidget {
   final String category;
@@ -27,7 +28,7 @@ class CategoryWallpapersPage extends StatelessWidget {
         itemCount: wallpapers.length,
         itemBuilder: (context, index) {
           final wallpaper = wallpapers[index];
-          final image = wallpaper["image"] ?? "assets/images/placeholder.png";
+          final image = wallpaper["image"] ?? AppConfig.placeholderImagePath;
           final author = wallpaper["author"] ?? "Unknown";
           final title =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"

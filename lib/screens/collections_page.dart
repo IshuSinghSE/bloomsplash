@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/data.dart'; // Import the dummy data
 import 'collection_wallpapers_page.dart'; // Import the collection wallpapers page
 import 'category_wallpapers_page.dart';
-
+import '../core/constants/config.dart';
 class CollectionsPage extends StatefulWidget {
   const CollectionsPage({super.key});
 
@@ -195,7 +195,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
             children:
                 wallpapers.take(3).map((wallpaper) {
                   final image =
-                      wallpaper["image"] ?? "assets/images/placeholder.png";
+                      wallpaper["image"] ?? AppConfig.placeholderImagePath;
                   final title = wallpaper["title"] ?? "Untitled";
                   final author = wallpaper["author"] ?? "Unknown";
 

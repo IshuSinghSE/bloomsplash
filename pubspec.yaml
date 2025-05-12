@@ -7,79 +7,74 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
-  # Flutter SDK dependency
+  # --- Flutter SDK ---
   flutter:
     sdk: flutter
 
-  # Essential Flutter dependencies
+  # --- UI and Design ---
   cupertino_icons: ^1.0.8
-  provider: ^6.1.4
-  flutter_cache_manager: ^3.4.1
-
-  # UI and design-related dependencies
-  palette_generator: ^0.3.3+6
   glassmorphism: ^3.0.0
+  palette_generator: ^0.3.3+6
 
-  # Networking and file handling dependencies
+  # --- Networking and File Handling ---
   dio: ^5.0.0
+  flutter_cache_manager: ^3.4.1
   path_provider: ^2.1.5
   android_content_provider: ^0.5.2
   media_scanner: ^2.2.0
+  http: ^1.4.0
 
-  # Wallpaper-related dependencies
-  async_wallpaper:
-    git:
-      url: https://github.com/IshuSinghSE/async_wallpaper.git
-      ref: main
+  # --- Media and Permissions ---
+  image_picker: ^1.1.2
+  permission_handler: ^12.0.0+1
+  device_info_plus: ^11.3.3
+  flutter_keyboard_visibility: ^6.0.0
+  cached_network_image: ^3.4.1
 
-  # Local storage dependencies
+  # --- Image Processing ---
+  image: ^4.5.4
+
+  # --- Local Storage ---
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   uuid: ^4.4.2
 
-  # Firebase dependencies
+  # --- Firebase ---
   firebase_core: ^3.13.0
   cloud_firestore: ^5.6.6
   firebase_storage: ^12.4.5
   firebase_auth: ^5.5.2
   firebase_app_check: ^0.3.2+5
 
-  # Media and permissions dependencies
-  image_picker: ^1.1.2
-  permission_handler: ^12.0.0+1
-  device_info_plus: ^11.3.3
-  flutter_keyboard_visibility: ^6.0.0
-
-  # Image processing dependency
-  image: ^4.5.4
+  # --- Utilities ---
+  provider: ^6.1.4
   google_sign_in: ^6.3.0
   flutter_native_splash: ^2.2.16
   fluttertoast: ^8.2.12
   google_api_availability: ^5.0.1
-  cached_network_image: ^3.4.1
-  http: ^1.4.0
+
+  # --- Wallpaper ---
+  async_wallpaper:
+    git:
+      url: https://github.com/IshuSinghSE/async_wallpaper.git
+      ref: main
 
 dev_dependencies:
+  # --- Dev Dependencies ---
   flutter_test:
     sdk: flutter
   hive_generator: ^2.0.1
   build_runner: ^2.4.6
   flutter_lints: ^5.0.0
 
-# The following section is specific to Flutter packages.
 flutter:
   uses-material-design: true
 
-  # To add custom platform-specific implementations of your plugin, add the
   assets:
+    - assets/
     - assets/icons/
     - assets/images/
-    - assets/wallpapers.json
-    - assets/welcome.png
-    - assets/icons/author1.png
-    - assets/images/placeholder.png
 
-  # To add custom platform-specific implementations of your plugin, add the
   # fonts:
   #   - family: Schyler
   #     fonts:

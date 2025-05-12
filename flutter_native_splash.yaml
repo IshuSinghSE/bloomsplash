@@ -15,7 +15,7 @@ flutter_native_splash:
   # splash screen to a png image.  This is useful for gradients. The image will be stretch to the
   # size of the app. Only one parameter can be used, color and background_image cannot both be set.
   color: "#F5F5F5" # Soft white shade for light theme
-  # background_image: "assets/avatar/BlueJ.png"
+  # background_image: "assets/avatar/BlueJ.webp"
 
   # Optional parameters are listed below.  To enable a parameter, uncomment the line by removing
   # the leading # character.
@@ -43,7 +43,7 @@ flutter_native_splash:
   # If the image_dark parameter is specified, color_dark or background_image_dark must be specified.  
   # color_dark and background_image_dark cannot both be set.
   color_dark: "#121212" # Soft black shade for dark theme
-  #background_image_dark: "assets/dark-background.png"
+  #background_image_dark: "assets/dark-background.webp"
   #image_dark: assets/splash-invert.png
   #branding_dark: assets/dart_dark.png
 
@@ -98,12 +98,12 @@ flutter_native_splash:
   #image_dark_ios: assets/splash-invert-ios.png
   #image_web: assets/splash-web.gif
   #image_dark_web: assets/splash-invert-web.gif
-  #background_image_android: "assets/background-android.png"
-  #background_image_dark_android: "assets/dark-background-android.png"
-  #background_image_ios: "assets/background-ios.png"
-  #background_image_dark_ios: "assets/dark-background-ios.png"
-  #background_image_web: "assets/background-web.png"
-  #background_image_dark_web: "assets/dark-background-web.png"
+  #background_image_android: "assets/background-android.webp"
+  #background_image_dark_android: "assets/dark-background-android.webp"
+  #background_image_ios: "assets/background-ios.webp"
+  #background_image_dark_ios: "assets/dark-background-ios.webp"
+  #background_image_web: "assets/background-web.webp"
+  #background_image_dark_web: "assets/dark-background-web.webp"
   #branding_android: assets/brand-android.png
   #branding_bottom_padding_android: 24
   #branding_dark_android: assets/dart_dark-android.png

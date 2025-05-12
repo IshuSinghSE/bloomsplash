@@ -109,7 +109,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     userData['photoUrl'] != null &&
                             userData['photoUrl']!.isNotEmpty
                         ? NetworkImage(userData['photoUrl']!)
-                        : const AssetImage('assets/avatar/Itsycal.png')
+                        : const AssetImage('assets/avatar/Itsycal.webp')
                             as ImageProvider,
               ),
             ],

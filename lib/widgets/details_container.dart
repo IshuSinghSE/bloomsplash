@@ -5,6 +5,7 @@ import 'metadata_box.dart' show buildMetadataBox;
 import 'shared_widgets.dart' show buildCircularActionButton;
 import '../providers/favorites_provider.dart';
 import 'package:provider/provider.dart';
+import '../core/constants/config.dart';
 
 class DetailsContainer extends StatelessWidget {
   final Map<String, dynamic> wallpaper;
@@ -31,8 +32,8 @@ class DetailsContainer extends StatelessWidget {
     final description = wallpaper['description'] ?? 'No description available';
     final authorImage = wallpaper['authorImage']?.startsWith('http') == true
         ? wallpaper['authorImage']
-        : 'assets/icons/author1.png'; // Ensure the correct asset path
-    final image = wallpaper['image'] ?? 'assets/images/placeholder.png';
+        : AppConfig.authorIconPath1; // Ensure the correct asset path
+    final image = wallpaper['image'] ?? AppConfig.placeholderImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
     final resolution = wallpaper['resolution'] ?? 'Unknown';

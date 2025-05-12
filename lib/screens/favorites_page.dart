@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
 import '../screens/wallpaper_details_page.dart';
 import '../utils/image_cache_utils.dart'; // Import the utility file
-
+import '../core/constants/config.dart';
 class FavoritesPage extends StatelessWidget {
   final bool showAppBar;
 
@@ -56,7 +56,7 @@ class FavoritesPage extends StatelessWidget {
                       itemCount: favoriteWallpapers.length,
                       itemBuilder: (context, index) {
                         final wallpaper = favoriteWallpapers[index];
-                        final image = wallpaper['image'] ?? 'assets/images/placeholder.png';
+                        final image = wallpaper['image'] ?? AppConfig.placeholderImagePath;
                         final author = wallpaper['author'] ?? 'Unknown';
                         final title = wallpaper['title'] ?? 'Untitled';
 
