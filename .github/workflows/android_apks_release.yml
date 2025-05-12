@@ -31,17 +31,17 @@ jobs:
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/flutter-app-key.keystore # Ensure this matches your keystore filename
 
-      # Create key.properties file for signing in the root project directory
+      # Create key.properties file for signing in the android directory
       - name: Create key.properties
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "storeFile=android/flutter-app-key.keystore" > key.properties
-          echo "storePassword=$KEYSTORE_PASSWORD" >> key.properties
-          echo "keyAlias=$KEY_ALIAS" >> key.properties
-          echo "keyPassword=$KEY_PASSWORD" >> key.properties
+          echo "storeFile=android/flutter-app-key.keystore" > android/key.properties
+          echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+          echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+          echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
 
       # Add key.properties to gitignore (important!) - This step is good, keep it.
       - name: Add key.properties to gitignore
