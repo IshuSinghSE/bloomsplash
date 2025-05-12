@@ -38,7 +38,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "storeFile=android/app/flutter-app-key.keystore" > key.properties
+          echo "storeFile=android/flutter-app-key.keystore" > key.properties
           echo "storePassword=$KEYSTORE_PASSWORD" >> key.properties
           echo "keyAlias=$KEY_ALIAS" >> key.properties
           echo "keyPassword=$KEY_PASSWORD" >> key.properties
