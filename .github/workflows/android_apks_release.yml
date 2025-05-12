@@ -24,6 +24,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-cache-
 
+      # Cache Gradle dependencies
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Cache Android build intermediates (optional, can help for incremental builds)
+      - name: Cache Android build intermediates
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            android/app/build
+          key: ${{ runner.os }}-android-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-android-build-
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2 # Sets up the Flutter environment
         with:
