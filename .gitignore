@@ -46,7 +46,7 @@ app.*.map.json
 
 # Custom
 /temp
-/assets
 /deb_package
 *.deb
 *.json
+.venv

@@ -1,0 +1,139 @@
+name: Flutter Android APK Release Build & Modular Release
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to your main development branch
+
+jobs:
+  build_apks:
+    name: Build Android APKs
+    runs-on: ubuntu-latest # Use a Linux runner for Android builds
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Checks out your repository
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2 # Sets up the Flutter environment
+        with:
+          channel: 'stable' # Specify the Flutter channel (stable, beta, dev)
+
+      - name: Get Dependencies
+        run: flutter pub get # Fetches your project dependencies
+
+      # --- Signing Setup (Requires GitHub Secrets) ---
+      # Decode the keystore file from base64 secret
+      - name: Decode Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        # Create the keystore file in the android/app directory
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/flutter-app-key.keystore # Ensure this matches your keystore filename
+
+      # Create key.properties file for signing in the root project directory
+      - name: Create key.properties
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        # Create the key.properties file in the root project directory (../ relative to android/app)
+        run: |
+          echo "storeFile=android/app/flutter-app-key.keystore" > key.properties # Path to keystore relative to build.gradle
+          echo "storePassword=$KEYSTORE_PASSWORD" >> key.properties
+          echo "keyAlias=$KEY_ALIAS" >> key.properties
+          echo "keyPassword=$KEY_PASSWORD" >> key.properties
+
+      # Add key.properties to gitignore (important!) - This step is good, keep it.
+      - name: Add key.properties to gitignore
+        run: echo "key.properties" >> android/.gitignore
+
+      # --- Versioning ---
+      # Get current version name from pubspec.yaml
+      - name: Get Version Name
+        run: |
+          VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          echo "APP_VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        shell: bash # Use bash shell for the grep/awk commands
+
+      # Use GitHub Run Number as Build Number
+      - name: Set Build Number
+        run: |
+          echo "APP_BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+
+      # --- Build Steps ---
+      - name: Build Standard Android Release APK
+        run: flutter build apk --release --build-name=${{ env.APP_VERSION_NAME }} --build-number=${{ env.APP_BUILD_NUMBER }} # Add --flavor if you use flavors
+
+      - name: Build Android Split APKs for Release
+        run: flutter build apk --release --split-per-abi --build-name=${{ env.APP_VERSION_NAME }} --build-number=${{ env.APP_BUILD_NUMBER }} # Corrected variable name here
+
+      # --- Upload Build Artifacts ---
+      - name: Upload Release APKs Artifact
+        uses: actions/upload-artifact@v4 # Uploads the generated APKs as a workflow artifact
+        with:
+          name: release-apks # Name for the artifact
+          path: build/app/outputs/apk/release/ # Path to the directory containing the APKs
+          retention-days: 5 # Optional: delete artifacts after 5 days to save storage
+
+  create_and_upload_release:
+    name: Create GitHub Release and Upload Artifacts
+    runs-on: ubuntu-latest # Can also use ubuntu-latest for release steps
+    needs: build_apks # This job depends on the 'build_apks' job completing successfully
+
+    steps:
+      # Checkout code is needed for the release action to create the tag
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Download the built APKs artifact from the previous job
+      - name: Download Release APKs Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apks # Name of the artifact to download
+          path: ./apks # Directory to download the artifacts to
+
+      # Get the version name and build number from the previous job's environment variables
+      # Re-extracting is simpler to avoid complex variable passing between jobs
+      - name: Get Version Name
+        run: |
+          VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          echo "APP_VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        shell: bash # Use bash shell for the grep/awk commands
+
+      - name: Set Build Number
+        run: |
+          echo "APP_BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+
+
+      # Create a GitHub Release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1 # Creates a new GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token is automatically provided
+        with:
+          tag_name: v${{ env.APP_VERSION_NAME }}+${{ env.APP_BUILD_NUMBER }} # Tag format
+          release_name: Release ${{ env.APP_VERSION_NAME }}+${{ env.APP_BUILD_NUMBER }}
+          draft: false # Set to true to create a draft release
+          prerelease: false # Set to true for a pre-release
+
+      # Find and upload all downloaded APKs to the release
+      - name: Find and Upload APKs to Release
+        run: |
+          UPLOAD_URL="${{ steps.create_release.outputs.upload_url }}"
+          DOWNLOADED_APKS_DIR="./apks" # Directory where artifacts were downloaded
+
+          for apk_file in "$DOWNLOADED_APKS_DIR"/*.apk; do
+            if [ -f "$apk_file" ]; then # Check if the file exists
+              echo "Uploading $apk_file..."
+              asset_name=$(basename "$apk_file") # Use the original filename as the asset name
+              # Optional: Append version and build number to asset name if desired
+              # asset_name="your_app_name-${asset_name%.*}-${{ env.APP_VERSION_NAME }}+${{ env.APP_BUILD_NUMBER }}.${asset_name##*.}"
+              curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/vnd.android.package-archive" \
+              --data-binary @"$apk_file" \
+              "${UPLOAD_URL}?name=${asset_name}"
+            fi
+          done
+        shell: bash
