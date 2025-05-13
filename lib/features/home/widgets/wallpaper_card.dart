@@ -5,41 +5,42 @@ import '../../../app/providers/favorites_provider.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 
 class WallpaperCard extends StatelessWidget {
-  final Map<String, dynamic> wallpaper; // Pass the wallpaper object
-  final VoidCallback onFavoritePressed; // Add the onFavoritePressed parameter
+  final Map<String, dynamic> wallpaper;
+  final VoidCallback onFavoritePressed; // Define the onFavoritePressed parameter
+  final WidgetBuilder? imageBuilder; // Define the imageBuilder parameter
 
   const WallpaperCard({
     super.key,
-    required this.wallpaper, // Use wallpaper instead of index
-    required this.onFavoritePressed, // Include the onFavoritePressed parameter
+    required this.wallpaper,
+    required this.onFavoritePressed,
+    this.imageBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
     final String? thumbnailUrl = wallpaper['thumbnail'];
+    final String heroTag = wallpaper['id'] ?? thumbnailUrl ?? '';
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isFavorite(wallpaper);
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper), // Pass wallpaper object
+            builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
           ),
         );
       },
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 4,
+      child: Hero(
+        tag: heroTag,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             children: [
-              // Wallpaper Image
-              if (thumbnailUrl != null && thumbnailUrl.startsWith('http'))
-                Image.network(
-                  thumbnailUrl,
+              // Display the thumbnail image
+              CachedNetworkImage(
+                imageUrl: thumbnailUrl ?? '',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
@@ -52,14 +53,16 @@ class WallpaperCard extends StatelessWidget {
                     if (loadingProgress == null) return child;
                     return const Center(
                       child: CircularProgressIndicator(),
-                    );
-                  },
-                )
-              else
-                const Center(
-                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
                 ),
-              // Wallpaper Details with Blur Background
+                errorWidget: (context, url, error) => const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 50,
+                    color: Colors.grey,
+                  ),
+                ),
+                ),
+              // Minimal overlay with wallpaper name
               Positioned(
                 bottom: 0,
                 left: 0,
