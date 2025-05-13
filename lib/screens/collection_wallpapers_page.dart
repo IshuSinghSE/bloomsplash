@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../features/wallpaper_details/screens/wallpaper_details_page.dart';
 import '../app/constants/config.dart';
 import '../core/themes/app_colors.dart'; // <-- Import the theme file
@@ -19,6 +20,8 @@ class CollectionWallpapersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GridView.builder(
+        physics: const BouncingScrollPhysics(),
+        cacheExtent: 1000,
         padding: const EdgeInsets.all(8.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2, // Number of wallpapers per row
@@ -51,7 +54,16 @@ class CollectionWallpapersPage extends StatelessWidget {
               child: Stack(
                 children: [
                   // Wallpaper Image
-                  if (image.isNotEmpty)
+                  if (image.startsWith('http'))
+                    CachedNetworkImage(
+                      imageUrl: image,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 50)),
+                    )
+                  else
                     Image.asset(
                       image,
                       fit: BoxFit.cover,

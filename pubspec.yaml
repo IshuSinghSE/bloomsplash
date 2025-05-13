@@ -58,6 +58,9 @@ dependencies:
     git:
       url: https://github.com/IshuSinghSE/async_wallpaper.git
       ref: main
+  shimmer: ^3.0.0
+  # blurhash: ^1.2.0
+  # flutter_blurhash: ^0.9.1
 
 dev_dependencies:
   # --- Dev Dependencies ---

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../widgets/details_container.dart';
 
@@ -42,14 +43,13 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
-
-    final wallpaper = widget.wallpaper;
-    final String imageUrl = wallpaper['preview'] ?? '';
-
-    final isFavorite = favoritesProvider.isFavorite(wallpaper);
+    final String? thumbnailUrl = widget.wallpaper['thumbnail'];
+    final String heroTag = widget.wallpaper['id'] ?? thumbnailUrl ?? '';
+    final isFavorite = favoritesProvider.isFavorite(widget.wallpaper);
 
     return Scaffold(
       body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           setState(() {
             if (_showMetadata) {
@@ -65,94 +65,110 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
         },
         child: Stack(
           children: [
-            Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              errorBuilder: (context, error, stackTrace) {
-                return const Center(
-                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                );
-              },
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              },
+            // Hero transition for the thumbnail image (must match grid)
+            Positioned.fill(
+              child: Hero(
+                tag: heroTag,
+                transitionOnUserGestures: true,
+                createRectTween: (begin, end) => MaterialRectArcTween(begin: begin, end: end),
+                child: Material(
+                  color: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    child: thumbnailUrl != null && thumbnailUrl.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: thumbnailUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            placeholder: (context, url) => Image.asset(
+                              'assets/images/shimmer.webp',
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                            errorWidget: (context, url, error) => const Center(
+                              child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                            ),
+                          )
+                        : const Center(
+                            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+             if (_showButtons)
+            Positioned(
+              top: 32,
+              left: 16,
+              child: ClipOval(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Tooltip(
+                    message: "Back",
+                    child: Container(
+                      color: Colors.black.withOpacity(0.5),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
             if (_showButtons)
-              Positioned(
-                top: 32,
-                left: 16,
-                child: ClipOval(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Tooltip(
-                      message: "Back",
-                      child: Container(
-                        color: Colors.black.withOpacity(0.5),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
+                Positioned(
+                  top: 32,
+                  right: 16,
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Tooltip(
+                        message: "Preview",
+                        child: Container(
+                          color: Colors.black.withOpacity(0.5),
+                          child: IconButton(
+                            icon: Icon(
+                              _showDetails
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.white,
+                            ),
+                            onPressed: _toggleDetailsAndButtons,
                           ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            if (_showButtons)
-              Positioned(
-                top: 32,
-                right: 16,
-                child: ClipOval(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Tooltip(
-                      message: "Preview",
-                      child: Container(
-                        color: Colors.black.withOpacity(0.5),
-                        child: IconButton(
-                          icon: Icon(
-                            _showDetails
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: Colors.white,
-                          ),
-                          onPressed: _toggleDetailsAndButtons,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             Align(
               alignment: Alignment.bottomCenter,
               child: GestureDetector(
-                onTap: () {},
-                child: AnimatedSlide(
-                  offset: _showDetails ? Offset.zero : const Offset(0, 1),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: DetailsContainer(
-                    wallpaper: wallpaper,
-                    showMetadata: _showMetadata,
-                    slideAnimation: const AlwaysStoppedAnimation(
-                      Offset.zero,
+                  onTap: () {},
+                  child: AnimatedSlide(
+                    offset: _showDetails ? Offset.zero : const Offset(0, 1),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: DetailsContainer(
+                      wallpaper: widget.wallpaper,
+                      showMetadata: _showMetadata,
+                      slideAnimation: const AlwaysStoppedAnimation(
+                        Offset.zero,
+                      ),
+                      toggleMetadata: _toggleMetadata,
+                      isFavorite: isFavorite,
+                      toggleFavorite: () {
+                        favoritesProvider.toggleFavorite(widget.wallpaper);
+                      },
                     ),
-                    toggleMetadata: _toggleMetadata,
-                    isFavorite: isFavorite,
-                    toggleFavorite: () {
-                      favoritesProvider.toggleFavorite(wallpaper);
-                    },
                   ),
-                ),
               ),
             ),
           ],

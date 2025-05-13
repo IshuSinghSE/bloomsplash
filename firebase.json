@@ -1,4 +1,7 @@
 {
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
   "flutter": {
     "platforms": {
       "android": {
@@ -9,7 +12,7 @@
         }
       },
       "dart": {
-        "lib/firebase_options.dart": {
+        "lib/app/config/firebase_options.dart": {
           "projectId": "roomdesign-7",
           "configurations": {
             "android": "1:1035240251094:android:3f2bb1d7af2d645699b377",

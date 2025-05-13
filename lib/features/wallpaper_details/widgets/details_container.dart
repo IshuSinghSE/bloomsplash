@@ -1,10 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'wallpaper_utils.dart';
 import 'metadata_box.dart';
 import '../../shared/widgets/shared_widgets.dart';
-import '../../../app/providers/favorites_provider.dart';
-import 'package:provider/provider.dart';
 import '../../../app/constants/config.dart';
 
 class DetailsContainer extends StatelessWidget {
@@ -40,122 +37,115 @@ class DetailsContainer extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: Container(
-            width: double.infinity,
-            color: Colors.black.withAlpha(153),
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        width: double.infinity,
+        color: Colors.black.withOpacity(0.55), // Semi-transparent, no blur
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: authorImage.startsWith('http')
-                          ? NetworkImage(authorImage)
-                          : AssetImage(authorImage) as ImageProvider,
-                      radius: 24,
-                      onBackgroundImageError: (_, __) {
-                        debugPrint('Error loading author image: $authorImage');
-                      },
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            author,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                CircleAvatar(
+                  backgroundImage: authorImage.startsWith('http')
+                      ? NetworkImage(authorImage)
+                      : AssetImage(authorImage) as ImageProvider,
+                  radius: 24,
+                  onBackgroundImageError: (_, __) {
+                    debugPrint('Error loading author image: $authorImage');
+                  },
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    buildCircularActionButton(Icons.download, 'Download', () {
-                      downloadWallpaper(context, image);
-                    }),
-                    buildCircularActionButton(
-                      FavoritesProvider().isFavorite(wallpaper)
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      'Like',
-                      () => Provider.of<FavoritesProvider>(context, listen: false)
-                          .toggleFavorite(wallpaper),
-                    ),
-                    buildCircularActionButton(Icons.image, 'Set', () {
-                      showSetWallpaperDialog(context, image);
-                    }),
-                    buildCircularActionButton(
-                      Icons.info_outline,
-                      'Info',
-                      toggleMetadata,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Stack(
-                  children: [
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      child: SizedBox(height: showMetadata ? 60 : 0),
-                    ),
-                    if (showMetadata)
-                      SlideTransition(
-                        position: slideAnimation,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            buildMetadataBox(
-                              'Downloads',
-                              download,
-                            ),
-                            buildMetadataBox(
-                              'Resolution',
-                              resolution,
-                            ),
-                            buildMetadataBox(
-                              'Size',
-                              size != null
-                                  ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
-                                  : 'Unknown',
-                            ),
-                          ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        author,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              description,
+              style: const TextStyle(fontSize: 14, color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCircularActionButton(Icons.download, 'Download', () {
+                  downloadWallpaper(context, image);
+                }),
+                buildCircularActionButton(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  'Like',
+                  () {
+                    // Use the passed toggleFavorite callback for correct state update
+                    toggleFavorite();
+                  },
+                ),
+                buildCircularActionButton(Icons.image, 'Set', () {
+                  showSetWallpaperDialog(context, image);
+                }),
+                buildCircularActionButton(
+                  Icons.info_outline,
+                  'Info',
+                  toggleMetadata,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Stack(
+              children: [
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: SizedBox(height: showMetadata ? 60 : 0),
+                ),
+                if (showMetadata)
+                  SlideTransition(
+                    position: slideAnimation,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        buildMetadataBox(
+                          'Downloads',
+                          download,
+                        ),
+                        buildMetadataBox(
+                          'Resolution',
+                          resolution,
+                        ),
+                        buildMetadataBox(
+                          'Size',
+                          size != null
+                              ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
+                              : 'Unknown',
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
