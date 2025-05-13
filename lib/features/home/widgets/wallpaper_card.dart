@@ -44,8 +44,13 @@ class WallpaperCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(),
+                placeholder: (context, url) => Center(
+                  child: Image.asset(
+                    'assets/images/shimmer.webp',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
                 errorWidget: (context, url, error) => const Center(
                   child: Icon(
