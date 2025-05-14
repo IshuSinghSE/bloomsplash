@@ -1,39 +1,29 @@
-// This file defines a Dart class named `Collection` that represents a collection of wallpapers.
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Collection {
   final String id;
-  final String name;
+  final String title;
   final String description;
-  final String coverImage;
-  final String createdBy;
-  final List<String> tags;
-  final String type;
   final List<String> wallpaperIds;
+  final String coverImage;
   final Timestamp createdAt;
 
   Collection({
     required this.id,
-    required this.name,
+    required this.title,
     required this.description,
-    required this.coverImage,
-    required this.createdBy,
-    required this.tags,
-    required this.type,
     required this.wallpaperIds,
+    required this.coverImage,
     required this.createdAt,
   });
 
   factory Collection.fromJson(Map<String, dynamic> json) {
     return Collection(
       id: json['id'] ?? '',
-      name: json['name'] ?? '',
+      title: json['title'] ?? '',
       description: json['description'] ?? '',
-      coverImage: json['coverImage'] ?? '',
-      createdBy: json['createdBy'] ?? '',
-      tags: List<String>.from(json['tags'] ?? []),
-      type: json['type'] ?? '',
       wallpaperIds: List<String>.from(json['wallpaperIds'] ?? []),
+      coverImage: json['coverImage'] ?? '',
       createdAt: json['createdAt'] ?? Timestamp.now(),
     );
   }
@@ -41,13 +31,10 @@ class Collection {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'title': title,
       'description': description,
-      'coverImage': coverImage,
-      'createdBy': createdBy,
-      'tags': tags,
-      'type': type,
       'wallpaperIds': wallpaperIds,
+      'coverImage': coverImage,
       'createdAt': createdAt,
     };
   }

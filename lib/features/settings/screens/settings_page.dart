@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../app/providers/auth_provider.dart';
-import '../../favorites/screens/favorites_page.dart';
 import '../../my_uploads/screens/my_uploads_page.dart';
+import '../../../app/providers/favorites_provider.dart'; // Ensure this is the correct path to FavoritesProvider
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,13 +14,24 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderStateMixin {
   int _cacheSize = 0; // Cache size in bytes
+  bool _isSyncingFavorites = false;
+  late final AnimationController _syncController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 1),
+  );
 
   @override
   void initState() {
     super.initState();
     _updateCacheSize(); // Calculate cache size on initialization
+  }
+
+  @override
+  void dispose() {
+    _syncController.dispose();
+    super.dispose();
   }
 
   Future<void> _updateCacheSize() async {
@@ -143,16 +154,43 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
           ListTile(
-            leading: const Icon(Icons.favorite),
-            title: const Text('My Favorites'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const FavoritesPage(showAppBar: true),
-                ),
-              );
-            },
+            leading: AnimatedBuilder(
+              animation: _syncController,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _syncController.value * 6.28319, // 2*pi radians
+                  child: child,
+                );
+              },
+              child: const Icon(Icons.sync),
+            ),
+            title: const Text('Sync Favorites'),
+            subtitle: const Text('Sync your favourites across all your devices'),
+            onTap: _isSyncingFavorites
+                ? null
+                : () async {
+                    setState(() {
+                      _isSyncingFavorites = true;
+                    });
+                    _syncController.repeat();
+                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                    final favoritesProvider = Provider.of<FavoritesProvider>(context, listen: false);
+                    final uid = authProvider.user?.uid;
+                    if (uid != null) {
+                      await favoritesProvider.saveFavoritesToFirestore(uid);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Favorites synced to cloud!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('You must be logged in to sync favorites.')),
+                      );
+                    }
+                    _syncController.stop();
+                    setState(() {
+                      _isSyncingFavorites = false;
+                    });
+                  },
           ),
           ListTile(
             leading: const Icon(Icons.storage),

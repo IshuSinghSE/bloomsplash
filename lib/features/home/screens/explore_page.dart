@@ -7,6 +7,7 @@ import '../widgets/wallpaper_card.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../../../app/constants/config.dart';
 // import '../../wallpaper_details/screens/wallpaper_details_page.dart';
+import '../../../app/providers/auth_provider.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -52,9 +53,19 @@ class _ExplorePageState extends State<ExplorePage> {
 
       setState(() {
         if (isRefresh) {
-          _wallpapers.clear(); // Clear on refresh regardless of result
+          _wallpapers.clear();
         }
-        _wallpapers.addAll(snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+        // Prevent duplicates by checking IDs
+        final existingIds = _wallpapers.map((w) => w['id']).toSet();
+        final newWallpapers = snapshot.docs
+            .map((doc) => doc.data() as Map<String, dynamic>)
+            .where((wallpaper) => !existingIds.contains(wallpaper['id']))
+            .toList();
+        _wallpapers.addAll(newWallpapers);
+        // Update _lastDocument for pagination
+        if (snapshot.docs.isNotEmpty) {
+          _lastDocument = snapshot.docs.last;
+        }
       });
     } catch (e) {
       debugPrint('Error fetching wallpapers: $e');
@@ -84,6 +95,8 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   Widget build(BuildContext context) {
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final uid = authProvider.user?.uid;
 
     return Scaffold(
       body: RefreshIndicator(
@@ -145,8 +158,14 @@ class _ExplorePageState extends State<ExplorePage> {
                       final wallpaper = _wallpapers[index];
                       return WallpaperCard(
                         wallpaper: wallpaper,
-                        onFavoritePressed: () {
-                          favoritesProvider.toggleFavorite(wallpaper);
+                        onFavoritePressed: () async {
+                          if (uid != null) {
+                            await favoritesProvider.toggleFavoriteWithSync(wallpaper, uid);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('You must be logged in to favorite.')),
+                            );
+                          }
                         },
                         imageBuilder: (context) {
                           final String? thumbnailUrl = wallpaper['thumbnail'];
