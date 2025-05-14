@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:palette_generator/palette_generator.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../widgets/details_container.dart';
 import '../../../app/constants/config.dart';
@@ -20,26 +19,10 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   bool _showDetails = true;
   bool _showButtons = true;
   bool _showMetadata = false;
-  PaletteGenerator? _palette;
 
   @override
   void initState() {
     super.initState();
-    _updatePalette();
-  }
-
-  Future<void> _updatePalette() async {
-    final String? thumbnailUrl = widget.wallpaper['thumbnail'];
-    if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
-      final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
-        CachedNetworkImageProvider(thumbnailUrl),
-        size: const Size(200, 200),
-        maximumColorCount: 8,
-      );
-      setState(() {
-        _palette = palette;
-      });
-    }
   }
 
   void _toggleMetadata() {
@@ -88,7 +71,6 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
         },
         child: Stack(
           children: [
-            // Hero transition for the thumbnail image (must match grid)
             Positioned.fill(
               child: Hero(
                 tag: heroTag,
@@ -123,7 +105,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
             ),
             if (_showButtons)
               Positioned(
-                top: MediaQuery.of(context).padding.top + 0,
+                top: MediaQuery.of(context).padding.top,
                 left: 16,
                 child: AnimatedOpacity(
                   opacity: _showButtons ? 1.0 : 0.0,
@@ -136,10 +118,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                         child: Container(
                           color: Colors.black.withAlpha(64),
                           child: IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                            ),
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
                             onPressed: () {
                               Navigator.pop(context);
                             },
@@ -152,7 +131,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
               ),
             if (_showButtons)
               Positioned(
-                top: MediaQuery.of(context).padding.top + 0,
+                top: MediaQuery.of(context).padding.top,
                 right: 16,
                 child: AnimatedOpacity(
                   opacity: _showButtons ? 1.0 : 0.0,
@@ -165,10 +144,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                         child: Container(
                           color: Colors.black.withAlpha(64),
                           child: IconButton(
-                            icon: Icon(
-                              _showDetails ? Icons.visibility_off : Icons.visibility,
-                              color: Colors.white,
-                            ),
+                            icon: Icon(_showDetails ? Icons.visibility_off : Icons.visibility, color: Colors.white),
                             onPressed: _toggleDetailsAndButtons,
                           ),
                         ),
@@ -197,7 +173,6 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                             favoritesProvider.toggleFavorite(widget.wallpaper);
                           },
                           slideAnimation: const AlwaysStoppedAnimation(Offset.zero),
-                          paletteColor: _palette?.dominantColor?.color,
                         ),
                       ),
                     ),
@@ -224,7 +199,6 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                         favoritesProvider.toggleFavorite(widget.wallpaper);
                       },
                       slideAnimation: const AlwaysStoppedAnimation(Offset.zero),
-                      paletteColor: _palette?.dominantColor?.color,
                     ),
                   ),
                 ),
