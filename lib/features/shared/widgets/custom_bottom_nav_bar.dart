@@ -41,7 +41,7 @@ class CustomBottomNavBar extends StatelessWidget {
               color: const Color.fromARGB(199, 9, 9, 12), // Solid semi-transparent color
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: Colors.white.withValues(alpha: .08), // Sleek subtle border
+                color: Colors.white.withOpacity(.08), // Sleek subtle border
                 width: 1,
               ),
               boxShadow: [
@@ -67,21 +67,57 @@ class CustomBottomNavBar extends StatelessWidget {
                   onItemTapped(index);
                 },
                 destinations: [
-                  const NavigationDestination(
-                    icon: Icon(Icons.explore),
-                    label: 'Explore',
-                    tooltip: 'Explore',
+                  GestureDetector(
+                    onTap: () => onItemTapped(0),
+                    child: Tooltip(
+                      message: 'Explore',
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selectedIndex == 0 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                        ),
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          selectedIndex == 0 ? Icons.explore : Icons.explore_outlined,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                  const NavigationDestination(
-                    icon: Icon(Icons.favorite),
-                    label: 'Favorites',
-                    tooltip: 'Favorites',
+                  GestureDetector(
+                    onTap: () => onItemTapped(1),
+                    child: Tooltip(
+                      message: 'Favorites',
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selectedIndex == 1 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                        ),
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          selectedIndex == 1 ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                   if (userEmail == "ishu.111636@gmail.com")
-                    const NavigationDestination(
-                      icon: Icon(Icons.upload_rounded),
-                      label: 'Upload',
-                      tooltip: 'Upload',
+                    GestureDetector(
+                      onTap: () => onItemTapped(2),
+                      child: Tooltip(
+                        message: 'Upload',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: selectedIndex == 2 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                          ),
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(
+                            selectedIndex == 2 ? Icons.upload_rounded : Icons.upload_outlined,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),
