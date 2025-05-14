@@ -54,15 +54,7 @@ class _ExplorePageState extends State<ExplorePage> {
         if (isRefresh) {
           _wallpapers.clear(); // Clear on refresh regardless of result
         }
-        
-        if (snapshot.docs.isNotEmpty) {
-          _lastDocument = snapshot.docs.last;
-          // Duplicate the fetched wallpapers 2 times for testing scroll smoothness
-          final docs = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-          for (int i = 0; i < 2; i++) {
-            _wallpapers.addAll(docs);
-          }
-        }
+        _wallpapers.addAll(snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
       });
     } catch (e) {
       debugPrint('Error fetching wallpapers: $e');
@@ -164,10 +156,6 @@ class _ExplorePageState extends State<ExplorePage> {
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
-                              memCacheHeight: 200, // Lower memory usage for cache
-                              memCacheWidth: 120,
-                              maxWidthDiskCache: 240, // Disk cache for low-res
-                              maxHeightDiskCache: 400,
                               useOldImageOnUrlChange: false,
                               placeholder: (context, url) => Image.asset(
                                 AppConfig.shimmerImagePath,
