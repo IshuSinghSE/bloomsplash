@@ -302,7 +302,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
                               } else if (value == 'delete') {
                                 _deleteWallpaper(wallpaper.id);
                               } else if (value == 'download') {
-                                _downloadImage(wallpaper.previewUrl);
+                                _downloadImage(wallpaper.imageUrl);
                               }
                             },
                             itemBuilder:

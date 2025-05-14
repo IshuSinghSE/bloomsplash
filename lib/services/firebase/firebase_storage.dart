@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http;
 
 final storageRef = FirebaseStorage.instance.ref();
 
@@ -10,8 +11,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
   try {
     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
     final originalRef = storageRef.child('wallpapers/original/$fileName');
-    final thumbnailRef = storageRef.child('wallpapers/thumbnail/$fileName');
-    final previewRef = storageRef.child('wallpapers/preview/$fileName');
+    final thumbnailRef = storageRef.child('wallpapers/thumbnail/$fileName.webp');
 
     // Read the original image
     final originalBytes = await file.readAsBytes();
@@ -31,43 +31,43 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       width: 200,
       height: (200 * originalImage.height / originalImage.width).round(),
     );
-    final thumbnailFile = File('${file.parent.path}/thumbnail_$fileName.webp');
-    await thumbnailFile.writeAsBytes(img.encodePng(thumbnailImage));
+    final thumbnailPngFile = File('${file.parent.path}/thumbnail_$fileName.png');
+    await thumbnailPngFile.writeAsBytes(img.encodePng(thumbnailImage));
 
-    // Resize for preview (800 width while maintaining aspect ratio)
-    final previewImage = img.copyResize(
-      originalImage,
-      width: 800,
-      height: (800 * originalImage.height / originalImage.width).round(),
+    // Convert PNG thumbnail to webp using external API
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('https://image-optimization-sooty.vercel.app/convert'),
     );
-    final previewFile = File('${file.parent.path}/preview_$fileName.webp');
-    await previewFile.writeAsBytes(img.encodePng(previewImage));
+    request.files.add(await http.MultipartFile.fromPath('file', thumbnailPngFile.path));
+    final streamedResponse = await request.send();
+    if (streamedResponse.statusCode != 200) {
+      throw Exception('Failed to convert thumbnail to webp');
+    }
+    final webpBytes = await streamedResponse.stream.toBytes();
+    final thumbnailWebpFile = File('${file.parent.path}/thumbnail_$fileName.webp');
+    await thumbnailWebpFile.writeAsBytes(webpBytes);
 
-    // Parallelize uploads
+    // Upload original and thumbnail (webp) to Firebase Storage
     final uploadTasks = [
       originalRef.putData(originalBytes),
-      thumbnailRef.putData(img.encodeJpg(thumbnailImage)),
-      previewRef.putData(img.encodeJpg(previewImage)),
+      thumbnailRef.putData(webpBytes),
     ];
-
     await Future.wait(uploadTasks);
 
     final originalUrl = await originalRef.getDownloadURL();
     final thumbnailUrl = await thumbnailRef.getDownloadURL();
-    final previewUrl = await previewRef.getDownloadURL();
 
     log('Original URL: $originalUrl');
     log('Thumbnail URL: $thumbnailUrl');
-    log('Preview URL: $previewUrl');
 
     // Clean up temporary files
-    thumbnailFile.deleteSync();
-    previewFile.deleteSync();
+    thumbnailPngFile.deleteSync();
+    thumbnailWebpFile.deleteSync();
 
     return {
       'originalUrl': originalUrl,
       'thumbnailUrl': thumbnailUrl,
-      'previewUrl': previewUrl,
       'originalSize': originalSize,
       'originalResolution': originalResolution,
     };

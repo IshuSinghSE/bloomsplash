@@ -199,11 +199,10 @@ class _UploadPageState extends State<UploadPage> {
         // Extract URLs, size, and resolution
         final originalUrl = result['originalUrl'];
         final thumbnailUrl = result['thumbnailUrl'];
-        final previewUrl = result['previewUrl'];
         final originalSize = result['originalSize'];
         final originalResolution = result['originalResolution'];
         debugPrint(
-          "Extracted image details: originalUrl=$originalUrl, thumbnailUrl=$thumbnailUrl, previewUrl=$previewUrl",
+          "Extracted image details: originalUrl=$originalUrl, thumbnailUrl=$thumbnailUrl",
         );
 
         // Generate a unique ID for the document
@@ -219,38 +218,26 @@ class _UploadPageState extends State<UploadPage> {
         debugPrint("Creating Wallpaper object...");
         final wallpaper = Wallpaper(
           id: id,
-          name: 'untitled',
+          name: _wallpaperNameController.text.isNotEmpty ? _wallpaperNameController.text : 'untitled',
           imageUrl: originalUrl,
           thumbnailUrl: thumbnailUrl,
-          previewUrl: previewUrl,
           downloads: 0,
           likes: 0,
           size: originalSize,
           resolution: originalResolution,
-          aspectRatio: 1.78, // Replace with dynamic aspect ratio if needed
-          orientation: 'portrait', // Replace with dynamic orientation if needed
-          category: 'casual', // Replace with dynamic category if needed
-          tags: ['new', 'trending'], // Replace with dynamic tags if needed
-          colors: [
-            '#FFFFFF',
-            '#000000',
-          ], // Replace with extracted colors if needed
-          author: userData['displayName'] ?? 'Author $id',
-          authorImage:
-              userData['photoUrl'] ??
-              'https://avatars.githubusercontent.com/u/50513398?v=4', // Replace with actual author image
-          uploadedBy:
-              userData['email'] != null
-                  ? 'admin'
-                  : 'unknown', // Replace with dynamic uploader if needed
-          description:
-              'A mesmerizing view of the night sky.', // Replace with dynamic description
+          orientation: 'portrait',
+          category: 'Uncategorized',
+          tags: [],
+          colors: [],
+          author: userData['displayName'] ?? 'Unknown',
+          authorImage: userData['photoUrl'] ?? '',
+          description: '',
           isPremium: false,
           isAIgenerated: false,
           status: 'approved',
           createdAt: DateTime.now().toIso8601String(),
           license: 'free-commercial',
-          hash: imageHash, // Add the computed hash
+          hash: imageHash,
         );
         debugPrint("Wallpaper object created successfully.");
 
@@ -306,42 +293,29 @@ class _UploadPageState extends State<UploadPage> {
           // Extract URLs, size, and resolution
           final originalUrl = result['originalUrl'];
           final thumbnailUrl = result['thumbnailUrl'];
-          final previewUrl = result['previewUrl'];
           final originalSize = result['originalSize'];
           final originalResolution = result['originalResolution'];
 
           // Generate a unique ID for the document
           final id = const Uuid().v4();
-
-          // Compute perceptual hash for the uploaded image
           final imageHash = computeImageHash(image);
 
-          // Create a Wallpaper object
           final wallpaper = Wallpaper(
             id: id,
             name: 'untitled',
             imageUrl: originalUrl,
             thumbnailUrl: thumbnailUrl,
-            previewUrl: previewUrl,
             downloads: 0,
             likes: 0,
             size: originalSize,
             resolution: originalResolution,
-            aspectRatio: 1.78, // Replace with dynamic aspect ratio if needed
-            orientation:
-                'portrait', // Replace with dynamic orientation if needed
-            category: 'casual', // Replace with dynamic category if needed
-            tags: ['new', 'trending'], // Replace with dynamic tags if needed
-            colors: [
-              '#FFFFFF',
-              '#000000',
-            ], // Replace with extracted colors if needed
-            author: userData['displayName'] ?? 'Author $id',
-            authorImage:
-                userData['photoUrl'] ??
-                'https://avatars.githubusercontent.com/u/50513398?v=4',
-            uploadedBy: userData['email'] != null ? 'admin' : 'unknown',
-            description: 'A mesmerizing view of the night sky.',
+            orientation: 'portrait',
+            category: 'Uncategorized',
+            tags: [],
+            colors: [],
+            author: userData['displayName'] ?? 'Unknown',
+            authorImage: userData['photoUrl'] ?? '',
+            description: '',
             isPremium: false,
             isAIgenerated: false,
             status: 'approved',
