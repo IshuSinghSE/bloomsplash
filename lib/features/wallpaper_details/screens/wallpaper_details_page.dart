@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:palette_generator/palette_generator.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../widgets/details_container.dart';
 import '../../../app/constants/config.dart';
@@ -19,6 +20,27 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   bool _showDetails = true;
   bool _showButtons = true;
   bool _showMetadata = false;
+  PaletteGenerator? _palette;
+
+  @override
+  void initState() {
+    super.initState();
+    _updatePalette();
+  }
+
+  Future<void> _updatePalette() async {
+    final String? thumbnailUrl = widget.wallpaper['thumbnail'];
+    if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
+      final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
+        CachedNetworkImageProvider(thumbnailUrl),
+        size: const Size(200, 200),
+        maximumColorCount: 8,
+      );
+      setState(() {
+        _palette = palette;
+      });
+    }
+  }
 
   void _toggleMetadata() {
     setState(() {
@@ -99,47 +121,52 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                 ),
               ),
             ),
-             if (_showButtons)
-            Positioned(
-              top: 32,
-              left: 16,
-              child: ClipOval(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Tooltip(
-                    message: "Back",
-                    child: Container(
-                      color: Colors.black.withOpacity(0.5),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
+            if (_showButtons)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 0,
+                left: 16,
+                child: AnimatedOpacity(
+                  opacity: _showButtons ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 500),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                      child: Tooltip(
+                        message: "Back",
+                        child: Container(
+                          color: Colors.black.withAlpha(64),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
             if (_showButtons)
-                Positioned(
-                  top: 32,
-                  right: 16,
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 0,
+                right: 16,
+                child: AnimatedOpacity(
+                  opacity: _showButtons ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 500),
                   child: ClipOval(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                       child: Tooltip(
                         message: "Preview",
                         child: Container(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withAlpha(64),
                           child: IconButton(
                             icon: Icon(
-                              _showDetails
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              _showDetails ? Icons.visibility_off : Icons.visibility,
                               color: Colors.white,
                             ),
                             onPressed: _toggleDetailsAndButtons,
@@ -149,27 +176,58 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                     ),
                   ),
                 ),
+              ),
             Align(
               alignment: Alignment.bottomCenter,
-              child: GestureDetector(
+              child: Hero(
+                tag: 'details_${widget.wallpaper['id']}',
+                flightShuttleBuilder: (flightContext, animation, direction, fromContext, toContext) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                        child: DetailsContainer(
+                          wallpaper: widget.wallpaper,
+                          showMetadata: _showMetadata,
+                          toggleMetadata: _toggleMetadata,
+                          isFavorite: isFavorite,
+                          toggleFavorite: () {
+                            favoritesProvider.toggleFavorite(widget.wallpaper);
+                          },
+                          slideAnimation: const AlwaysStoppedAnimation(Offset.zero),
+                          paletteColor: _palette?.dominantColor?.color,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                createRectTween: (begin, end) {
+                  return RectTween(
+                    begin: begin,
+                    end: end,
+                  );
+                },
+                child: GestureDetector(
                   onTap: () {},
-                  child: AnimatedSlide(
-                    offset: _showDetails ? Offset.zero : const Offset(0, 1),
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
+                  child: AnimatedOpacity(
+                    opacity: _showDetails ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOutCubic,
                     child: DetailsContainer(
                       wallpaper: widget.wallpaper,
                       showMetadata: _showMetadata,
-                      slideAnimation: const AlwaysStoppedAnimation(
-                        Offset.zero,
-                      ),
                       toggleMetadata: _toggleMetadata,
                       isFavorite: isFavorite,
                       toggleFavorite: () {
                         favoritesProvider.toggleFavorite(widget.wallpaper);
                       },
+                      slideAnimation: const AlwaysStoppedAnimation(Offset.zero),
+                      paletteColor: _palette?.dominantColor?.color,
                     ),
                   ),
+                ),
               ),
             ),
           ],

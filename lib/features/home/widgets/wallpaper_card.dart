@@ -28,8 +28,15 @@ class WallpaperCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => WallpaperDetailsPage(wallpaper: wallpaper),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 500),
           ),
         );
       },
@@ -39,7 +46,6 @@ class WallpaperCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             children: [
-              // Display the thumbnail image
               CachedNetworkImage(
                 imageUrl: thumbnailUrl ?? '',
                 fit: BoxFit.cover,
@@ -61,7 +67,6 @@ class WallpaperCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Minimal overlay with wallpaper name
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -75,7 +80,6 @@ class WallpaperCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Wallpaper Name
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,7 +107,6 @@ class WallpaperCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // Favorite Button
                       GestureDetector(
                         onTap: () {
                           favoritesProvider.toggleFavorite(wallpaper);

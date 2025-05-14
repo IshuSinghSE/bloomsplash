@@ -11,6 +11,7 @@ import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import '../../../models/wallpaper_model.dart';
 import 'package:image/image.dart' as img;
 import 'package:hive/hive.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -92,6 +93,17 @@ class _UploadPageState extends State<UploadPage> {
       }
     }
     return false; // No duplicates
+  }
+
+  /// Extract dominant colors from a File (thumbnail image)
+  Future<List<String>> _extractDominantColors(File imageFile, {int colorCount = 5}) async {
+    final image = await imageFile.readAsBytes();
+    final uiImage = await decodeImageFromList(image);
+    final palette = await PaletteGenerator.fromImage(
+      uiImage,
+      maximumColorCount: colorCount,
+    );
+    return palette.colors.map((c) => '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}').toList();
   }
 
   Future<void> _pickImage() async {
@@ -194,16 +206,16 @@ class _UploadPageState extends State<UploadPage> {
         if (result == null) {
           throw Exception('Failed to upload images');
         }
+
         debugPrint("Image uploaded successfully. Firebase result: $result");
 
         // Extract URLs, size, and resolution
         final originalUrl = result['originalUrl'];
         final thumbnailUrl = result['thumbnailUrl'];
-        final previewUrl = result['previewUrl'];
         final originalSize = result['originalSize'];
         final originalResolution = result['originalResolution'];
         debugPrint(
-          "Extracted image details: originalUrl=$originalUrl, thumbnailUrl=$thumbnailUrl, previewUrl=$previewUrl",
+          "Extracted image details: originalUrl=$originalUrl, thumbnailUrl=$thumbnailUrl",
         );
 
         // Generate a unique ID for the document
@@ -215,42 +227,48 @@ class _UploadPageState extends State<UploadPage> {
         final imageHash = computeImageHash(_selectedImage!);
         debugPrint("Perceptual hash computed: $imageHash");
 
+        // Extract dominant colors from the webp thumbnail image returned by the API (local file)
+        debugPrint("Extracting dominant colors from local webp thumbnail...");
+        List<String> colors = [];
+        try {
+          // Use the local webp thumbnail file path returned from uploadFileToFirebase
+          final localWebpPath = result['localThumbnailPath'];
+          if (localWebpPath != null && File(localWebpPath).existsSync()) {
+            final thumbFile = File(localWebpPath);
+            colors = await _extractDominantColors(thumbFile);
+            // Optionally delete the local webp after palette extraction
+            thumbFile.deleteSync();
+          } else {
+            debugPrint('Local webp thumbnail not found for palette extraction.');
+          }
+        } catch (e) {
+          debugPrint('Color extraction failed: $e');
+        }
+
         // Create a Wallpaper object
         debugPrint("Creating Wallpaper object...");
         final wallpaper = Wallpaper(
           id: id,
-          name: 'untitled',
+          name: _wallpaperNameController.text.isNotEmpty ? _wallpaperNameController.text : 'untitled',
           imageUrl: originalUrl,
           thumbnailUrl: thumbnailUrl,
-          previewUrl: previewUrl,
           downloads: 0,
           likes: 0,
           size: originalSize,
           resolution: originalResolution,
-          aspectRatio: 1.78, // Replace with dynamic aspect ratio if needed
-          orientation: 'portrait', // Replace with dynamic orientation if needed
-          category: 'casual', // Replace with dynamic category if needed
-          tags: ['new', 'trending'], // Replace with dynamic tags if needed
-          colors: [
-            '#FFFFFF',
-            '#000000',
-          ], // Replace with extracted colors if needed
-          author: userData['displayName'] ?? 'Author $id',
-          authorImage:
-              userData['photoUrl'] ??
-              'https://avatars.githubusercontent.com/u/50513398?v=4', // Replace with actual author image
-          uploadedBy:
-              userData['email'] != null
-                  ? 'admin'
-                  : 'unknown', // Replace with dynamic uploader if needed
-          description:
-              'A mesmerizing view of the night sky.', // Replace with dynamic description
+          orientation: 'portrait',
+          category: 'Uncategorized',
+          tags: [],
+          colors: colors,
+          author: userData['displayName'] ?? 'Unknown',
+          authorImage: userData['photoUrl'] ?? '',
+          description: '',
           isPremium: false,
           isAIgenerated: false,
           status: 'approved',
           createdAt: DateTime.now().toIso8601String(),
           license: 'free-commercial',
-          hash: imageHash, // Add the computed hash
+          hash: imageHash,
         );
         debugPrint("Wallpaper object created successfully.");
 
@@ -299,6 +317,7 @@ class _UploadPageState extends State<UploadPage> {
 
           // Upload the file to Firebase Storage
           final result = await uploadFileToFirebase(image);
+
           if (result == null) {
             throw Exception('Failed to upload image: ${image.path}');
           }
@@ -306,42 +325,48 @@ class _UploadPageState extends State<UploadPage> {
           // Extract URLs, size, and resolution
           final originalUrl = result['originalUrl'];
           final thumbnailUrl = result['thumbnailUrl'];
-          final previewUrl = result['previewUrl'];
           final originalSize = result['originalSize'];
           final originalResolution = result['originalResolution'];
 
           // Generate a unique ID for the document
           final id = const Uuid().v4();
-
-          // Compute perceptual hash for the uploaded image
           final imageHash = computeImageHash(image);
 
-          // Create a Wallpaper object
+          // Extract dominant colors from the thumbnail image
+          List<String> colors = [];
+          try {
+            File thumbFile;
+            if (thumbnailUrl.startsWith('http')) {
+              final tempDir = Directory.systemTemp;
+              final tempFile = File('${tempDir.path}/thumb_${DateTime.now().millisecondsSinceEpoch}.jpg');
+              final response = await HttpClient().getUrl(Uri.parse(thumbnailUrl));
+              final res = await response.close();
+              await res.pipe(tempFile.openWrite());
+              thumbFile = tempFile;
+            } else {
+              thumbFile = File(thumbnailUrl);
+            }
+            colors = await _extractDominantColors(thumbFile);
+          } catch (e) {
+            debugPrint('Color extraction failed: $e');
+          }
+
           final wallpaper = Wallpaper(
             id: id,
             name: 'untitled',
             imageUrl: originalUrl,
             thumbnailUrl: thumbnailUrl,
-            previewUrl: previewUrl,
             downloads: 0,
             likes: 0,
             size: originalSize,
             resolution: originalResolution,
-            aspectRatio: 1.78, // Replace with dynamic aspect ratio if needed
-            orientation:
-                'portrait', // Replace with dynamic orientation if needed
-            category: 'casual', // Replace with dynamic category if needed
-            tags: ['new', 'trending'], // Replace with dynamic tags if needed
-            colors: [
-              '#FFFFFF',
-              '#000000',
-            ], // Replace with extracted colors if needed
-            author: userData['displayName'] ?? 'Author $id',
-            authorImage:
-                userData['photoUrl'] ??
-                'https://avatars.githubusercontent.com/u/50513398?v=4',
-            uploadedBy: userData['email'] != null ? 'admin' : 'unknown',
-            description: 'A mesmerizing view of the night sky.',
+            orientation: 'portrait',
+            category: 'Uncategorized',
+            tags: [],
+            colors: colors,
+            author: userData['displayName'] ?? 'Unknown',
+            authorImage: userData['photoUrl'] ?? '',
+            description: '',
             isPremium: false,
             isAIgenerated: false,
             status: 'approved',

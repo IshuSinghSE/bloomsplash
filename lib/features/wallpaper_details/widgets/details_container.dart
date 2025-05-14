@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'wallpaper_utils.dart';
 import 'metadata_box.dart';
@@ -11,6 +12,7 @@ class DetailsContainer extends StatelessWidget {
   final VoidCallback toggleMetadata;
   final bool isFavorite;
   final VoidCallback toggleFavorite;
+  final Color? paletteColor;
 
   const DetailsContainer({
     super.key,
@@ -20,6 +22,7 @@ class DetailsContainer extends StatelessWidget {
     required this.toggleMetadata,
     required this.isFavorite,
     required this.toggleFavorite,
+    this.paletteColor,
   });
 
   @override
@@ -27,9 +30,10 @@ class DetailsContainer extends StatelessWidget {
     final name = wallpaper['name'] ?? 'Untitled';
     final author = wallpaper['author'] ?? 'unknown author';
     final description = wallpaper['description'] ?? 'No description available';
-    final authorImage = wallpaper['authorImage']?.startsWith('http') == true
-        ? wallpaper['authorImage']
-        : AppConfig.authorIconPath1;
+    final authorImage =
+        wallpaper['authorImage']?.startsWith('http') == true
+            ? wallpaper['authorImage']
+            : AppConfig.authorIconPath1;
     final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
@@ -39,113 +43,113 @@ class DetailsContainer extends StatelessWidget {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: Container(
         width: double.infinity,
-        color: Colors.black.withOpacity(0.55), // Semi-transparent, no blur
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: authorImage.startsWith('http')
-                      ? NetworkImage(authorImage)
-                      : AssetImage(authorImage) as ImageProvider,
-                  radius: 24,
-                  onBackgroundImageError: (_, __) {
-                    debugPrint('Error loading author image: $authorImage');
-                  },
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        author,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
+        decoration: BoxDecoration(
+          // Use paletteColor as background if available, fallback to semi-transparent black
+          color:  Colors.black.withValues(alpha: 0.55),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage:
+                        authorImage.startsWith('http')
+                            ? NetworkImage(authorImage)
+                            : AssetImage(authorImage) as ImageProvider,
+                    radius: 24,
+                    onBackgroundImageError: (_, __) {
+                      debugPrint('Error loading author image: $authorImage');
+                    },
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              description,
-              style: const TextStyle(fontSize: 14, color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                buildCircularActionButton(Icons.download, 'Download', () {
-                  downloadWallpaper(context, image);
-                }),
-                buildCircularActionButton(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  'Like',
-                  () {
-                    // Use the passed toggleFavorite callback for correct state update
-                    toggleFavorite();
-                  },
-                ),
-                buildCircularActionButton(Icons.image, 'Set', () {
-                  showSetWallpaperDialog(context, image);
-                }),
-                buildCircularActionButton(
-                  Icons.info_outline,
-                  'Info',
-                  toggleMetadata,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Stack(
-              children: [
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: SizedBox(height: showMetadata ? 60 : 0),
-                ),
-                if (showMetadata)
-                  SlideTransition(
-                    position: slideAnimation,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        buildMetadataBox(
-                          'Downloads',
-                          download,
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                        buildMetadataBox(
-                          'Resolution',
-                          resolution,
-                        ),
-                        buildMetadataBox(
-                          'Size',
-                          size != null
-                              ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
-                              : 'Unknown',
+                        const SizedBox(height: 4),
+                        Text(
+                          author,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
                         ),
                       ],
                     ),
                   ),
-              ],
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  buildCircularActionButton(Icons.download, 'Download', () {
+                    downloadWallpaper(context, image);
+                  }),
+                  buildCircularActionButton(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    'Like',
+                    () {
+                      // Use the passed toggleFavorite callback for correct state update
+                      toggleFavorite();
+                    },
+                  ),
+                  buildCircularActionButton(Icons.image, 'Set', () {
+                    showSetWallpaperDialog(context, image);
+                  }),
+                  buildCircularActionButton(
+                    Icons.info_outline,
+                    'Info',
+                    toggleMetadata,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Stack(
+                children: [
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: SizedBox(height: showMetadata ? 60 : 0),
+                  ),
+                  if (showMetadata)
+                    SlideTransition(
+                      position: slideAnimation,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          buildMetadataBox('Downloads', download),
+                          buildMetadataBox('Resolution', resolution),
+                          buildMetadataBox(
+                            'Size',
+                            size != null
+                                ? '${((int.tryParse(size.toString()) ?? 0) / (1024 * 1024)).toStringAsFixed(2)} MB'
+                                : 'Unknown',
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
