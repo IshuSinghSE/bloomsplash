@@ -99,30 +99,36 @@ class _ExplorePageState extends State<ExplorePage> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _wallpapers.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.image_not_supported_rounded,
-                          size: 70,
-                          color: Colors.grey,
+                ? SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.7, // Ensures enough space to pull
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.image_not_supported_rounded,
+                              size: 70,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No wallpapers found',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.grey[700],
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Pull down to refresh',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[500],
+                                  ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No wallpapers found',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.grey[700],
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Pull down to refresh',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[500],
-                              ),
-                        ),
-                      ],
+                      ),
                     ),
                   )
                 : GridView.builder(
