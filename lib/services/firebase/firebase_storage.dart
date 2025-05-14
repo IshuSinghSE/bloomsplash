@@ -33,9 +33,9 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final originalSize = file.lengthSync();
     final originalResolution = '${originalImage.width}x${originalImage.height}';
 
-    // Resize for thumbnail (HD quality, 1080x1920 max, maintaining aspect ratio)
-    final maxThumbWidth = 1080;
-    final maxThumbHeight = 1920;
+    // Resize for thumbnail (optimized for list views, 480px max width)
+    final maxThumbWidth = 480; // Reduced from 1080 for better performance
+    final maxThumbHeight = 800; // Reduced from 1920 for better performance
     final thumbAspect = originalImage.width / originalImage.height;
     int thumbWidth = maxThumbWidth;
     int thumbHeight = (maxThumbWidth / thumbAspect).round();
@@ -49,12 +49,12 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       height: thumbHeight,
     );
 
-    // Use the same format as the user uploaded (JPEG/PNG/WEBP)
+    // Use the same format as the user uploaded (JPEG/PNG)
     String ext = file.path.split('.').last.toLowerCase();
     List<int> thumbBytes;
     String thumbExt;
     if (ext == 'jpg' || ext == 'jpeg') {
-      thumbBytes = img.encodeJpg(thumbnailImage, quality: 95);
+      thumbBytes = img.encodeJpg(thumbnailImage, quality: 85); // Reduced quality from 95 to 85
       thumbExt = 'jpg';
     } else {
       thumbBytes = img.encodePng(thumbnailImage);
