@@ -30,6 +30,7 @@ class _UploadPageState extends State<UploadPage> {
       TextEditingController();
   bool _termsAccepted = false; // Track terms acceptance
   bool _showBulkOptions = false; // Track whether to show bulk options
+  bool _showImageSizeError = false; // Track image size error state
 
   Future<File> _fixImageOrientation(File imageFile) async {
     final bytes = await imageFile.readAsBytes();
@@ -44,12 +45,22 @@ class _UploadPageState extends State<UploadPage> {
     canvas.drawImage(image, Offset.zero, Paint());
 
     final picture = recorder.endRecording();
-    final img = await picture.toImage(image.width, image.height);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    final fixedUiImage = await picture.toImage(image.width, image.height);
+    final byteData = await fixedUiImage.toByteData(format: ui.ImageByteFormat.rawRgba);
 
+    // Use the same file extension as the original
+    final ext = imageFile.path.split('.').last.toLowerCase();
+    final imgLib = img.decodeImage(bytes);
+    if (imgLib == null) throw Exception('Failed to decode image');
+    final fixedImage = img.Image.fromBytes(image.width, image.height, byteData!.buffer.asUint8List());
+    List<int> encoded;
+    if (ext == 'jpg' || ext == 'jpeg') {
+      encoded = img.encodeJpg(fixedImage, quality: 95);
+    } else {
+      encoded = img.encodePng(fixedImage);
+    }
     final fixedImageFile = File(imageFile.path);
-    await fixedImageFile.writeAsBytes(byteData!.buffer.asUint8List());
-
+    await fixedImageFile.writeAsBytes(encoded);
     return fixedImageFile;
   }
 
@@ -96,7 +107,7 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   /// Extract dominant colors from a File (thumbnail image)
-  Future<List<String>> _extractDominantColors(File imageFile, {int colorCount = 5}) async {
+  Future<List<String>> _extractDominantColors(File imageFile, {int colorCount = 3}) async {
     final image = await imageFile.readAsBytes();
     final uiImage = await decodeImageFromList(image);
     final palette = await PaletteGenerator.fromImage(
@@ -128,18 +139,31 @@ class _UploadPageState extends State<UploadPage> {
       final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
       setState(() {
-        _isLoading =
-            false; // Hide loading indicator immediately after picker opens
+        _isLoading = false; // Hide loading indicator immediately after picker opens
       });
 
       if (pickedFile != null) {
         File selectedFile = File(pickedFile.path);
-
+        debugPrint("Selected file path: ${selectedFile.path}");
+        // Check file size before processing
+        final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
+        if (selectedFile.lengthSync() > maxFileSize) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image should be less than 4 MB.')),
+          );
+          setState(() {
+            _selectedImage = null;
+            _termsAccepted = false;
+            _showImageSizeError = true;
+          });
+          return;
+        }
         // Fix the orientation of the image
         selectedFile = await _fixImageOrientation(selectedFile);
-
+        debugPrint("Fixed image orientation: ${selectedFile.path}");
         setState(() {
           _selectedImage = selectedFile;
+          _showImageSizeError = false;
         });
       }
     } else if (status.isDenied) {
@@ -185,6 +209,18 @@ class _UploadPageState extends State<UploadPage> {
 
       try {
         debugPrint("Starting image upload process...");
+
+        // Check file size before processing
+        final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
+        if (_selectedImage != null && _selectedImage!.lengthSync() > maxFileSize) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image should be less than 4 MB.')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+          return;
+        }
 
         // Check for duplicates
         final isDuplicate = await isDuplicateWallpaper(_selectedImage!);
@@ -455,6 +491,9 @@ class _UploadPageState extends State<UploadPage> {
                               65,
                             ).withOpacity(0.3),
                             borderRadius: BorderRadius.circular(24),
+                            border: _showImageSizeError
+                                ? Border.all(color: Colors.pinkAccent, width: 3)
+                                : null,
                             image:
                                 _selectedImage != null
                                     ? DecorationImage(
@@ -626,15 +665,15 @@ class _UploadPageState extends State<UploadPage> {
                           side: const BorderSide(color: Colors.grey, width: 1),
                           checkColor: Colors.grey[900],
                           value: _termsAccepted,
-                          onChanged: (value) {
-                            setState(() {
-                              _termsAccepted = value ?? false;
-                            });
-                          },
-
+                          onChanged: _showImageSizeError
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _termsAccepted = value ?? false;
+                                  });
+                                },
                           materialTapTargetSize:
-                              MaterialTapTargetSize
-                                  .padded, // Makes the tap area larger
+                              MaterialTapTargetSize.padded, // Makes the tap area larger
                         ),
                         const Expanded(
                           child: Text(
@@ -675,13 +714,20 @@ class _UploadPageState extends State<UploadPage> {
                         ),
                         ElevatedButton(
                           onPressed:
-                              _isUploading || !_termsAccepted
+                              _isUploading || !_termsAccepted || _showImageSizeError
                                   ? null
                                   : () => _uploadImage(
                                     userData,
                                   ), // Pass userData to _uploadImage
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
+                            backgroundColor: _showImageSizeError
+                                ? Colors.pink[100]
+                                : (_isUploading || !_termsAccepted)
+                                    ? Colors.pink[100]
+                                    : Colors.blueAccent,
+                            foregroundColor: _showImageSizeError
+                                ? Colors.pink[300]
+                                : Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 36,
                               vertical: 12,
