@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:palette_generator/palette_generator.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../widgets/details_container.dart';
 import '../../../app/constants/config.dart';
@@ -19,6 +20,27 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
   bool _showDetails = true;
   bool _showButtons = true;
   bool _showMetadata = false;
+  PaletteGenerator? _palette;
+
+  @override
+  void initState() {
+    super.initState();
+    _updatePalette();
+  }
+
+  Future<void> _updatePalette() async {
+    final String? thumbnailUrl = widget.wallpaper['thumbnail'];
+    if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
+      final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
+        CachedNetworkImageProvider(thumbnailUrl),
+        size: const Size(200, 200),
+        maximumColorCount: 8,
+      );
+      setState(() {
+        _palette = palette;
+      });
+    }
+  }
 
   void _toggleMetadata() {
     setState(() {
@@ -175,6 +197,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                             favoritesProvider.toggleFavorite(widget.wallpaper);
                           },
                           slideAnimation: const AlwaysStoppedAnimation(Offset.zero),
+                          paletteColor: _palette?.dominantColor?.color,
                         ),
                       ),
                     ),
@@ -201,6 +224,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                         favoritesProvider.toggleFavorite(widget.wallpaper);
                       },
                       slideAnimation: const AlwaysStoppedAnimation(Offset.zero),
+                      paletteColor: _palette?.dominantColor?.color,
                     ),
                   ),
                 ),

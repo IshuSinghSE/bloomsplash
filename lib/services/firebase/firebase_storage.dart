@@ -26,18 +26,14 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final originalResolution = '${originalImage.width}x${originalImage.height}';
 
     // Resize for thumbnail (200 width while maintaining aspect ratio)
-    final thumbnailImage = img.copyResize(
-      originalImage,
-      width: 200,
-      height: (200 * originalImage.height / originalImage.width).round(),
-    );
+    final thumbnailImage = originalImage;
     final thumbnailPngFile = File('${file.parent.path}/thumbnail_$fileName.png');
     await thumbnailPngFile.writeAsBytes(img.encodePng(thumbnailImage));
 
     // Convert PNG thumbnail to webp using external API
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('https://image-optimization-sooty.vercel.app/convert'),
+      Uri.parse('https://image-optimization-sooty.vercel.app/convert?quality=100'),
     );
     request.files.add(await http.MultipartFile.fromPath('file', thumbnailPngFile.path));
     final streamedResponse = await request.send();
@@ -63,13 +59,14 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
 
     // Clean up temporary files
     thumbnailPngFile.deleteSync();
-    thumbnailWebpFile.deleteSync();
+    // Do NOT delete thumbnailWebpFile here, return its path for palette extraction
 
     return {
       'originalUrl': originalUrl,
       'thumbnailUrl': thumbnailUrl,
       'originalSize': originalSize,
       'originalResolution': originalResolution,
+      'localThumbnailPath': thumbnailWebpFile.path, // Add local webp path for palette extraction
     };
   } catch (e) {
     log('Error uploading file: $e');

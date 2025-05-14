@@ -12,6 +12,7 @@ class DetailsContainer extends StatelessWidget {
   final VoidCallback toggleMetadata;
   final bool isFavorite;
   final VoidCallback toggleFavorite;
+  final Color? paletteColor;
 
   const DetailsContainer({
     super.key,
@@ -21,6 +22,7 @@ class DetailsContainer extends StatelessWidget {
     required this.toggleMetadata,
     required this.isFavorite,
     required this.toggleFavorite,
+    this.paletteColor,
   });
 
   @override
@@ -42,7 +44,8 @@ class DetailsContainer extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: .55), // Semi-transparent
+          // Use paletteColor as background if available, fallback to semi-transparent black
+          color:  Colors.black.withValues(alpha: 0.55),
         ),
         child: Container(
           padding: const EdgeInsets.all(16.0),

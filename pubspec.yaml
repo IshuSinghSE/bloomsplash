@@ -14,7 +14,7 @@ dependencies:
   # --- UI and Design ---
   cupertino_icons: ^1.0.8
   glassmorphism: ^3.0.0
-  palette_generator: ^0.3.3+6
+  palette_generator: ^0.3.3+7
 
   # --- Networking and File Handling ---
   dio: ^5.0.0
@@ -32,7 +32,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # --- Image Processing ---
-  image: ^4.5.4
+  image: 3.2.2
 
   # --- Local Storage ---
   hive: ^2.2.3
