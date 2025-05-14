@@ -33,9 +33,9 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final originalSize = file.lengthSync();
     final originalResolution = '${originalImage.width}x${originalImage.height}';
 
-    // Resize for thumbnail (optimized for list views, 480px max width)
-    final maxThumbWidth = 480; // Reduced from 1080 for better performance
-    final maxThumbHeight = 800; // Reduced from 1920 for better performance
+    // Resize for thumbnail (optimized for list views, 800px max width)
+    final maxThumbWidth = 800; // Reduced from 1080 for better performance
+    final maxThumbHeight = 1420; // Reduced from 1920 for better performance
     final thumbAspect = originalImage.width / originalImage.height;
     int thumbWidth = maxThumbWidth;
     int thumbHeight = (maxThumbWidth / thumbAspect).round();
