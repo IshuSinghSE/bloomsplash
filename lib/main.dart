@@ -110,6 +110,9 @@ class _HomePageState extends State<HomePage> {
   // Conditionally include the UploadPage tab
   late final List<Widget> pages;
 
+  // Conditionally include the UploadPage tab
+  late final List<Widget> pages;
+
   @override
   void initState() {
     super.initState();
