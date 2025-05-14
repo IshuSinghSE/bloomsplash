@@ -32,7 +32,7 @@ class CategoryWallpapersPage extends StatelessWidget {
         itemCount: wallpapers.length,
         itemBuilder: (context, index) {
           final wallpaper = wallpapers[index];
-          final image = wallpaper["image"] ?? AppConfig.placeholderImagePath;
+          final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
           final author = wallpaper["author"] ?? "Unknown";
           final title =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"

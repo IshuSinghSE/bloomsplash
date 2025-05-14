@@ -33,7 +33,7 @@ class CollectionWallpapersPage extends StatelessWidget {
         itemBuilder: (context, index) {
           final wallpaper = wallpapers[index];
           final image =
-              wallpaper["image"] ?? AppConfig.placeholderImagePath; // Fallback to sample image
+              wallpaper["image"] ?? AppConfig.shimmerImagePath; // Fallback to sample image
           final name =
               wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
 

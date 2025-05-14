@@ -192,7 +192,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
             children:
                 wallpapers.take(3).map((wallpaper) {
                   final image =
-                      wallpaper["image"] ?? AppConfig.placeholderImagePath;
+                      wallpaper["image"] ?? AppConfig.shimmerImagePath;
                   final title = wallpaper["title"] ?? "Untitled";
                   final author = wallpaper["author"] ?? "Unknown";
 

@@ -30,7 +30,7 @@ class DetailsContainer extends StatelessWidget {
     final authorImage = wallpaper['authorImage']?.startsWith('http') == true
         ? wallpaper['authorImage']
         : AppConfig.authorIconPath1;
-    final image = wallpaper['image'] ?? AppConfig.placeholderImagePath;
+    final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
     final resolution = wallpaper['resolution'] ?? 'Unknown';

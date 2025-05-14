@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
+import '../../../app/constants/config.dart';
 
 class WallpaperCard extends StatelessWidget {
   final Map<String, dynamic> wallpaper;
@@ -46,7 +47,7 @@ class WallpaperCard extends StatelessWidget {
                 height: double.infinity,
                 placeholder: (context, url) => Center(
                   child: Image.asset(
-                    'assets/images/shimmer.webp',
+                    AppConfig.shimmerImagePath,
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,

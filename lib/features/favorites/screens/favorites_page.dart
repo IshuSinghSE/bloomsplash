@@ -56,7 +56,7 @@ class FavoritesPage extends StatelessWidget {
                       itemCount: favoriteWallpapers.length,
                       itemBuilder: (context, index) {
                         final wallpaper = favoriteWallpapers[index];
-                        final image = wallpaper['image'] ?? AppConfig.placeholderImagePath;
+                        final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
                         final author = wallpaper['author'] ?? 'Unknown';
                         final title = wallpaper['title'] ?? 'Untitled';
 
