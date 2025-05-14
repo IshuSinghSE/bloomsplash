@@ -46,27 +46,29 @@ class WallpaperCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             children: [
-              CachedNetworkImage(
-                imageUrl: thumbnailUrl ?? '',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholder: (context, url) => Center(
-                  child: Image.asset(
-                    AppConfig.shimmerImagePath,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                ),
-                errorWidget: (context, url, error) => const Center(
-                  child: Icon(
-                    Icons.broken_image,
-                    size: 50,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
+              imageBuilder != null
+                  ? imageBuilder!(context)
+                  : CachedNetworkImage(
+                      imageUrl: thumbnailUrl ?? '',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      placeholder: (context, url) => Center(
+                        child: Image.asset(
+                          AppConfig.shimmerImagePath,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
               Positioned(
                 bottom: 0,
                 left: 0,
