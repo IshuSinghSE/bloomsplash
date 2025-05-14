@@ -28,8 +28,15 @@ class WallpaperCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => WallpaperDetailsPage(wallpaper: wallpaper),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 500),
           ),
         );
       },

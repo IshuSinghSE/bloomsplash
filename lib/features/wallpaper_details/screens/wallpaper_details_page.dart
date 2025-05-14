@@ -99,35 +99,42 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                 ),
               ),
             ),
-             if (_showButtons)
-            Positioned(
-              top: 32,
-              left: 16,
-              child: ClipOval(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Tooltip(
-                    message: "Back",
-                    child: Container(
-                      color: Colors.black.withOpacity(0.5),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
+            if (_showButtons)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 0,
+                left: 16,
+                child: AnimatedOpacity(
+                  opacity: _showButtons ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Tooltip(
+                        message: "Back",
+                        child: Container(
+                          color: Colors.black.withOpacity(0.5),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
             if (_showButtons)
-                Positioned(
-                  top: 32,
-                  right: 16,
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 0,
+                right: 16,
+                child: AnimatedOpacity(
+                  opacity: _showButtons ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
                   child: ClipOval(
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -137,9 +144,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                           color: Colors.black.withOpacity(0.5),
                           child: IconButton(
                             icon: Icon(
-                              _showDetails
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              _showDetails ? Icons.visibility_off : Icons.visibility,
                               color: Colors.white,
                             ),
                             onPressed: _toggleDetailsAndButtons,
@@ -149,14 +154,18 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                     ),
                   ),
                 ),
+              ),
             Align(
               alignment: Alignment.bottomCenter,
               child: GestureDetector(
-                  onTap: () {},
-                  child: AnimatedSlide(
-                    offset: _showDetails ? Offset.zero : const Offset(0, 1),
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
+                onTap: () {},
+                child: AnimatedSlide(
+                  offset: _showDetails ? Offset.zero : const Offset(0, 1),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOutCubic,
+                  child: AnimatedOpacity(
+                    opacity: _showDetails ? 1.0 : 1.0,
+                    duration: const Duration(milliseconds: 500),
                     child: DetailsContainer(
                       wallpaper: widget.wallpaper,
                       showMetadata: _showMetadata,
@@ -170,6 +179,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
                       },
                     ),
                   ),
+                ),
               ),
             ),
           ],

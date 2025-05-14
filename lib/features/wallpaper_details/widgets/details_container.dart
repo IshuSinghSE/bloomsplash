@@ -116,7 +116,7 @@ class DetailsContainer extends StatelessWidget {
             Stack(
               children: [
                 AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
                   child: SizedBox(height: showMetadata ? 60 : 0),
                 ),
