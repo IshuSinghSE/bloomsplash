@@ -50,19 +50,20 @@ class _ExplorePageState extends State<ExplorePage> {
         snapshot = await query.startAfterDocument(_lastDocument!).get();
       }
 
-      if (snapshot.docs.isNotEmpty) {
-        setState(() {
+      setState(() {
+        if (isRefresh) {
+          _wallpapers.clear(); // Clear on refresh regardless of result
+        }
+        
+        if (snapshot.docs.isNotEmpty) {
           _lastDocument = snapshot.docs.last;
-          if (isRefresh) {
-            _wallpapers.clear(); // Clear only on refresh
-          }
           // Duplicate the fetched wallpapers 2 times for testing scroll smoothness
           final docs = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
           for (int i = 0; i < 2; i++) {
             _wallpapers.addAll(docs);
           }
-        });
-      }
+        }
+      });
     } catch (e) {
       debugPrint('Error fetching wallpapers: $e');
     } finally {
@@ -97,71 +98,98 @@ class _ExplorePageState extends State<ExplorePage> {
         onRefresh: () => _fetchWallpapers(isRefresh: true),
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : GridView.builder(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                cacheExtent: 400, // Lower cacheExtent for minimal memory usage
-                padding: const EdgeInsets.all(8.0),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.75,
-                ),
-                addAutomaticKeepAlives: false,
-                addRepaintBoundaries: true,
-                addSemanticIndexes: false,
-                itemCount: _wallpapers.length + (_isLoadingMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _wallpapers.length) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final wallpaper = _wallpapers[index];
-                  return WallpaperCard(
-                    wallpaper: wallpaper,
-                    onFavoritePressed: () {
-                      favoritesProvider.toggleFavorite(wallpaper);
-                    },
-                    imageBuilder: (context) {
-                      final String? thumbnailUrl = wallpaper['thumbnail'];
-                      if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
-                        return CachedNetworkImage(
-                          imageUrl: thumbnailUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          memCacheHeight: 200, // Lower memory usage for cache
-                          memCacheWidth: 120,
-                          maxWidthDiskCache: 240, // Disk cache for low-res
-                          maxHeightDiskCache: 400,
-                          useOldImageOnUrlChange: false,
-                          placeholder: (context, url) => Image.asset(
-                            AppConfig.shimmerImagePath,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                          ),
-                          errorWidget: (context, url, error) => const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 50,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      } else {
-                        return const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                        );
+            : _wallpapers.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.image_not_supported_rounded,
+                          size: 70,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No wallpapers found',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.grey[700],
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Pull down to refresh',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[500],
+                              ),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    controller: _scrollController,
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                    cacheExtent: 400, // Lower cacheExtent for minimal memory usage
+                    padding: const EdgeInsets.all(8.0),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.75,
+                    ),
+                    addAutomaticKeepAlives: false,
+                    addRepaintBoundaries: true,
+                    addSemanticIndexes: false,
+                    itemCount: _wallpapers.length + (_isLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _wallpapers.length) {
+                        return const Center(child: CircularProgressIndicator());
                       }
+                      final wallpaper = _wallpapers[index];
+                      return WallpaperCard(
+                        wallpaper: wallpaper,
+                        onFavoritePressed: () {
+                          favoritesProvider.toggleFavorite(wallpaper);
+                        },
+                        imageBuilder: (context) {
+                          final String? thumbnailUrl = wallpaper['thumbnail'];
+                          if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
+                            return CachedNetworkImage(
+                              imageUrl: thumbnailUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              memCacheHeight: 200, // Lower memory usage for cache
+                              memCacheWidth: 120,
+                              maxWidthDiskCache: 240, // Disk cache for low-res
+                              maxHeightDiskCache: 400,
+                              useOldImageOnUrlChange: false,
+                              placeholder: (context, url) => Image.asset(
+                                AppConfig.shimmerImagePath,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                              errorWidget: (context, url, error) => const Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            );
+                          } else {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            );
+                          }
+                        },
+                      );
                     },
-                  );
-                },
-              ),
+                  ),
       ),
     );
   }
