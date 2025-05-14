@@ -11,7 +11,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
   try {
     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
     final originalRef = storageRef.child('wallpapers/original/$fileName');
-    final thumbnailRef = storageRef.child('wallpapers/thumbnail/$fileName.webp');
+    final thumbnailRef = storageRef.child('wallpapers/thumbnail/$fileName');
 
     // Read the original image
     final originalBytes = await file.readAsBytes();
