@@ -35,6 +35,13 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
     _scrollController.addListener(_onScroll);
   }
 
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   Future<void> _initHiveAndLoad() async {
     _wallpapersBox = await Hive.openBox('uploadedWallpapers');
     _loadWallpapersFromLocal();
@@ -46,6 +53,16 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
 
   void _loadWallpapersFromLocal() {
     final storedWallpapers = _wallpapersBox.get('wallpapers', defaultValue: []);
+    final cacheTimestamp = _wallpapersBox.get('cacheTimestamp', defaultValue: 0);
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+    // Check if cache is expired (e.g., 7 days)
+    if (currentTime - cacheTimestamp > 7 * 24 * 60 * 60 * 1000) {
+      debugPrint('Cache expired. Fetching fresh data.');
+      _fetchWallpapers(isRefresh: true, forceFetch: true);
+      return;
+    }
+
     if (storedWallpapers.isNotEmpty) {
       setState(() {
         _uploadedWallpapers = (storedWallpapers as List)
@@ -60,10 +77,10 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
   Future<void> _saveWallpapersToLocal(List<Wallpaper> wallpapers) async {
     final wallpapersJson = wallpapers.map((w) => json.encode(w.toJson())).toList();
     await _wallpapersBox.put('wallpapers', wallpapersJson);
+    await _wallpapersBox.put('cacheTimestamp', DateTime.now().millisecondsSinceEpoch);
   }
 
   Future<void> _fetchWallpapers({bool isRefresh = false, bool forceFetch = false}) async {
-    // Only fetch if forced, or if pull-to-refresh, or if we have more to load
     if (!forceFetch && !isRefresh && !_hasMore) return;
 
     try {
@@ -81,7 +98,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
       }
 
       final result = await _firestoreService.getPaginatedWallpapers(
-        limit: _lazyLoadBatchSize, // Use batch size for lazy loading
+        limit: _lazyLoadBatchSize,
         lastDocument: isRefresh ? null : _lastDocument,
       );
 
@@ -107,6 +124,12 @@ class _MyUploadsPageState extends State<MyUploadsPage> {
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
+      });
+      // Retry mechanism
+      Future.delayed(const Duration(seconds: 3), () {
+        if (!_isLoading && !_isLoadingMore) {
+          _fetchWallpapers(isRefresh: isRefresh, forceFetch: forceFetch);
+        }
       });
     }
   }
