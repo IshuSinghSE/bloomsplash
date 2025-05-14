@@ -98,24 +98,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
+  // Conditionally include the UploadPage tab
+  late final List<Widget> pages;
+
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     var userData = widget.preferencesBox.get('userData', defaultValue: {});
     final userEmail = userData['email'] ?? '';
 
-    // Conditionally include the UploadPage tab
-    final List<Widget> pages = [
+    pages = [
       const ExplorePage(),
       const FavoritesPage(),
       if (userEmail == "ishu.111636@gmail.com") const UploadPage(),
     ];
+  }
 
-    void onItemTapped(int index) {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+  void onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -140,15 +146,11 @@ class _HomePageState extends State<HomePage> {
             child: IconButton(
               icon: CircleAvatar(
                 backgroundImage:
-                    userData != null &&
-                            userData['photoUrl'] != null &&
-                            userData['photoUrl']!.isNotEmpty
-                        ? NetworkImage(userData['photoUrl']!)
-                        : AssetImage(AppConfig.avatarIconPath)
-                            as ImageProvider,
+                    widget.preferencesBox.get('userData')?['photoUrl'] != null
+                        ? NetworkImage(widget.preferencesBox.get('userData')['photoUrl'])
+                        : AssetImage(AppConfig.avatarIconPath) as ImageProvider,
               ),
               onPressed: () {
-                // Handle account action
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SettingsPage()),
@@ -159,16 +161,29 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       extendBody: true, // Ensures the bottom navigation bar floats over the background
-      body: IndexedStack(
-        index: _selectedIndex, // Show the selected tab
-        children: pages, // Preserve the state of all tabs
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: IndexedStack(
+          key: ValueKey<int>(_selectedIndex),
+          index: _selectedIndex, // Show the selected tab
+          children: pages, // Preserve the state of all tabs
+        ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemTapped: (index) {
-          // Prevent selecting the Upload tab if it's not available
-          if (index == 2 && userEmail != "ishu.111636@gmail.com") return;
-          onItemTapped(index);
+          // Ensure the selected index is valid
+          if (index < pages.length) {
+            onItemTapped(index);
+          }
         },
       ),
     );
