@@ -37,7 +37,7 @@ Widget buildCircularActionButton(
     children: [
       ClipOval(
         child: Material(
-          color: Colors.black.withOpacity(0.5),
+          color: Colors.black.withValues(alpha: .5),
           child: IconButton(
             icon: Icon(icon, color: Colors.white),
             onPressed: onPressed,
