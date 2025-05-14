@@ -25,7 +25,6 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
   late TextEditingController _tagsController;
   late TextEditingController _colorsController;
   late TextEditingController _orientationController;
-  late TextEditingController _aspectRatioController;
   late TextEditingController _resolutionController;
   late TextEditingController _licenseController;
   late TextEditingController _statusController;
@@ -43,7 +42,6 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
     _tagsController = TextEditingController(text: widget.wallpaper.tags.join(', '));
     _colorsController = TextEditingController(text: widget.wallpaper.colors.join(', '));
     _orientationController = TextEditingController(text: widget.wallpaper.orientation);
-    _aspectRatioController = TextEditingController(text: widget.wallpaper.aspectRatio.toString());
     _resolutionController = TextEditingController(text: widget.wallpaper.resolution);
     _licenseController = TextEditingController(text: widget.wallpaper.license);
     _statusController = TextEditingController(text: widget.wallpaper.status);
@@ -70,18 +68,6 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
     }
   }
 
-  Future<void> _loadPreview() async {
-    if (_cachedImages['Preview'] != null) return;
-    try {
-      final previewFile = await _cacheManager.getSingleFile(widget.wallpaper.previewUrl);
-      setState(() {
-        _cachedImages['Preview'] = previewFile;
-      });
-    } catch (e) {
-      debugPrint('Error caching preview: $e');
-    }
-  }
-
   Future<void> _loadOriginal() async {
     if (_cachedImages['Original'] != null) return;
     try {
@@ -98,9 +84,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
     setState(() {
       _selectedTab = tab;
     });
-    if (tab == 'Preview') {
-      _loadPreview();
-    } else if (tab == 'Original') {
+    if (tab == 'Original') {
       _loadOriginal();
     }
     // Thumbnail is loaded in initState
@@ -113,15 +97,11 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
   Future<void> _downloadImage() async {
     final url = _selectedTab == 'Thumbnail'
         ? widget.wallpaper.thumbnailUrl
-        : _selectedTab == 'Preview'
-            ? widget.wallpaper.previewUrl
-            : widget.wallpaper.imageUrl;
+        : widget.wallpaper.imageUrl;
 
     final suffix = _selectedTab == 'Thumbnail'
         ? '_thumbnail'
-        : _selectedTab == 'Preview'
-            ? '_preview'
-            : ''; // No suffix for original
+        : ''; // No suffix for original
 
     final fileName = '${widget.wallpaper.name.replaceAll(' ', '_')}$suffix.jpg';
 
@@ -136,12 +116,10 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
       if (pickedFile == null) return;
 
       final newFile = File(pickedFile.path);
-      final field = _selectedTab.toLowerCase(); // thumbnail, preview, or original
+      final field = _selectedTab.toLowerCase(); // thumbnail or original
       final oldUrl = _selectedTab == 'Thumbnail'
           ? widget.wallpaper.thumbnailUrl
-          : _selectedTab == 'Preview'
-              ? widget.wallpaper.previewUrl
-              : widget.wallpaper.imageUrl;
+          : widget.wallpaper.imageUrl;
 
       final oldRef = FirebaseStorage.instance.refFromURL(oldUrl);
       await oldRef.delete();
@@ -157,7 +135,6 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
         name: widget.wallpaper.name,
         imageUrl: field == 'original' ? newUrl : widget.wallpaper.imageUrl,
         thumbnailUrl: field == 'thumbnail' ? newUrl : widget.wallpaper.thumbnailUrl,
-        previewUrl: field == 'preview' ? newUrl : widget.wallpaper.previewUrl,
         downloads: widget.wallpaper.downloads,
         size: widget.wallpaper.size.toString(),
         resolution: widget.wallpaper.resolution,
@@ -187,7 +164,6 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
           name: _nameController.text,
           imageUrl: widget.wallpaper.imageUrl,
           thumbnailUrl: widget.wallpaper.thumbnailUrl,
-          previewUrl: widget.wallpaper.previewUrl,
           downloads: widget.wallpaper.downloads,
           size: widget.wallpaper.size.toString(),
           resolution: _resolutionController.text,
@@ -226,7 +202,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
             // Tab Bar
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: ['Thumbnail', 'Preview', 'Original'].map((tab) {
+              children: ['Thumbnail', 'Original'].map((tab) {
                 return GestureDetector(
                   onTap: () => _onTabSelected(tab),
                   child: Padding(
@@ -320,10 +296,6 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
                   TextFormField(
                     controller: _orientationController,
                     decoration: const InputDecoration(labelText: 'Orientation'),
-                  ),
-                  TextFormField(
-                    controller: _aspectRatioController,
-                    decoration: const InputDecoration(labelText: 'Aspect Ratio'),
                   ),
                   TextFormField(
                     controller: _resolutionController,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import '../../services/firebase/firebase_firestore_service.dart';
 
 class FavoritesProvider extends ChangeNotifier {
   final Box<Map> _favoritesBox = Hive.box<Map>('favorites');
@@ -40,5 +41,42 @@ class FavoritesProvider extends ChangeNotifier {
   // Method to check if a wallpaper is a favorite
   bool isFavorite(Map<String, dynamic> wallpaper) {
     return _favoritesBox.values.any((fav) => fav['id'] == wallpaper['id']);
+  }
+
+  // Sync favorites from Firestore (on login or sync button)
+  Future<void> syncFavoritesFromFirestore(String uid) async {
+    final firestoreService = FirestoreService();
+    final userProfile = await firestoreService.getUserProfile(uid);
+    final savedIds = (userProfile?['savedWallpapers'] as List?)?.cast<String>() ?? [];
+    _favoritesBox.clear();
+    for (final id in savedIds) {
+      final wallpaper = await firestoreService.getImageDetailsFromFirestore(id);
+      if (wallpaper != null) {
+        _favoritesBox.add(wallpaper);
+      }
+    }
+    // After syncing locally, update Firestore to match local state (in case local changed)
+    final localIds = _favoritesBox.values.map((fav) => fav['id'] as String).toList();
+    await firestoreService.updateUserSavedWallpapers(uid, localIds);
+    notifyListeners();
+  }
+
+  // Save current favorites to Firestore (after add/remove)
+  Future<void> saveFavoritesToFirestore(String uid) async {
+    final firestoreService = FirestoreService();
+    final ids = _favoritesBox.values.map((fav) => fav['id'] as String).toList();
+    await firestoreService.updateUserSavedWallpapers(uid, ids);
+  }
+
+  // Clear favorites on sign out (local only)
+  void clearFavoritesOnSignOut() {
+    _favoritesBox.clear();
+    notifyListeners();
+  }
+
+  // Override toggleFavorite to sync with Firestore
+  Future<void> toggleFavoriteWithSync(Map<String, dynamic> wallpaper, String uid) async {
+    toggleFavorite(wallpaper);
+    await saveFavoritesToFirestore(uid);
   }
 }

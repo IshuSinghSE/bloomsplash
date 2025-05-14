@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/providers/favorites_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 import '../../../utils/image_cache_utils.dart';
 import '../../../app/constants/config.dart';
@@ -56,7 +57,7 @@ class FavoritesPage extends StatelessWidget {
                       itemCount: favoriteWallpapers.length,
                       itemBuilder: (context, index) {
                         final wallpaper = favoriteWallpapers[index];
-                        final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
+                        final image = wallpaper['thumbnail'] ?? AppConfig.shimmerImagePath;
                         final author = wallpaper['author'] ?? 'Unknown';
                         final title = wallpaper['title'] ?? 'Untitled';
 
@@ -73,12 +74,31 @@ class FavoritesPage extends StatelessWidget {
                             },
                             child: Stack(
                               children: [
-                                Image.network(
-                                  image,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
+                                if (image.startsWith('http'))
+                                   CachedNetworkImage(
+                                    imageUrl: image,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    placeholder: (context, url) => Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                    errorWidget: (context, url, error) {
+                                      return Image.asset(
+                                        AppConfig.shimmerImagePath,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                      );
+                                    },
+                                    )
+                                else
+                                  Image.asset(
+                                    image,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                  ),
                                 Positioned.fill(
                                   child: Container(
                                     decoration: BoxDecoration(

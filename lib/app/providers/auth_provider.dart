@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import '../../features/welcome/screens/welcome_page.dart';
 import '../constants/data.dart';
+import '../../services/firebase/firebase_firestore_service.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -71,6 +72,24 @@ class AuthProvider with ChangeNotifier {
         'id': _user?.uid,
         'photoUrl': _user?.photoURL,
       });
+
+      // Create the user document in Firestore on first login if it does not exist
+      final firestoreService = FirestoreService();
+      final userDoc = await firestoreService.getUserProfile(_user!.uid);
+      if (userDoc == null) {
+        await firestoreService.saveOrUpdateUserProfile(
+          uid: _user!.uid,
+          name: _user!.displayName ?? '',
+          email: _user!.email ?? '',
+          photoURL: _user!.photoURL ?? '',
+          savedWallpapers: [],
+          uploadedWallpapers: [],
+          isPremium: false,
+          premiumPurchasedAt: null,
+          authProvider: 'google', // or 'apple' if using Apple sign-in
+          createdAt: DateTime.now(),
+        );
+      }
 
       notifyListeners();
     } catch (e) {
