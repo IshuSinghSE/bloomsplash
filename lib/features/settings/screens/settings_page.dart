@@ -14,7 +14,8 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderStateMixin {
+class _SettingsPageState extends State<SettingsPage>
+    with SingleTickerProviderStateMixin {
   int _cacheSize = 0; // Cache size in bytes
   bool _isSyncingFavorites = false;
   late final AnimationController _syncController = AnimationController(
@@ -98,6 +99,25 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              icon: const Icon(
+                Icons.login_outlined,
+                color: Colors.deepOrange,
+                semanticLabel: "Log out",
+              ),
+              onPressed: () {
+                // Handle login action
+                Provider.of<AuthProvider>(
+                  context,
+                  listen: false,
+                ).signOut(context);
+              },
+            ),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -141,8 +161,8 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           if (userData['email'] == "ishu.111636@gmail.com") ...[
             const SizedBox(height: 24),
             ListTile(
-              leading: const Icon(Icons.upload),
-              title: const Text('My Uploads'),
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Admin Dashboard'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -165,40 +185,55 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               child: const Icon(Icons.sync),
             ),
             title: const Text('Sync Favorites'),
-            subtitle: const Text('Sync your favourites across all your devices'),
-            onTap: _isSyncingFavorites
-                ? null
-                : () async {
-                    setState(() {
-                      _isSyncingFavorites = true;
-                    });
-                    _syncController.repeat();
-                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                    final favoritesProvider = Provider.of<FavoritesProvider>(context, listen: false);
-                    final uid = authProvider.user?.uid;
-                    if (uid != null) {
-                      await favoritesProvider.saveFavoritesToFirestore(uid);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Favorites synced to cloud!')),
+            subtitle: const Text(
+              'Sync your favourites across all your devices',
+            ),
+            onTap:
+                _isSyncingFavorites
+                    ? null
+                    : () async {
+                      setState(() {
+                        _isSyncingFavorites = true;
+                      });
+                      _syncController.repeat();
+                      final authProvider = Provider.of<AuthProvider>(
+                        context,
+                        listen: false,
                       );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('You must be logged in to sync favorites.')),
+                      final favoritesProvider = Provider.of<FavoritesProvider>(
+                        context,
+                        listen: false,
                       );
-                    }
-                    _syncController.stop();
-                    setState(() {
-                      _isSyncingFavorites = false;
-                    });
-                  },
+                      final uid = authProvider.user?.uid;
+                      if (uid != null) {
+                        await favoritesProvider.saveFavoritesToFirestore(uid);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Favorites synced to cloud!'),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'You must be logged in to sync favorites.',
+                            ),
+                          ),
+                        );
+                      }
+                      _syncController.stop();
+                      setState(() {
+                        _isSyncingFavorites = false;
+                      });
+                    },
           ),
           ListTile(
             leading: const Icon(Icons.storage),
-            title: const Text('Image Cache'),
+            title: const Text('Clear Cache'),
             subtitle: Text(
               _cacheSize > 1024 * 1024
-                  ? 'Cache size: ${(_cacheSize / (1024 * 1024)).toStringAsFixed(2)} MB'
-                  : 'Cache size: ${(_cacheSize / 1024).toStringAsFixed(2)} KB',
+                  ? 'Current size: ${(_cacheSize / (1024 * 1024)).toStringAsFixed(2)} MB'
+                  : 'Current size: ${(_cacheSize / 1024).toStringAsFixed(2)} KB',
             ),
             trailing: IconButton(
               icon: const Icon(Icons.delete),
@@ -206,17 +241,118 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
             ),
           ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Sign Out'),
+           ListTile(
+            leading: const Icon(Icons.headset_mic_rounded),
+            title: const Text('Help & Support'),
+            subtitle: const Text('Got a question? We have answers!'),
             onTap: () {
-              Provider.of<AuthProvider>(
-                context,
-                listen: false,
-              ).signOut(context);
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Help & Support'),
+                      content: const SelectableText(
+                        'For any questions or support, email us at:\n\n'
+                        'support@bloomsplash.app',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+              );
             },
           ),
-        ],
+          ListTile(
+            leading: const Icon(Icons.article),
+            title: const Text('Terms & Conditions'),
+            subtitle: const Text('Read our terms and conditions.'),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Terms & Conditions'),
+                      content: const SingleChildScrollView(
+                        child: Text(
+                          'Here are the Terms & Conditions of the app. Please visit our website for the full document.',
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip),
+            title: const Text('Privacy Policy'),
+            subtitle: const Text('Read our privacy policy.'),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Privacy Policy'),
+                      content: const SingleChildScrollView(
+                        child: Text(
+                          'Here is the Privacy Policy of the app. Please visit our website for the full document.',
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+              );
+            },
+          ),
+         
+          ListTile(
+            leading: const Icon(Icons.copyright),
+            title: const Text('About'),
+            subtitle: const Text('License & Credits'),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('License & Credits'),
+                      content: const SingleChildScrollView(
+                        child: Text(
+                          'This app is developed by BloomSplash Team.\n\n'
+                          'Credits:\n'
+                          '- Flutter & Dart\n'
+                          '- Open source packages\n\n'
+                          'All rights reserved.\n'
+                          'See our website for full license details.',
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+              );
+            },
+          ),
+         
+         ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('App Version'),
+            subtitle: const Text('1.0.0'), // Replace with your app version
+            onTap: null,
+          ),],
       ),
     );
   }
