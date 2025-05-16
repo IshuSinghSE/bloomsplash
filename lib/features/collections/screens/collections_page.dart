@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../app/services/firebase/collection_db.dart';
 import '../../../../models/collection_model.dart';
 import 'collection_detail_page.dart'; // Import the collection wallpapers page
+import 'collection_list_page.dart'; // Import the new collection list page
 
 class CollectionsPage extends StatefulWidget {
   const CollectionsPage({super.key});
@@ -15,7 +15,6 @@ class CollectionsPage extends StatefulWidget {
 class _CollectionsPageState extends State<CollectionsPage> {
   final CollectionService _collectionService = CollectionService();
   List<Collection> _collections = [];
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -24,134 +23,83 @@ class _CollectionsPageState extends State<CollectionsPage> {
   }
 
   Future<void> _fetchCollections() async {
-    setState(() => _isLoading = true);
     // Try to load from Hive cache first
     var box = await Hive.openBox('collections');
     final cached = box.get('allCollections');
     if (cached != null && cached is List) {
-      _collections = List<Map<String, dynamic>>.from(cached)
-          .map((e) => Collection.fromJson(e))
-          .toList();
+      _collections =
+          List<Map<String, dynamic>>.from(
+            cached,
+          ).map((e) => Collection.fromJson(e)).toList();
     }
     // Always fetch latest from Firestore
     final collections = await _collectionService.getAllCollections();
     setState(() {
       _collections = collections;
-      _isLoading = false;
     });
     // Cache to Hive
-    await box.put('allCollections', collections.map((c) => c.toJson()).toList());
-  }
-
-  Future<void> _showCollectionDialog({Collection? collection}) async {
-    final nameController = TextEditingController(text: collection?.name ?? '');
-    final descController = TextEditingController(text: collection?.description ?? '');
-    final coverController = TextEditingController(text: collection?.coverImage ?? '');
-    final tagsController = TextEditingController(text: collection?.tags.join(', ') ?? '');
-    final typeController = TextEditingController(text: collection?.type ?? '');
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(collection == null ? 'Create Collection' : 'Edit Collection'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                  ),
-                  TextFormField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                  ),
-                  TextFormField(
-                    controller: coverController,
-                    decoration: const InputDecoration(labelText: 'Cover Image URL'),
-                  ),
-                  TextFormField(
-                    controller: tagsController,
-                    decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
-                  ),
-                  TextFormField(
-                    controller: typeController,
-                    decoration: const InputDecoration(labelText: 'Type'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final newCollection = Collection(
-                  id: collection?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                  name: nameController.text.trim(),
-                  description: descController.text.trim(),
-                  coverImage: coverController.text.trim(),
-                  createdBy: 'admin', // Replace with actual user
-                  tags: tagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-                  type: typeController.text.trim(),
-                  wallpaperIds: collection?.wallpaperIds ?? [],
-                  createdAt: collection?.createdAt ?? Timestamp.now(),
-                );
-                if (collection == null) {
-                  await _collectionService.createCollection(newCollection);
-                } else {
-                  await _collectionService.updateCollection(newCollection);
-                }
-                Navigator.pop(context);
-                await _fetchCollections();
-              },
-              child: Text(collection == null ? 'Create' : 'Update'),
-            ),
-          ],
-        );
-      },
+    await box.put(
+      'allCollections',
+      collections.map((c) => c.toJson()).toList(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Filter collections by type
+    final proCollections = _collections.where((c) => c.type == 'pro').toList();
+    final freeCollections = _collections.where((c) => c.type == 'free').toList();
+    final premiumCollections = _collections.where((c) => c.type == 'premium').toList();
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Set dark background color
+      backgroundColor: const Color(0xFF121212),
       body: RefreshIndicator(
-        onRefresh: _fetchCollections, // Ensure pull-to-refresh works
+        onRefresh: _fetchCollections,
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // Allow pull-to-refresh even when content is less
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Collections Sections
-              _buildCollectionSection('All Collections', _collections),
-              _buildCollectionSection('Pro Collections', _collections.where((c) => c.type == 'pro').toList()),
-              _buildCollectionSection('Free Collections', _collections.where((c) => c.type == 'free').toList()),
-              _buildCollectionSection('Premium Collections', _collections.where((c) => c.type == 'premium').toList()),
-              // Add bottom space
-              const SizedBox(height: 80), // Adjust height as needed
+              // Only show sections with non-empty collections
+              if (_collections.isNotEmpty)
+                _buildCollectionSection('All Collections', _collections),
+              
+              if (proCollections.isNotEmpty)
+                _buildCollectionSection('Pro Collections', proCollections),
+              
+              if (freeCollections.isNotEmpty)
+                _buildCollectionSection('Free Collections', freeCollections),
+              
+              if (premiumCollections.isNotEmpty)
+                _buildCollectionSection('Premium Collections', premiumCollections),
+              
+              const SizedBox(height: 80),
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCollectionDialog(),
-        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildCollectionSection(String title, List<Collection> collections) {
+    // Double-check that collections is not empty before building the section
+    if (collections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    // Determine what type this section represents
+    String? collectionType;
+    if (title.toLowerCase().contains('pro')) {
+      collectionType = 'pro';
+    } else if (title.toLowerCase().contains('free')) {
+      collectionType = 'free';
+    } else if (title.toLowerCase().contains('premium')) {
+      collectionType = 'premium';
+    } else if (!title.toLowerCase().contains('all')) {
+      // For custom categories, use the title directly
+      collectionType = title.toLowerCase();
+    }
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
       child: Column(
@@ -167,9 +115,10 @@ class _CollectionsPageState extends State<CollectionsPage> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: title.toLowerCase().contains('free')
-                        ? Colors.amber
-                        : title.toLowerCase().contains('pro')
+                    color:
+                        title.toLowerCase().contains('free')
+                            ? Colors.amber
+                            : title.toLowerCase().contains('pro')
                             ? Colors.cyanAccent
                             : title.toLowerCase().contains('premium')
                             ? Colors.purpleAccent
@@ -177,14 +126,23 @@ class _CollectionsPageState extends State<CollectionsPage> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'View all',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70,
-                    ),
-                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CollectionListPage(
+                          title: title,
+                          type: collectionType,
+                          initialCollections: _collections,
+                          // Don't pass bottom nav parameters from here
+                          // The bottom nav should only be shown on main app screens
+                          // showBottomNav: true,
+                          // currentNavIndex: 1,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('View all'),
                 ),
               ],
             ),
@@ -200,15 +158,18 @@ class _CollectionsPageState extends State<CollectionsPage> {
                 final collection = collections[i];
                 return GestureDetector(
                   onTap: () async {
-                    final wallpapers = await _collectionService.getWallpapersForCollection(collection);
+                    final wallpapers = await _collectionService
+                        .getWallpapersForCollection(collection);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CollectionDetailPage(
-                          title: collection.name,
-                          author: collection.createdBy,
-                          wallpapers: wallpapers.map((w) => w.toJson()).toList(),
-                        ),
+                        builder:
+                            (context) => CollectionDetailPage(
+                              title: collection.name,
+                              author: collection.createdBy,
+                              wallpapers:
+                                  wallpapers.map((w) => w.toJson()).toList(),
+                            ),
                       ),
                     );
                   },
@@ -217,15 +178,18 @@ class _CollectionsPageState extends State<CollectionsPage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1), // Add border with subtle opacity
+                        color: Colors.white.withOpacity(
+                          0.1,
+                        ), // Add border with subtle opacity
                         width: 1.2,
                       ),
-                      image: collection.coverImage.isNotEmpty
-                          ? DecorationImage(
-                              image: NetworkImage(collection.coverImage),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
+                      image:
+                          collection.coverImage.isNotEmpty
+                              ? DecorationImage(
+                                image: NetworkImage(collection.coverImage),
+                                fit: BoxFit.cover,
+                              )
+                              : null,
                       color: Colors.grey[800],
                       boxShadow: [
                         BoxShadow(
@@ -241,7 +205,9 @@ class _CollectionsPageState extends State<CollectionsPage> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
-                              color: Colors.black.withOpacity(0.4), // Add overlay for better text visibility
+                              color: Colors.black.withOpacity(
+                                0.4,
+                              ), // Add overlay for better text visibility
                             ),
                           ),
                         ),
@@ -259,7 +225,9 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 4), // Add spacing between name and description
+                              const SizedBox(
+                                height: 4,
+                              ), // Add spacing between name and description
                               Text(
                                 collection.description,
                                 style: const TextStyle(

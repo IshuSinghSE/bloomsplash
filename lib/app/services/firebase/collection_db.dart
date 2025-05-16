@@ -45,26 +45,36 @@ class CollectionService {
   // Update a collection
   Future<void> updateCollection(Collection collection) async {
     try {
-      // Update in Firestore
+      // First update in Firestore (this will work normally with Timestamp)
       await _firestore
           .collection(_collectionPath)
           .doc(collection.id)
           .update(collection.toJson());
       
-      // Update cache with a modified version that Hive can store
+      // For Hive, we need to handle the Timestamp separately
       final box = await Hive.openBox(_collectionPath);
       
-      // Create a copy of the JSON for Hive storage
-      final Map<String, dynamic> hiveJson = Map<String, dynamic>.from(collection.toJson());
+      // Create a deep copy of the JSON data
+      final Map<String, dynamic> hiveJson = {};
+      collection.toJson().forEach((key, value) {
+        // Special handling for Timestamp objects
+        if (value is Timestamp) {
+          // Convert Timestamp to milliseconds since epoch integer
+          hiveJson[key] = value.millisecondsSinceEpoch;
+        } else {
+          hiveJson[key] = value;
+        }
+      });
       
-      // Convert Timestamp to milliseconds for Hive storage
+      // Ensure the createdAt field is properly converted, even if accessed via nested properties
       if (hiveJson['createdAt'] is Timestamp) {
-        final timestamp = hiveJson['createdAt'] as Timestamp;
-        hiveJson['createdAt'] = timestamp.millisecondsSinceEpoch;
+        hiveJson['createdAt'] = (hiveJson['createdAt'] as Timestamp).millisecondsSinceEpoch;
       }
       
-      // Store the converted data in Hive
+      // Now store the Hive-compatible data
       await box.put(collection.id, hiveJson);
+      
+      log('Collection updated successfully in both Firestore and Hive cache');
     } catch (e) {
       log('Error updating collection: $e');
       throw Exception('Error updating collection: $e');

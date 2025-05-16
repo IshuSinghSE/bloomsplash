@@ -1,21 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 import '../../../core/constant/config.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../shared/widgets/custom_bottom_nav_bar.dart';
+import '../../../main.dart';
 
 class CollectionDetailPage extends StatelessWidget {
   final String title;
   final String author;
   final List<Map<String, dynamic>> wallpapers;
+  final bool showBottomNav; // Control whether to show bottom nav
+  final int currentNavIndex; // Current index for bottom nav
 
   const CollectionDetailPage({
     super.key,
     required this.title,
     required this.wallpapers,
     required this.author,
+    this.showBottomNav = true,
+    this.currentNavIndex = 1, // Default to Collections tab
   });
+
+  void _onNavItemTapped(BuildContext context, int index) {
+    if (index == currentNavIndex) {
+      // Already on this tab, do nothing
+      return;
+    }
+
+    // Clear all routes and navigate to home with the selected index
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => HomePage(
+          initialSelectedIndex: index,
+          preferencesBox: Hive.box('preferences'),
+        ),
+      ),
+      (route) => false, // Remove all routes from the stack
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,10 +148,12 @@ class CollectionDetailPage extends StatelessWidget {
                 );
               },
             ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: 1, // Or whichever index is appropriate for navigation
-        onItemTapped: (index) {}, // You may want to wire this up for navigation
-      ),
+      bottomNavigationBar: showBottomNav
+          ? CustomBottomNavBar(
+              selectedIndex: currentNavIndex,
+              onItemTapped: (index) => _onNavItemTapped(context, index),
+            )
+          : null,
     );
   }
 }
