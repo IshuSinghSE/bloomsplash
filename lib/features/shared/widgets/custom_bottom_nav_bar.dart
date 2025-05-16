@@ -63,7 +63,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 selectedIndex: selectedIndex,
                 onDestinationSelected: (index) {
                   // Prevent selecting the Upload tab if it's not available
-                  if (index == 2 && userEmail != "ishu.111636@gmail.com") return;
+                  if (index == 3 && userEmail != "ishu.111636@gmail.com") return;
                   onItemTapped(index);
                 },
                 destinations: [
@@ -83,11 +83,10 @@ class CustomBottomNavBar extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
-                  GestureDetector(
+                  ), GestureDetector(
                     onTap: () => onItemTapped(1),
                     child: Tooltip(
-                      message: 'Favorites',
+                      message: 'Collections',
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
@@ -95,25 +94,43 @@ class CustomBottomNavBar extends StatelessWidget {
                         ),
                         padding: const EdgeInsets.all(8.0),
                         child: Icon(
-                          selectedIndex == 1 ? Icons.favorite : Icons.favorite_border,
+                          selectedIndex == 1 ? Icons.collections : Icons.collections_outlined,
                           color: Colors.white,
                         ),
                       ),
                     ),
                   ),
+                  GestureDetector(
+                    onTap: () => onItemTapped(2),
+                    child: Tooltip(
+                      message: 'Favorites',
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selectedIndex == 2 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                        ),
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          selectedIndex == 2 ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                 
                   if (userEmail == "ishu.111636@gmail.com")
                     GestureDetector(
-                      onTap: () => onItemTapped(2),
+                      onTap: () => onItemTapped(3),
                       child: Tooltip(
                         message: 'Upload',
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: selectedIndex == 2 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                            color: selectedIndex == 3 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
                           ),
                           padding: const EdgeInsets.all(8.0),
                           child: Icon(
-                            selectedIndex == 2 ? Icons.upload_rounded : Icons.upload_outlined,
+                            selectedIndex == 3 ? Icons.upload_rounded : Icons.upload_outlined,
                             color: Colors.white,
                           ),
                         ),

@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../features/wallpaper_details/screens/wallpaper_details_page.dart';
 import '../app/constants/config.dart';
-import '../core/themes/app_colors.dart'; // <-- Import the theme file
+import '../core/themes/app_colors.dart';
+import '../features/shared/widgets/custom_bottom_nav_bar.dart';
 
-class CollectionWallpapersPage extends StatelessWidget {
-  final String title; // Title of the collection or category
-  final String author; // Author of the wallpapers
-  final List<Map<String, dynamic>> wallpapers; // Wallpapers to display
+class CollectionDetailPage extends StatelessWidget {
+  final String title;
+  final String author;
+  final List<Map<String, dynamic>> wallpapers;
 
-  const CollectionWallpapersPage({
+  const CollectionDetailPage({
     super.key,
     required this.title,
     required this.wallpapers,
@@ -18,34 +19,37 @@ class CollectionWallpapersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> wallpapersList = wallpapers.map((w) => Map<String, dynamic>.from(w)).toList();
     return Scaffold(
+      appBar: AppBar(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
+      extendBody: true,
       body: GridView.builder(
         physics: const BouncingScrollPhysics(),
         cacheExtent: 1000,
         padding: const EdgeInsets.all(8.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // Number of wallpapers per row
-          crossAxisSpacing: 8, // Horizontal spacing
-          mainAxisSpacing: 8, // Vertical spacing
-          childAspectRatio: 0.75, // Aspect ratio of the grid items
+          crossAxisCount: 2,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.75,
         ),
-        itemCount: wallpapers.length,
+        itemCount: wallpapersList.length,
         itemBuilder: (context, index) {
-          final wallpaper = wallpapers[index];
-          final image =
-              wallpaper["image"] ?? AppConfig.shimmerImagePath; // Fallback to sample image
-          final name =
-              wallpaper["name"] ?? "Untitled"; // Fallback to "Untitled"
-
+          final wallpaper = wallpapersList[index];
+          final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
+          final name = wallpaper["name"] ?? "Untitled";
           return GestureDetector(
             onTap: () {
-              // Navigate to the wallpaper details page
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder:
-                      (context) =>
-                          WallpaperDetailsPage(wallpaper: wallpaper), // Pass wallpaper ID and wallpaper object
+                  builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
                 ),
               );
             },
@@ -53,8 +57,7 @@ class CollectionWallpapersPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.card),
               child: Stack(
                 children: [
-                  // Wallpaper Image
-                  if (image.startsWith('http'))
+                  if (image.toString().startsWith('http'))
                     CachedNetworkImage(
                       imageUrl: image,
                       fit: BoxFit.cover,
@@ -70,7 +73,6 @@ class CollectionWallpapersPage extends StatelessWidget {
                       width: double.infinity,
                       height: double.infinity,
                     ),
-                  // Gradient Overlay
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
@@ -85,7 +87,6 @@ class CollectionWallpapersPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Wallpaper Title
                   Positioned(
                     bottom: 8,
                     left: 8,
@@ -111,6 +112,10 @@ class CollectionWallpapersPage extends StatelessWidget {
             ),
           );
         },
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: 1, // Or whichever index is appropriate for navigation
+        onItemTapped: (index) {}, // You may want to wire this up for navigation
       ),
     );
   }

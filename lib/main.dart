@@ -15,11 +15,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'app/constants/config.dart';
+import 'screens/collections_page.dart';
+import '../app/constants/data.dart'; // Import the dummy data
+
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
+  await loadWallpapers();
   try {
     debugPrint('Initializing Firebase...');
     await Firebase.initializeApp(
@@ -79,6 +82,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/explore': (context) => const ExplorePage(),
+        '/collection': (context) => const CollectionsPage(),
         '/favorites': (context) => const FavoritesPage(),
         '/upload': (context) => const UploadPage(),
         '/settings': (context) => const SettingsPage(),
@@ -109,6 +113,7 @@ class _HomePageState extends State<HomePage> {
 
     pages = [
       const ExplorePage(),
+      const CollectionsPage(),
       const FavoritesPage(),
       if (userEmail == "ishu.111636@gmail.com") const UploadPage(),
     ];

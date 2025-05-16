@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../app/constants/data.dart'; // Import the dummy data
-import 'collection_wallpapers_page.dart'; // Import the collection wallpapers page
-import 'category_wallpapers_page.dart';
+import 'collection_detail_page.dart'; // Import the collection wallpapers page
 import '../app/constants/config.dart';
 import '../core/themes/app_colors.dart'; // <-- Import the theme file
 
@@ -14,160 +12,23 @@ class CollectionsPage extends StatefulWidget {
 }
 
 class _CollectionsPageState extends State<CollectionsPage> {
-  String selectedCategory = "All"; // Track the selected chip
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {  
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Toggleable Chips
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 10.0,
-                horizontal: 20.0,
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildChip("All"),
-                    _buildChip("Nature"),
-                    _buildChip("Abstract"),
-                    _buildChip("Minimalist"),
-                    _buildChip("Sci-Fi"),
-                    _buildChip("Space"),
-                  ],
-                ),
-              ),
-            ),
             // Collections Sections
             ...collections.entries.map((entry) {
               final sectionTitle = entry.key;
               final sectionItems = entry.value;
               return _buildCollectionSection(sectionTitle, sectionItems);
             }),
-            // Curated Categories Section
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              child: Text(
-                'Categories',
-                style: AppTextStyles.sectionTitle, // Use theme style
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: SizedBox(
-                height: 140, // Height of the carousel
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 4.0, right: 4.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          // Navigate to the category wallpapers page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              // Navigate to the category wallpapers page bottom row
-                              builder:
-                                  (context) => CategoryWallpapersPage(
-                                    category: category["title"]!,
-                                    wallpapers:
-                                        categoryWallpapers[category["title"]!] ??
-                                        [],
-                                  ),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 140, // Width of each card
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppRadius.card),
-                            image: DecorationImage(
-                              image: AssetImage(category["image"]!),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              // Gradient overlay for text readability
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(AppRadius.card),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.gradientStart,
-                                        AppColors.gradientEnd,
-                                      ],
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Category title and icon
-                              Positioned(
-                                bottom: 8,
-                                left: 8,
-                                right: 8,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        category["title"]!,
-                                        style: AppTextStyles.cardTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.chevron_right,
-                                      color: AppColors.accent,
-                                      size: 24,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
             // Add bottom space
             const SizedBox(height: 80), // Adjust height as needed
           ],
         ),
-      ),
-    );
-  }
-
-  // Build a single chip
-  Widget _buildChip(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: ChoiceChip(
-        backgroundColor: AppColors.chipBackground,
-        selectedColor: AppColors.chipSelected,
-        label: Text(label),
-        selected: selectedCategory == label,
-        onSelected: (isSelected) {
-          setState(() {
-            selectedCategory = label;
-          });
-        },
       ),
     );
   }
@@ -178,122 +39,195 @@ class _CollectionsPageState extends State<CollectionsPage> {
     String title,
     List<Map<String, dynamic>> wallpapers,
   ) {
+    // If the collection's wallpapers are empty, use dummy wallpapers from local data
+    final List<Map<String, dynamic>> displayWallpapers =
+        (wallpapers.isNotEmpty && wallpapers[0]["wallpapers"] != null && (wallpapers[0]["wallpapers"] as List).isNotEmpty)
+            ? wallpapers
+            : List<Map<String, dynamic>>.from(collections.values.expand((c) => c).where((w) => w["image"] != null));
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 0.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: AppTextStyles.sectionTitle,
-          ),
-          const SizedBox(height: 10),
-          Column(
-            children:
-                wallpapers.take(3).map((wallpaper) {
-                  final image =
-                      wallpaper["image"] ?? AppConfig.shimmerImagePath;
-                  final title = wallpaper["title"] ?? "Untitled";
-                  final author = wallpaper["author"] ?? "Unknown";
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.card),
-                      child: Stack(
-                        children: [
-                          // Background image
-                          // if (image.isNotEmpty)
-                          // Image.asset(
-                          //   image,
-                          //   width: double.infinity,
-                          //   height: 100,
-                          //   fit: BoxFit.cover,
-                          // ),
-                          // Blur overlay
-                          Positioned.fill(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                color: AppColors.blurOverlay,
-                              ),
-                            ),
-                          ),
-                          // Content
-                          ListTile(
-                            leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(AppRadius.image),
-                              child: Image.asset(
-                                image,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            title: Text(
-                              title,
-                              style: AppTextStyles.cardTitle,
-                            ),
-                            subtitle: Text(
-                              "By $author",
-                              style: AppTextStyles.cardSubtitle,
-                            ),
-                            onTap: () {
-                              // Navigate to the collection wallpapers page
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => CollectionWallpapersPage(
-                                        title: title ?? "Untitled",
-                                        author: author ?? "Unknown",
-                                        wallpapers:
-                                            wallpaper["wallpapers"] ?? [],
-                                      ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: TextButton(
-              onPressed: () {
-                // Navigate to the collection wallpapers page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => CollectionWallpapersPage(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.sectionTitle.copyWith(
+                    fontSize: 24, // Larger font size for section title
+                    color: (title.toLowerCase().contains('trending')
+                            ? Colors.amber
+                            : title.toLowerCase().contains('popular')
+                            ? Colors.cyanAccent
+                            : title.toLowerCase().contains('monochrome')
+                            ? Colors.orangeAccent
+                            : Colors.white)
+                        .withOpacity(0.82), // Reduced opacity
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CollectionDetailPage(
                           title: title,
-                          author: wallpapers[0]["author"],
-                          wallpapers: wallpapers,
+                          author: wallpapers.isNotEmpty ? wallpapers[0]["author"] : "Unknown",
+                          wallpapers: displayWallpapers,
                         ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'View all',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // const SizedBox(height: 8),
+          SizedBox(
+            height: 180,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              itemCount: displayWallpapers.length > 5 ? 5 : displayWallpapers.length,
+              separatorBuilder: (context, i) => const SizedBox(width: 16),
+              itemBuilder: (context, i) {
+                final wallpaper = displayWallpapers[i];
+                final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
+                final titleText = wallpaper["title"] ?? "Untitled";
+                final author = wallpaper["author"] ?? "Unknown";
+                final isLocked = wallpaper["isLocked"] == true;
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CollectionDetailPage(
+                          title: titleText,
+                          author: author,
+                          wallpapers: displayWallpapers,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 280,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1), // Subtle border
+                        width: 1.2,
+                      ),
+                      image: DecorationImage(
+                        image:
+                            image.toString().startsWith('http')
+                                ? NetworkImage(image)
+                                : AssetImage(image) as ImageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.18),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.black.withOpacity(0.2),
+                                  Colors.transparent,
+                                ],
+                                center: Alignment.center,
+                                radius: 1.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  titleText,
+                                  style: AppTextStyles.cardTitle.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 28,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withOpacity(0.5),
+                                        offset: const Offset(0, 0),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  'the essence of art',
+                                  style: AppTextStyles.cardSubtitle.copyWith(
+                                    color: Colors.grey[50],
+                                    fontSize: 15,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withOpacity(0.5),
+                                        offset: const Offset(0, 0),
+                                        blurRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (isLocked)
+                          Positioned(
+                            right: 18,
+                            top: 18,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: const Icon(
+                                Icons.lock,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 );
               },
-              style: TextButton.styleFrom(
-                
-                // backgroundColor: const Color.fromARGB(20, 56, 91, 114),
-                side: const BorderSide(color: AppColors.border, width: 1),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                ),
-              ),
-              child: const Text(
-                
-                'Show All',
-                style: AppTextStyles.button,
-              ),
             ),
           ),
         ],
