@@ -45,13 +45,26 @@ class CollectionService {
   // Update a collection
   Future<void> updateCollection(Collection collection) async {
     try {
+      // Update in Firestore
       await _firestore
           .collection(_collectionPath)
           .doc(collection.id)
           .update(collection.toJson());
-      // Update cache
+      
+      // Update cache with a modified version that Hive can store
       final box = await Hive.openBox(_collectionPath);
-      await box.put(collection.id, collection.toJson());
+      
+      // Create a copy of the JSON for Hive storage
+      final Map<String, dynamic> hiveJson = Map<String, dynamic>.from(collection.toJson());
+      
+      // Convert Timestamp to milliseconds for Hive storage
+      if (hiveJson['createdAt'] is Timestamp) {
+        final timestamp = hiveJson['createdAt'] as Timestamp;
+        hiveJson['createdAt'] = timestamp.millisecondsSinceEpoch;
+      }
+      
+      // Store the converted data in Hive
+      await box.put(collection.id, hiveJson);
     } catch (e) {
       log('Error updating collection: $e');
       throw Exception('Error updating collection: $e');

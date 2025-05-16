@@ -4,6 +4,7 @@ import '../../../models/wallpaper_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String _wallpapersCollection = 'wallpapers';
 
   Future<void> addImageDetailsToFirestore(Wallpaper wallpaper) async {
     try {
@@ -128,4 +129,15 @@ class FirestoreService {
     }
   }
 
+  Future<List<Wallpaper>> getAllWallpapers() async {
+    try {
+      final querySnapshot = await _firestore.collection(_wallpapersCollection).get();
+      return querySnapshot.docs
+          .map((doc) => Wallpaper.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      print('Error getting all wallpapers: $e');
+      return [];
+    }
+  }
 }
