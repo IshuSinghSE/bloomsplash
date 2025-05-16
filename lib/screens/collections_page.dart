@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../app/constants/data.dart'; // Import the dummy data
+import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/firebase/collection_service.dart';
+import '../../models/collection_model.dart';
 import 'collection_detail_page.dart'; // Import the collection wallpapers page
-import '../app/constants/config.dart';
-import '../core/themes/app_colors.dart'; // <-- Import the theme file
 
 class CollectionsPage extends StatefulWidget {
   const CollectionsPage({super.key});
@@ -12,40 +13,143 @@ class CollectionsPage extends StatefulWidget {
 }
 
 class _CollectionsPageState extends State<CollectionsPage> {
+  final CollectionService _collectionService = CollectionService();
+  List<Collection> _collections = [];
+  bool _isLoading = true;
+
   @override
-  Widget build(BuildContext context) {  
+  void initState() {
+    super.initState();
+    _fetchCollections();
+  }
+
+  Future<void> _fetchCollections() async {
+    setState(() => _isLoading = true);
+    // Try to load from Hive cache first
+    var box = await Hive.openBox('collections');
+    final cached = box.get('allCollections');
+    if (cached != null && cached is List) {
+      _collections = List<Map<String, dynamic>>.from(cached)
+          .map((e) => Collection.fromJson(e))
+          .toList();
+    }
+    // Always fetch latest from Firestore
+    final collections = await _collectionService.getAllCollections();
+    setState(() {
+      _collections = collections;
+      _isLoading = false;
+    });
+    // Cache to Hive
+    await box.put('allCollections', collections.map((c) => c.toJson()).toList());
+  }
+
+  Future<void> _showCollectionDialog({Collection? collection}) async {
+    final nameController = TextEditingController(text: collection?.name ?? '');
+    final descController = TextEditingController(text: collection?.description ?? '');
+    final coverController = TextEditingController(text: collection?.coverImage ?? '');
+    final tagsController = TextEditingController(text: collection?.tags.join(', ') ?? '');
+    final typeController = TextEditingController(text: collection?.type ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(collection == null ? 'Create Collection' : 'Edit Collection'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                  ),
+                  TextFormField(
+                    controller: descController,
+                    decoration: const InputDecoration(labelText: 'Description'),
+                  ),
+                  TextFormField(
+                    controller: coverController,
+                    decoration: const InputDecoration(labelText: 'Cover Image URL'),
+                  ),
+                  TextFormField(
+                    controller: tagsController,
+                    decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+                  ),
+                  TextFormField(
+                    controller: typeController,
+                    decoration: const InputDecoration(labelText: 'Type'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final newCollection = Collection(
+                  id: collection?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                  name: nameController.text.trim(),
+                  description: descController.text.trim(),
+                  coverImage: coverController.text.trim(),
+                  createdBy: 'admin', // Replace with actual user
+                  tags: tagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                  type: typeController.text.trim(),
+                  wallpaperIds: collection?.wallpaperIds ?? [],
+                  createdAt: collection?.createdAt ?? Timestamp.now(),
+                );
+                if (collection == null) {
+                  await _collectionService.createCollection(newCollection);
+                } else {
+                  await _collectionService.updateCollection(newCollection);
+                }
+                Navigator.pop(context);
+                await _fetchCollections();
+              },
+              child: Text(collection == null ? 'Create' : 'Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF121212), // Set dark background color
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Collections Sections
-            ...collections.entries.map((entry) {
-              final sectionTitle = entry.key;
-              final sectionItems = entry.value;
-              return _buildCollectionSection(sectionTitle, sectionItems);
-            }),
+            _buildCollectionSection('All Collections', _collections),
+            _buildCollectionSection('Pro Collections', _collections.where((c) => c.type == 'pro').toList()),
+            _buildCollectionSection('Free Collections', _collections.where((c) => c.type == 'free').toList()),
+            _buildCollectionSection('Premium Collections', _collections.where((c) => c.type == 'premium').toList()),
             // Add bottom space
             const SizedBox(height: 80), // Adjust height as needed
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCollectionDialog(),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-  // Build a collection section { featured, curated, popular }
-  // with a title and a list of wallpapers
-  Widget _buildCollectionSection(
-    String title,
-    List<Map<String, dynamic>> wallpapers,
-  ) {
-    // If the collection's wallpapers are empty, use dummy wallpapers from local data
-    final List<Map<String, dynamic>> displayWallpapers =
-        (wallpapers.isNotEmpty && wallpapers[0]["wallpapers"] != null && (wallpapers[0]["wallpapers"] as List).isNotEmpty)
-            ? wallpapers
-            : List<Map<String, dynamic>>.from(collections.values.expand((c) => c).where((w) => w["image"] != null));
+  Widget _buildCollectionSection(String title, List<Collection> collections) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 0.0),
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -56,31 +160,20 @@ class _CollectionsPageState extends State<CollectionsPage> {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.sectionTitle.copyWith(
-                    fontSize: 24, // Larger font size for section title
-                    color: (title.toLowerCase().contains('trending')
-                            ? Colors.amber
-                            : title.toLowerCase().contains('popular')
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: title.toLowerCase().contains('free')
+                        ? Colors.amber
+                        : title.toLowerCase().contains('pro')
                             ? Colors.cyanAccent
-                            : title.toLowerCase().contains('monochrome')
-                            ? Colors.orangeAccent
-                            : Colors.white)
-                        .withOpacity(0.82), // Reduced opacity
+                            : title.toLowerCase().contains('premium')
+                            ? Colors.purpleAccent
+                            : Colors.orangeAccent,
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CollectionDetailPage(
-                          title: title,
-                          author: wallpapers.isNotEmpty ? wallpapers[0]["author"] : "Unknown",
-                          wallpapers: displayWallpapers,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () {},
                   child: const Text(
                     'View all',
                     style: TextStyle(
@@ -92,29 +185,25 @@ class _CollectionsPageState extends State<CollectionsPage> {
               ],
             ),
           ),
-          // const SizedBox(height: 8),
           SizedBox(
             height: 180,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              itemCount: displayWallpapers.length > 5 ? 5 : displayWallpapers.length,
+              itemCount: collections.length,
               separatorBuilder: (context, i) => const SizedBox(width: 16),
               itemBuilder: (context, i) {
-                final wallpaper = displayWallpapers[i];
-                final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
-                final titleText = wallpaper["title"] ?? "Untitled";
-                final author = wallpaper["author"] ?? "Unknown";
-                final isLocked = wallpaper["isLocked"] == true;
+                final collection = collections[i];
                 return GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+                    final wallpapers = await _collectionService.getWallpapersForCollection(collection);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => CollectionDetailPage(
-                          title: titleText,
-                          author: author,
-                          wallpapers: displayWallpapers,
+                          title: collection.name,
+                          author: collection.createdBy,
+                          wallpapers: wallpapers.map((w) => w.toJson()).toList(),
                         ),
                       ),
                     );
@@ -124,16 +213,16 @@ class _CollectionsPageState extends State<CollectionsPage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1), // Subtle border
+                        color: Colors.white.withOpacity(0.1), // Add border with subtle opacity
                         width: 1.2,
                       ),
-                      image: DecorationImage(
-                        image:
-                            image.toString().startsWith('http')
-                                ? NetworkImage(image)
-                                : AssetImage(image) as ImageProvider,
-                        fit: BoxFit.cover,
-                      ),
+                      image: collection.coverImage.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(collection.coverImage),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                      color: Colors.grey[800],
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.18),
@@ -148,65 +237,37 @@ class _CollectionsPageState extends State<CollectionsPage> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.black.withOpacity(0.2),
-                                  Colors.transparent,
-                                ],
-                                center: Alignment.center,
-                                radius: 1.0,
-                              ),
+                              color: Colors.black.withOpacity(0.4), // Add overlay for better text visibility
                             ),
                           ),
                         ),
                         Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  titleText,
-                                  style: AppTextStyles.cardTitle.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 28,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.5),
-                                        offset: const Offset(0, 0),
-                                        blurRadius: 10,
-                                      ),
-                                    ],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                collection.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 28,
                                 ),
-                                Text(
-                                  'the essence of art',
-                                  style: AppTextStyles.cardSubtitle.copyWith(
-                                    color: Colors.grey[50],
-                                    fontSize: 15,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.5),
-                                        offset: const Offset(0, 0),
-                                        blurRadius: 2,
-                                      ),
-                                    ],
+                                textAlign: TextAlign.center,
+                              ),
+                              if (collection.type == 'pro')
+                                const Text(
+                                  'INCLUDED WITH PRO',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
                                 ),
-                              ],
-                            ),
+                            ],
                           ),
                         ),
-                        if (isLocked)
+                        if (collection.type == 'premium')
                           Positioned(
                             right: 18,
                             top: 18,

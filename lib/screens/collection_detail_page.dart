@@ -29,90 +29,101 @@ class CollectionDetailPage extends StatelessWidget {
         centerTitle: true,
       ),
       extendBody: true,
-      body: GridView.builder(
-        physics: const BouncingScrollPhysics(),
-        cacheExtent: 1000,
-        padding: const EdgeInsets.all(8.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: wallpapersList.length,
-        itemBuilder: (context, index) {
-          final wallpaper = wallpapersList[index];
-          final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
-          final name = wallpaper["name"] ?? "Untitled";
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
-                ),
-              );
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              child: Stack(
-                children: [
-                  if (image.toString().startsWith('http'))
-                    CachedNetworkImage(
-                      imageUrl: image,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 50)),
-                    )
-                  else
-                    Image.asset(
-                      image,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.gradientStart,
-                            AppColors.gradientEnd,
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    right: 8,
-                    child: Text(
-                      name,
-                      style: AppTextStyles.cardTitle.copyWith(fontSize: 14, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: const Icon(
-                      Icons.auto_awesome_motion,
-                      color: AppColors.accentSecondary,
-                      size: 20,
-                    ),
-                  ),
+      body: wallpapersList.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text('🗂️', style: TextStyle(fontSize: 48)),
+                  SizedBox(height: 12),
+                  Text('Collection is empty', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
                 ],
               ),
+            )
+          : GridView.builder(
+              physics: const BouncingScrollPhysics(),
+              cacheExtent: 1000,
+              padding: const EdgeInsets.all(8.0),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: wallpapersList.length,
+              itemBuilder: (context, index) {
+                final wallpaper = wallpapersList[index];
+                final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
+                final name = wallpaper["name"] ?? "Untitled";
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WallpaperDetailsPage(wallpaper: wallpaper),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    child: Stack(
+                      children: [
+                        if (image.toString().startsWith('http'))
+                          CachedNetworkImage(
+                            imageUrl: image,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 50)),
+                          )
+                        else
+                          Image.asset(
+                            image,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.gradientStart,
+                                  AppColors.gradientEnd,
+                                ],
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          left: 8,
+                          right: 8,
+                          child: Text(
+                            name,
+                            style: AppTextStyles.cardTitle.copyWith(fontSize: 14, fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: const Icon(
+                            Icons.auto_awesome_motion,
+                            color: AppColors.accentSecondary,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: 1, // Or whichever index is appropriate for navigation
         onItemTapped: (index) {}, // You may want to wire this up for navigation

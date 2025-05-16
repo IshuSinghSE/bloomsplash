@@ -1,5 +1,7 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hive/hive.dart';
+import '../../models/collection_model.dart';
 import '../../models/wallpaper_model.dart';
 
 class FirestoreService {
@@ -247,6 +249,74 @@ class FirestoreService {
     await _firestore.collection('users').doc(uid).update({
       'savedWallpapers': [],
     });
+  }
+
+  // --- COLLECTION CRUD METHODS ---
+  // Create a collection
+  Future<void> createCollection(Collection collection) async {
+    try {
+      await _firestore.collection('collections').doc(collection.id).set(collection.toJson());
+      // Cache locally
+      final box = await Hive.openBox('collections');
+      await box.put(collection.id, collection.toJson());
+    } catch (e) {
+      log('Error creating collection: $e');
+      throw Exception('Error creating collection: $e');
+    }
+  }
+
+  // Update a collection
+  Future<void> updateCollection(Collection collection) async {
+    try {
+      await _firestore.collection('collections').doc(collection.id).update(collection.toJson());
+      // Update cache
+      final box = await Hive.openBox('collections');
+      await box.put(collection.id, collection.toJson());
+    } catch (e) {
+      log('Error updating collection: $e');
+      throw Exception('Error updating collection: $e');
+    }
+  }
+
+  // Delete a collection
+  Future<void> deleteCollection(String id) async {
+    try {
+      await _firestore.collection('collections').doc(id).delete();
+      // Remove from cache
+      final box = await Hive.openBox('collections');
+      await box.delete(id);
+    } catch (e) {
+      log('Error deleting collection: $e');
+      throw Exception('Error deleting collection: $e');
+    }
+  }
+
+  // Fetch all collections
+  Future<List<Collection>> getAllCollections({bool forceRefresh = false}) async {
+    final box = await Hive.openBox('collections');
+    if (!forceRefresh) {
+      final cached = box.values.toList();
+      if (cached.isNotEmpty) {
+        return cached.map((e) => Collection.fromJson(Map<String, dynamic>.from(e))).toList();
+      }
+    }
+    // Fetch from Firestore
+    final snapshot = await _firestore.collection('collections').get();
+    final collections = snapshot.docs.map((doc) => Collection.fromJson(doc.data())).toList();
+    // Cache
+    for (final c in collections) {
+      await box.put(c.id, c.toJson());
+    }
+    return collections;
+  }
+
+  // Fetch wallpapers for a collection
+  Future<List<Wallpaper>> getWallpapersForCollection(Collection collection) async {
+    if (collection.wallpaperIds.isEmpty) return [];
+    final snapshot = await _firestore.collection('wallpapers')
+        .where('id', whereIn: collection.wallpaperIds)
+        .get();
+    return snapshot.docs.map((doc) => Wallpaper.fromJson(doc.data())).toList();
   }
 }
 

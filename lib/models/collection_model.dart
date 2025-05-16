@@ -51,4 +51,28 @@ class Collection {
       'createdAt': createdAt,
     };
   }
+
+  Collection copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? coverImage,
+    String? createdBy,
+    List<String>? tags,
+    String? type,
+    List<String>? wallpaperIds,
+    Timestamp? createdAt,
+  }) {
+    return Collection(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      coverImage: coverImage ?? this.coverImage,
+      createdBy: createdBy ?? this.createdBy,
+      tags: tags ?? this.tags,
+      type: type ?? this.type,
+      wallpaperIds: wallpaperIds ?? this.wallpaperIds,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

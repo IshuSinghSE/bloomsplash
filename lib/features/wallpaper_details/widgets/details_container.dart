@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'wallpaper_utils.dart';
 import 'metadata_box.dart';
