@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../app/services/firebase/collection_service.dart';
+import '../../../app/services/firebase/collection_db.dart';
 import '../../../../models/collection_model.dart';
 import 'collection_detail_page.dart'; // Import the collection wallpapers page
 

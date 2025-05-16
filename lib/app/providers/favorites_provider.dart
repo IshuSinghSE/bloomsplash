@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../services/firebase/firebase_firestore_service.dart';
+import '../services/firebase/user_db.dart';
 
 class FavoritesProvider extends ChangeNotifier {
   final Box<Map> _favoritesBox = Hive.box<Map>('favorites');
@@ -45,7 +45,7 @@ class FavoritesProvider extends ChangeNotifier {
 
   // Sync favorites from Firestore (on login or sync button)
   Future<void> syncFavoritesFromFirestore(String uid) async {
-    final firestoreService = FirestoreService();
+    final firestoreService = UserService();
     final userProfile = await firestoreService.getUserProfile(uid);
     final savedIds = (userProfile?['savedWallpapers'] as List?)?.cast<String>() ?? [];
     _favoritesBox.clear();
@@ -63,7 +63,7 @@ class FavoritesProvider extends ChangeNotifier {
 
   // Save current favorites to Firestore (after add/remove)
   Future<void> saveFavoritesToFirestore(String uid) async {
-    final firestoreService = FirestoreService();
+    final firestoreService = UserService();
     final ids = _favoritesBox.values.map((fav) => fav['id'] as String).toList();
     await firestoreService.updateUserSavedWallpapers(uid, ids);
   }

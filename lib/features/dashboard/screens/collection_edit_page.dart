@@ -4,9 +4,9 @@ import 'package:image_picker/image_picker.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../models/collection_model.dart';
 import '../../../../../models/wallpaper_model.dart';
-import '../../../app/services/firebase/collection_service.dart';
+import '../../../app/services/firebase/collection_db.dart';
 import '../../../app/services/firebase/firebase_storage.dart' as custom_storage;
-import '../../../app/services/firebase/firebase_firestore_service.dart';
+import '../../../app/services/firebase/wallpaper_db.dart';
 
 class CollectionEditPage extends StatefulWidget {
   final Collection collection;

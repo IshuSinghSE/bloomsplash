@@ -24,34 +24,6 @@ class Collection {
     required this.createdAt,
   });
 
-  factory Collection.fromJson(Map<String, dynamic> json) {
-    return Collection(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      coverImage: json['coverImage'] ?? '',
-      createdBy: json['createdBy'] ?? '',
-      tags: List<String>.from(json['tags'] ?? []),
-      type: json['type'] ?? '',
-      wallpaperIds: List<String>.from(json['wallpaperIds'] ?? []),
-      createdAt: json['createdAt'] ?? Timestamp.now(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'coverImage': coverImage,
-      'createdBy': createdBy,
-      'tags': tags,
-      'type': type,
-      'wallpaperIds': wallpaperIds,
-      'createdAt': createdAt,
-    };
-  }
-
   Collection copyWith({
     String? id,
     String? name,
@@ -74,5 +46,33 @@ class Collection {
       wallpaperIds: wallpaperIds ?? this.wallpaperIds,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  factory Collection.fromJson(Map<String, dynamic> json) {
+    return Collection(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String? ?? '',
+      coverImage: json['coverImage'] as String? ?? '',
+      createdBy: json['createdBy'] as String? ?? '',
+      tags: List<String>.from(json['tags'] ?? []),
+      type: json['type'] as String? ?? '',
+      wallpaperIds: List<String>.from(json['wallpaperIds'] ?? []),
+      createdAt: json['createdAt'] as Timestamp? ?? Timestamp.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'coverImage': coverImage,
+      'createdBy': createdBy,
+      'tags': tags,
+      'type': type,
+      'wallpaperIds': wallpaperIds,
+      'createdAt': createdAt,
+    };
   }
 }

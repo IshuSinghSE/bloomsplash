@@ -6,7 +6,7 @@ import '../../../app/services/firebase/firebase_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
-import '../../../app/services/firebase/firebase_firestore_service.dart';
+import '../../../app/services/firebase/wallpaper_db.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import '../../../models/wallpaper_model.dart';
 import 'package:image/image.dart' as img;

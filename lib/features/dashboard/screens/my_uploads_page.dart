@@ -2,19 +2,18 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../../../app/services/firebase/firebase_firestore_service.dart';
+import '../../../app/services/firebase/wallpaper_db.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/wallpaper_model.dart';
 import '../../../models/collection_model.dart';
-import '../temp/create_collection.dart';
-import '../temp/create_wallpaper.dart';
 import 'edit_wallpaper_page.dart';
 import '../../../core/utils/image_cache_utils.dart';
-import '../../../app/services/firebase/collection_service.dart';
+import '../../../app/services/firebase/collection_db.dart';
 import 'collection_edit_page.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../app/services/firebase/firebase_storage.dart' as custom_storage;
 import '../../../core/utils/utils.dart';
+
 class MyUploadsPage extends StatefulWidget {
   const MyUploadsPage({super.key});
 
@@ -22,7 +21,8 @@ class MyUploadsPage extends StatefulWidget {
   State<MyUploadsPage> createState() => _MyUploadsPageState();
 }
 
-class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProviderStateMixin {
+class _MyUploadsPageState extends State<MyUploadsPage>
+    with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   final ScrollController _scrollController = ScrollController();
   List<Wallpaper> _uploadedWallpapers = [];
@@ -71,7 +71,10 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
 
   void _loadWallpapersFromLocal() {
     final storedWallpapers = _wallpapersBox.get('wallpapers', defaultValue: []);
-    final cacheTimestamp = _wallpapersBox.get('cacheTimestamp', defaultValue: 0);
+    final cacheTimestamp = _wallpapersBox.get(
+      'cacheTimestamp',
+      defaultValue: 0,
+    );
     final currentTime = DateTime.now().millisecondsSinceEpoch;
 
     // Check if cache is expired (e.g., 7 days)
@@ -83,9 +86,13 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
 
     if (storedWallpapers.isNotEmpty) {
       setState(() {
-        _uploadedWallpapers = (storedWallpapers as List)
-            .map((wallpaperJson) => Wallpaper.fromJson(json.decode(wallpaperJson)))
-            .toList();
+        _uploadedWallpapers =
+            (storedWallpapers as List)
+                .map(
+                  (wallpaperJson) =>
+                      Wallpaper.fromJson(json.decode(wallpaperJson)),
+                )
+                .toList();
         _isLoading = false;
       });
       _cacheImages();
@@ -93,12 +100,19 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
   }
 
   Future<void> _saveWallpapersToLocal(List<Wallpaper> wallpapers) async {
-    final wallpapersJson = wallpapers.map((w) => json.encode(w.toJson())).toList();
+    final wallpapersJson =
+        wallpapers.map((w) => json.encode(w.toJson())).toList();
     await _wallpapersBox.put('wallpapers', wallpapersJson);
-    await _wallpapersBox.put('cacheTimestamp', DateTime.now().millisecondsSinceEpoch);
+    await _wallpapersBox.put(
+      'cacheTimestamp',
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
-  Future<void> _fetchWallpapers({bool isRefresh = false, bool forceFetch = false}) async {
+  Future<void> _fetchWallpapers({
+    bool isRefresh = false,
+    bool forceFetch = false,
+  }) async {
     if (!forceFetch && !isRefresh && !_hasMore) return;
 
     try {
@@ -153,10 +167,11 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
   }
 
   Future<void> _cacheImages() async {
-    final imageUrls = _uploadedWallpapers
-        .map((wallpaper) => wallpaper.thumbnailUrl)
-        .where((url) => url.startsWith('http'))
-        .toList();
+    final imageUrls =
+        _uploadedWallpapers
+            .map((wallpaper) => wallpaper.thumbnailUrl)
+            .where((url) => url.startsWith('http'))
+            .toList();
     await cacheImages(imageUrls);
   }
 
@@ -180,23 +195,33 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
     var box = await Hive.openBox('collections');
     final cached = box.get('allCollections');
     if (cached != null && cached is List) {
-      _collections = List<Map<String, dynamic>>.from(cached)
-          .map((e) => Collection.fromJson(e))
-          .toList();
+      _collections =
+          List<Map<String, dynamic>>.from(
+            cached,
+          ).map((e) => Collection.fromJson(e)).toList();
     }
     final collections = await CollectionService().getAllCollections();
     setState(() {
       _collections = collections;
       _isLoadingCollections = false;
     });
-    await box.put('allCollections', collections.map((c) => c.toJson()).toList());
+    await box.put(
+      'allCollections',
+      collections.map((c) => c.toJson()).toList(),
+    );
   }
 
   Future<void> _showCollectionDialog({Collection? collection}) async {
     final nameController = TextEditingController(text: collection?.name ?? '');
-    final descController = TextEditingController(text: collection?.description ?? '');
-    final coverController = TextEditingController(text: collection?.coverImage ?? '');
-    final tagsController = TextEditingController(text: collection?.tags.join(', ') ?? '');
+    final descController = TextEditingController(
+      text: collection?.description ?? '',
+    );
+    final coverController = TextEditingController(
+      text: collection?.coverImage ?? '',
+    );
+    final tagsController = TextEditingController(
+      text: collection?.tags.join(', ') ?? '',
+    );
     final typeController = TextEditingController(text: collection?.type ?? '');
     final formKey = GlobalKey<FormState>();
     XFile? pickedImage;
@@ -205,9 +230,12 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
     double uploadProgress = 0;
     String? selectedWallpaperId;
     // Only wallpapers in this collection, or all if new
-    List<Wallpaper> availableWallpapers = collection?.wallpaperIds != null && collection!.wallpaperIds.isNotEmpty
-      ? _uploadedWallpapers.where((w) => collection.wallpaperIds.contains(w.id)).toList()
-      : _uploadedWallpapers;
+    List<Wallpaper> availableWallpapers =
+        collection?.wallpaperIds != null && collection!.wallpaperIds.isNotEmpty
+            ? _uploadedWallpapers
+                .where((w) => collection.wallpaperIds.contains(w.id))
+                .toList()
+            : _uploadedWallpapers;
 
     Future<void> pickAndUploadImage(String collectionId) async {
       final picker = ImagePicker();
@@ -222,11 +250,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
       final file = File(image.path);
 
       // Simulate upload progress
-      final uploadTask = custom_storage.uploadFileToFirebaseWithProgress(file, (progress) {
-        setState(() {
-          uploadProgress = progress;
-        });
-      });
+      final uploadTask = custom_storage.uploadFileToFirebase(file);
 
       final result = await uploadTask;
       if (result != null && result['thumbnailUrl'] != null) {
@@ -250,50 +274,77 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 12),
-        const Text('Add a wallpaper to this collection (optional):', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Add a wallpaper to this collection (optional):',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         ElevatedButton.icon(
           icon: const Icon(Icons.add_photo_alternate),
           label: const Text('Upload Wallpaper'),
-          onPressed: isUploading ? null : () async {
-            final picker = ImagePicker();
-            final image = await picker.pickImage(source: ImageSource.gallery);
-            if (image == null) return;
-            setState(() { isUploading = true; });
-            final file = File(image.path);
-            final result = await custom_storage.uploadFileToFirebase(file);
-            if (result != null && result['originalUrl'] != null && result['thumbnailUrl'] != null) {
-              final newWallpaper = Wallpaper(
-                id: generateUuid(),
-                name: 'New Wallpaper',
-                imageUrl: result['originalUrl'],
-                thumbnailUrl: result['thumbnailUrl'],
-                downloads: 0,
-                size: result['originalSize'] ?? 0,
-                resolution: result['originalResolution']?.toString() ?? '',
-                category: '',
-                author: 'admin',
-                authorImage: '',
-                description: '',
-                likes: 0,
-                tags: [],
-                colors: [],
-                orientation: '',
-                license: '',
-                status: 'active',
-                createdAt: DateTime.now().toIso8601String(),
-                isPremium: false,
-                isAIgenerated: false,
-                hash: ''
-              );
-              await FirestoreService().addImageDetailsToFirestore(newWallpaper);
-              availableWallpapers.add(newWallpaper);
-              setState(() { isUploading = false; });
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wallpaper uploaded!')));
-            } else {
-              setState(() { isUploading = false; });
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to upload wallpaper.')));
-            }
-          },
+          onPressed:
+              isUploading
+                  ? null
+                  : () async {
+                    final picker = ImagePicker();
+                    final image = await picker.pickImage(
+                      source: ImageSource.gallery,
+                    );
+                    if (image == null) return;
+                    setState(() {
+                      isUploading = true;
+                    });
+                    final file = File(image.path);
+                    final result = await custom_storage.uploadFileToFirebase(
+                      file,
+                    );
+                    if (result != null &&
+                        result['originalUrl'] != null &&
+                        result['thumbnailUrl'] != null) {
+                      final newWallpaper = Wallpaper(
+                        id: generateUuid(),
+                        name: 'New Wallpaper',
+                        imageUrl: result['originalUrl'],
+                        thumbnailUrl: result['thumbnailUrl'],
+                        downloads: 0,
+                        size: result['originalSize'] ?? 0,
+                        resolution:
+                            result['originalResolution']?.toString() ?? '',
+                        category: '',
+                        author: 'admin',
+                        authorImage: '',
+                        description: '',
+                        likes: 0,
+                        tags: [],
+                        colors: [],
+                        orientation: '',
+                        license: '',
+                        status: 'active',
+                        createdAt: DateTime.now().toIso8601String(),
+                        isPremium: false,
+                        isAIgenerated: false,
+                        hash: '',
+                      );
+                      await FirestoreService().addImageDetailsToFirestore(
+                        newWallpaper,
+                      );
+                      availableWallpapers.add(newWallpaper);
+                      setState(() {
+                        isUploading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Wallpaper uploaded!')),
+                      );
+                    } else {
+                      setState(() {
+                        isUploading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to upload wallpaper.'),
+                        ),
+                      );
+                    }
+                  },
         ),
       ],
     );
@@ -304,7 +355,9 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(collection == null ? 'Create Collection' : 'Edit Collection'),
+              title: Text(
+                collection == null ? 'Create Collection' : 'Edit Collection',
+              ),
               content: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -314,28 +367,39 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                       TextFormField(
                         controller: nameController,
                         decoration: const InputDecoration(labelText: 'Name'),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        validator:
+                            (v) => v == null || v.isEmpty ? 'Required' : null,
                       ),
                       TextFormField(
                         controller: descController,
-                        decoration: const InputDecoration(labelText: 'Description'),
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                        ),
                       ),
                       Row(
                         children: [
                           Expanded(
                             child: TextFormField(
                               controller: coverController,
-                              decoration: const InputDecoration(labelText: 'Cover Image URL'),
+                              decoration: const InputDecoration(
+                                labelText: 'Cover Image URL',
+                              ),
                               readOnly: true,
                             ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.upload_file),
                             tooltip: 'Upload Custom Cover Image',
-                            onPressed: isUploading ? null : () async {
-                              final id = collection?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
-                              await pickAndUploadImage(id);
-                            },
+                            onPressed:
+                                isUploading
+                                    ? null
+                                    : () async {
+                                      final id =
+                                          collection?.id ??
+                                          DateTime.now().millisecondsSinceEpoch
+                                              .toString();
+                                      await pickAndUploadImage(id);
+                                    },
                           ),
                         ],
                       ),
@@ -351,7 +415,9 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                             coverController.text,
                             height: 100,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                            errorBuilder:
+                                (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image),
                           ),
                         ),
                       if (availableWallpapers.isNotEmpty)
@@ -364,24 +430,36 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                               value: selectedWallpaperId,
                               hint: const Text('Select wallpaper'),
                               isExpanded: true,
-                              items: availableWallpapers.map((w) => DropdownMenuItem(
-                                value: w.id,
-                                child: Row(
-                                  children: [
-                                    Image.network(w.thumbnailUrl, width: 40, height: 40, fit: BoxFit.cover),
-                                    const SizedBox(width: 8),
-                                    Text(w.name),
-                                  ],
-                                ),
-                              )).toList(),
+                              items:
+                                  availableWallpapers
+                                      .map(
+                                        (w) => DropdownMenuItem(
+                                          value: w.id,
+                                          child: Row(
+                                            children: [
+                                              Image.network(
+                                                w.thumbnailUrl,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(w.name),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
                               onChanged: (val) {
                                 setState(() {
                                   selectedWallpaperId = val;
                                   pickedImage = null;
                                   uploadedImageUrl = null;
                                   if (val != null) {
-                                    final selected = availableWallpapers.firstWhere((w) => w.id == val);
-                                    coverController.text = selected.thumbnailUrl;
+                                    final selected = availableWallpapers
+                                        .firstWhere((w) => w.id == val);
+                                    coverController.text =
+                                        selected.thumbnailUrl;
                                   } else {
                                     coverController.text = '';
                                   }
@@ -392,7 +470,9 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                         ),
                       TextFormField(
                         controller: tagsController,
-                        decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Tags (comma separated)',
+                        ),
                       ),
                       TextFormField(
                         controller: typeController,
@@ -413,7 +493,8 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
                     String coverImageUrl = coverController.text.trim();
-                    if (coverImageUrl.isEmpty && availableWallpapers.isNotEmpty) {
+                    if (coverImageUrl.isEmpty &&
+                        availableWallpapers.isNotEmpty) {
                       coverImageUrl = availableWallpapers.first.thumbnailUrl;
                     }
                     final newCollection = Collection(
@@ -422,7 +503,12 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                       description: descController.text.trim(),
                       coverImage: coverImageUrl,
                       createdBy: 'admin', // Replace with actual user
-                      tags: tagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                      tags:
+                          tagsController.text
+                              .split(',')
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .toList(),
                       type: typeController.text.trim(),
                       wallpaperIds: collection?.wallpaperIds ?? [],
                       createdAt: collection?.createdAt ?? Timestamp.now(),
@@ -445,6 +531,8 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
     );
   }
 
+
+// --- UI --- 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -454,10 +542,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
           title: const Text('My Uploads'),
           bottom: TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: 'My Uploads'),
-              Tab(text: 'Collections'),
-            ],
+            tabs: const [Tab(text: 'My Uploads'), Tab(text: 'Collections')],
           ),
         ),
         body: TabBarView(
@@ -467,111 +552,93 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
-                    onRefresh: _refreshWallpapers,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: _uploadedWallpapers.length,
-                      itemBuilder: (context, i) {
-                        final wallpaper = _uploadedWallpapers[i];
-                        return ListTile(
-                          leading: (wallpaper.thumbnailUrl.isNotEmpty)
-                              ? Image.network(wallpaper.thumbnailUrl, width: 56, height: 56, fit: BoxFit.cover)
-                              : const Icon(Icons.image),
-                          title: Text(wallpaper.name),
-                          subtitle: Text(wallpaper.category),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EditWallpaperPage(wallpaper: wallpaper),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                  onRefresh: _refreshWallpapers,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _uploadedWallpapers.length,
+                    itemBuilder: (context, i) {
+                      final wallpaper = _uploadedWallpapers[i];
+                      return ListTile(
+                        leading:
+                            (wallpaper.thumbnailUrl.isNotEmpty)
+                                ? Image.network(
+                                  wallpaper.thumbnailUrl,
+                                  width: 56,
+                                  height: 56,
+                                  fit: BoxFit.cover,
+                                )
+                                : const Icon(Icons.image),
+                        title: Text(wallpaper.name),
+                        subtitle: Text(wallpaper.category),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      EditWallpaperPage(wallpaper: wallpaper),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
+                ),
+
             // --- Collections Tab ---
             _isLoadingCollections
                 ? const Center(child: CircularProgressIndicator())
                 : Stack(
-                    children: [
-                      RefreshIndicator(
-                        onRefresh: _fetchCollections,
-                        child: ListView.builder(
-                          itemCount: _collections.length,
-                          itemBuilder: (context, i) {
-                            final collection = _collections[i];
-                            return ListTile(
-                              leading: collection.coverImage.isNotEmpty
-                                  ? Image.network(collection.coverImage, width: 56, height: 56, fit: BoxFit.cover)
-                                  : const Icon(Icons.collections),
-                              title: Text(collection.name),
-                              subtitle: Text(collection.description),
-                              onTap: () async {
-                                final wallpapers = await CollectionService().getWallpapersForCollection(collection);
-                                final updated = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CollectionEditPage(
-                                      collection: collection,
-                                      wallpapers: wallpapers,
-                                    ),
-                                  ),
-                                );
-                                if (updated == true) await _fetchCollections();
-                              },
-                            );
-                          },
-                        ),
+                  children: [
+                    RefreshIndicator(
+                      onRefresh: _fetchCollections,
+                      child: ListView.builder(
+                        itemCount: _collections.length,
+                        itemBuilder: (context, i) {
+                          final collection = _collections[i];
+                          return ListTile(
+                            leading:
+                                collection.coverImage.isNotEmpty
+                                    ? Image.network(
+                                      collection.coverImage,
+                                      width: 56,
+                                      height: 56,
+                                      fit: BoxFit.cover,
+                                    )
+                                    : const Icon(Icons.collections),
+                            title: Text(collection.name),
+                            subtitle: Text(collection.description),
+                            onTap: () async {
+                              final wallpapers = await CollectionService()
+                                  .getWallpapersForCollection(collection);
+                              final updated = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CollectionEditPage(
+                                        collection: collection,
+                                        wallpapers: wallpapers,
+                                      ),
+                                ),
+                              );
+                              if (updated == true) await _fetchCollections();
+                            },
+                          );
+                        },
                       ),
-                      Positioned(
-                        bottom: 16,
-                        left: 16,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FloatingActionButton.extended(
-                              heroTag: 'create-wallpaper',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CreateWallpaperPage(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.add_photo_alternate),
-                              label: const Text('New Wallpaper'),
-                            ),
-                            const SizedBox(height: 8),
-                            FloatingActionButton.extended(
-                              heroTag: 'create-collection',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CreateCollectionPage(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.collections_sharp),
-                              label: const Text('New Collection'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
           ],
         ),
-        floatingActionButton: _tabController.index == 1
-            ? FloatingActionButton(
-                onPressed: () => _showCollectionDialog(),
-                tooltip: 'New Collection',
-                child: const Icon(Icons.add),
-              )
-            : null,
+        floatingActionButton:
+            _tabController.index == 1
+                ? FloatingActionButton(
+                  onPressed: () => _showCollectionDialog(),
+                  tooltip: 'New Collection',
+                  child: const Icon(Icons.add),
+                )
+                : null,
       ),
     );
   }

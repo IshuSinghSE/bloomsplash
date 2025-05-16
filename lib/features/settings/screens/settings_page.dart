@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../../../app/providers/auth_provider.dart';
-import '../../my_uploads/screens/my_uploads_page.dart';
+import '../../dashboard/screens/my_uploads_page.dart';
 import '../../../app/providers/favorites_provider.dart'; // Ensure this is the correct path to FavoritesProvider
 
 class SettingsPage extends StatefulWidget {

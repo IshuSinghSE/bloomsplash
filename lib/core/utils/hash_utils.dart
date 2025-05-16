@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:image/image.dart' as img;
-import '../../app/services/firebase/firebase_firestore_service.dart';
+import '../../app/services/firebase/wallpaper_db.dart';
 
 /// Compute perceptual hash (pHash) of an image
 String computeImageHash(File imageFile) {

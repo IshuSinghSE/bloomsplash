@@ -4,7 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'app/providers/favorites_provider.dart';
 import 'app/providers/auth_provider.dart';
 import 'features/shared/widgets/custom_bottom_nav_bar.dart';
-import 'features/home/screens/explore_page.dart';
+import 'features/explore/screens/explore_page.dart';
 import 'features/favorites/screens/favorites_page.dart';
 import 'features/upload/screens/upload_page.dart';
 import 'features/welcome/screens/welcome_page.dart';
@@ -15,14 +15,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'core/constant/config.dart';
-import 'features/collection/screens/collections_page.dart';
-import '../app/constants/data.dart'; // Import the dummy data
+import 'features/collections/screens/collections_page.dart';
 
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await loadWallpapers();
   try {
     debugPrint('Initializing Firebase...');
     await Firebase.initializeApp(
