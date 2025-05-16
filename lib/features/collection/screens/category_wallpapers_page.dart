@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../app/providers/favorites_provider.dart';
-import '../features/wallpaper_details/screens/wallpaper_details_page.dart';
-import '../app/constants/config.dart';
-import '../core/themes/app_colors.dart'; // <-- Import the theme file
+import '../../../app/providers/favorites_provider.dart';
+import '../../wallpaper_details/screens/wallpaper_details_page.dart';
+import '../../../core/constant/config.dart';
+import '../../../core/themes/app_colors.dart'; // <-- Import the theme file
 
 class CategoryWallpapersPage extends StatelessWidget {
   final String category;

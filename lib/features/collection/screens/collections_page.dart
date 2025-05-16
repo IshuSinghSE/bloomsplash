@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/firebase/collection_service.dart';
-import '../../models/collection_model.dart';
+import '../../../app/services/firebase/collection_service.dart';
+import '../../../../models/collection_model.dart';
 import 'collection_detail_page.dart'; // Import the collection wallpapers page
 
 class CollectionsPage extends StatefulWidget {
@@ -126,18 +126,22 @@ class _CollectionsPageState extends State<CollectionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF121212), // Set dark background color
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Collections Sections
-            _buildCollectionSection('All Collections', _collections),
-            _buildCollectionSection('Pro Collections', _collections.where((c) => c.type == 'pro').toList()),
-            _buildCollectionSection('Free Collections', _collections.where((c) => c.type == 'free').toList()),
-            _buildCollectionSection('Premium Collections', _collections.where((c) => c.type == 'premium').toList()),
-            // Add bottom space
-            const SizedBox(height: 80), // Adjust height as needed
-          ],
+      body: RefreshIndicator(
+        onRefresh: _fetchCollections, // Ensure pull-to-refresh works
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Allow pull-to-refresh even when content is less
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Collections Sections
+              _buildCollectionSection('All Collections', _collections),
+              _buildCollectionSection('Pro Collections', _collections.where((c) => c.type == 'pro').toList()),
+              _buildCollectionSection('Free Collections', _collections.where((c) => c.type == 'free').toList()),
+              _buildCollectionSection('Premium Collections', _collections.where((c) => c.type == 'premium').toList()),
+              // Add bottom space
+              const SizedBox(height: 80), // Adjust height as needed
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -255,15 +259,15 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              if (collection.type == 'pro')
-                                const Text(
-                                  'INCLUDED WITH PRO',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                  textAlign: TextAlign.center,
+                              const SizedBox(height: 4), // Add spacing between name and description
+                              Text(
+                                collection.description,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
                                 ),
+                                textAlign: TextAlign.center,
+                              ),
                             ],
                           ),
                         ),

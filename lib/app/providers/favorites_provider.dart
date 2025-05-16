@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../../services/firebase/firebase_firestore_service.dart';
+import '../services/firebase/firebase_firestore_service.dart';
 
 class FavoritesProvider extends ChangeNotifier {
   final Box<Map> _favoritesBox = Hive.box<Map>('favorites');

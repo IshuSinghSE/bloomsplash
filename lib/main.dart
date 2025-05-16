@@ -14,8 +14,8 @@ import 'app/config/firebase_options.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'app/constants/config.dart';
-import 'screens/collections_page.dart';
+import 'core/constant/config.dart';
+import 'features/collection/screens/collections_page.dart';
 import '../app/constants/data.dart'; // Import the dummy data
 
 

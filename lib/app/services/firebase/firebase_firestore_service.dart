@@ -1,8 +1,8 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
-import '../../models/collection_model.dart';
-import '../../models/wallpaper_model.dart';
+import '../../../models/collection_model.dart';
+import '../../../models/wallpaper_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

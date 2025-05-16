@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../features/wallpaper_details/screens/wallpaper_details_page.dart';
-import '../app/constants/config.dart';
-import '../core/themes/app_colors.dart';
-import '../features/shared/widgets/custom_bottom_nav_bar.dart';
+import '../../wallpaper_details/screens/wallpaper_details_page.dart';
+import '../../../core/constant/config.dart';
+import '../../../core/themes/app_colors.dart';
+import '../../shared/widgets/custom_bottom_nav_bar.dart';
 
 class CollectionDetailPage extends StatelessWidget {
   final String title;

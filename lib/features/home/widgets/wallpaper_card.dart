@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
-import '../../../app/constants/config.dart';
+import '../../../core/constant/config.dart';
 
 class WallpaperCard extends StatelessWidget {
   final Map<String, dynamic> wallpaper;

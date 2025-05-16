@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'wallpaper_utils.dart';
 import 'metadata_box.dart';
 import '../../shared/widgets/shared_widgets.dart';
-import '../../../app/constants/config.dart';
+import '../../../core/constant/config.dart';
 
 class DetailsContainer extends StatelessWidget {
   final Map<String, dynamic> wallpaper;

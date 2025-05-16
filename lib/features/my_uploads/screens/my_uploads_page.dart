@@ -2,18 +2,19 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../../../services/firebase/firebase_firestore_service.dart';
+import '../../../app/services/firebase/firebase_firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/wallpaper_model.dart';
 import '../../../models/collection_model.dart';
-import '../../edit_wallpaper/screens/edit_wallpaper_page.dart';
-import '../../wallpaper_details/widgets/wallpaper_utils.dart';
-import '../../../utils/image_cache_utils.dart';
-import '../../../services/firebase/collection_service.dart';
-import '../../../screens/collection_edit_page.dart';
+import '../temp/create_collection.dart';
+import '../temp/create_wallpaper.dart';
+import 'edit_wallpaper_page.dart';
+import '../../../core/utils/image_cache_utils.dart';
+import '../../../app/services/firebase/collection_service.dart';
+import 'collection_edit_page.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../services/firebase/firebase_storage.dart' as custom_storage;
-
+import '../../../app/services/firebase/firebase_storage.dart' as custom_storage;
+import '../../../core/utils/utils.dart';
 class MyUploadsPage extends StatefulWidget {
   const MyUploadsPage({super.key});
 
@@ -173,49 +174,6 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
     }
   }
 
-  Future<void> _deleteWallpaper(String id) async {
-    try {
-      await _firestoreService.deleteImageDetailsFromFirestore(id);
-      setState(() {
-        _uploadedWallpapers.removeWhere((wallpaper) => wallpaper.id == id);
-      });
-      await _saveWallpapersToLocal(_uploadedWallpapers);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wallpaper deleted successfully!')),
-      );
-    } catch (e) {
-      debugPrint('Error deleting wallpaper: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete wallpaper!')),
-      );
-    }
-  }
-
-  Future<void> _downloadImage(String url) async {
-    await downloadWallpaper(context, url);
-  }
-
-  void _editWallpaper(Wallpaper wallpaper) {
-    Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditWallpaperPage(wallpaper: wallpaper),
-      ),
-    ).then((didUpdate) async {
-      if (didUpdate == true) {
-        await _refreshWallpapers();
-      }
-      // else do nothing, avoid unnecessary loading
-    });
-  }
-
-  List<Wallpaper> get _filteredWallpapers {
-    if (_selectedFilter == 'All') return _uploadedWallpapers;
-    return _uploadedWallpapers
-        .where((w) => w.status.toLowerCase() == _selectedFilter.toLowerCase())
-        .toList();
-  }
-
   // --- Collections CRUD ---
   Future<void> _fetchCollections() async {
     setState(() => _isLoadingCollections = true);
@@ -262,7 +220,15 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
         selectedWallpaperId = null; // Clear wallpaper selection if uploading
       });
       final file = File(image.path);
-      final result = await custom_storage.uploadFileToFirebase(file);
+
+      // Simulate upload progress
+      final uploadTask = custom_storage.uploadFileToFirebaseWithProgress(file, (progress) {
+        setState(() {
+          uploadProgress = progress;
+        });
+      });
+
+      final result = await uploadTask;
       if (result != null && result['thumbnailUrl'] != null) {
         setState(() {
           uploadedImageUrl = result['thumbnailUrl'];
@@ -297,7 +263,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
             final result = await custom_storage.uploadFileToFirebase(file);
             if (result != null && result['originalUrl'] != null && result['thumbnailUrl'] != null) {
               final newWallpaper = Wallpaper(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                id: generateUuid(),
                 name: 'New Wallpaper',
                 imageUrl: result['originalUrl'],
                 thumbnailUrl: result['thumbnailUrl'],
@@ -451,7 +417,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                       coverImageUrl = availableWallpapers.first.thumbnailUrl;
                     }
                     final newCollection = Collection(
-                      id: collection?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                      id: collection?.id ?? generateUuid(),
                       name: nameController.text.trim(),
                       description: descController.text.trim(),
                       coverImage: coverImageUrl,
@@ -555,48 +521,46 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                                 );
                                 if (updated == true) await _fetchCollections();
                               },
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (value) async {
-                                  if (value == 'edit') {
-                                    final wallpapers = await CollectionService().getWallpapersForCollection(collection);
-                                    final updated = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CollectionEditPage(
-                                          collection: collection,
-                                          wallpapers: wallpapers,
-                                        ),
-                                      ),
-                                    );
-                                    if (updated == true) await _fetchCollections();
-                                  } else if (value == 'delete') {
-                                    await CollectionService().deleteCollection(collection.id);
-                                    await _fetchCollections();
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                                ],
-                              ),
                             );
                           },
                         ),
                       ),
-                      // Add prominent create button in top right
-                      // Positioned(
-                      //   top: 16,
-                      //   right: 16,
-                      //   child: FloatingActionButton.extended(
-                      //     heroTag: 'create-collection-fab',
-                      //     onPressed: () => _showCollectionDialog(),
-                      //     icon: const Icon(Icons.add),
-                      //     label: const Text('New Collection'),
-                      //     backgroundColor: Theme.of(context).colorScheme.primary,
-                      //     foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      //     elevation: 2,
-                      //   ),
-                      // ),
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FloatingActionButton.extended(
+                              heroTag: 'create-wallpaper',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CreateWallpaperPage(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.add_photo_alternate),
+                              label: const Text('New Wallpaper'),
+                            ),
+                            const SizedBox(height: 8),
+                            FloatingActionButton.extended(
+                              heroTag: 'create-collection',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CreateCollectionPage(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.collections_sharp),
+                              label: const Text('New Collection'),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
           ],

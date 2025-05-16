@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
-import '../../../services/firebase/firebase_storage.dart';
+import '../../../app/services/firebase/firebase_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
-import '../../../services/firebase/firebase_firestore_service.dart';
+import '../../../app/services/firebase/firebase_firestore_service.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import '../../../models/wallpaper_model.dart';
 import 'package:image/image.dart' as img;
 import 'package:hive/hive.dart';
-import 'package:palette_generator/palette_generator.dart';
+import '../../../core/utils/utils.dart';
+import '../../../core/utils/hash_utils.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -64,59 +65,8 @@ class _UploadPageState extends State<UploadPage> {
     return fixedImageFile;
   }
 
-  /// Utility function to compute perceptual hash (pHash) of an image
-  String computeImageHash(File imageFile) {
-    final image = img.decodeImage(imageFile.readAsBytesSync());
-    if (image == null) {
-      throw Exception("Failed to decode image.");
-    }
 
-    // Resize to 8x8 and convert to grayscale
-    final resized = img.copyResize(image, width: 8, height: 8);
-    final grayscale = img.grayscale(resized);
-
-    // Compute average pixel value
-    final avgPixelValue =
-        grayscale.getBytes().map((pixel) => pixel).reduce((a, b) => a + b) ~/
-        grayscale.getBytes().length;
-
-    // Generate hash based on whether pixel values are above or below the average
-    final hash =
-        grayscale
-            .getBytes()
-            .map((pixel) => pixel > avgPixelValue ? '1' : '0')
-            .join();
-    return hash;
-  }
-
-  /// Function to check for duplicate wallpapers
-  Future<bool> isDuplicateWallpaper(File newImage) async {
-    final newImageHash = computeImageHash(newImage);
-
-    // Fetch existing hashes from Firestore
-    final firestoreService = FirestoreService();
-    final existingWallpapers =
-        await firestoreService.getAllImageDetailsFromFirestore();
-
-    for (var wallpaper in existingWallpapers) {
-      if (wallpaper['hash'] == newImageHash) {
-        return true; // Duplicate found
-      }
-    }
-    return false; // No duplicates
-  }
-
-  /// Extract dominant colors from a File (thumbnail image)
-  Future<List<String>> _extractDominantColors(File imageFile, {int colorCount = 3}) async {
-    final image = await imageFile.readAsBytes();
-    final uiImage = await decodeImageFromList(image);
-    final palette = await PaletteGenerator.fromImage(
-      uiImage,
-      maximumColorCount: colorCount,
-    );
-    return palette.colors.map((c) => '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}').toList();
-  }
-
+ 
   Future<void> _pickImage() async {
     setState(() {
       _isLoading = true; // Show loading indicator
@@ -255,7 +205,7 @@ class _UploadPageState extends State<UploadPage> {
         );
 
         // Generate a unique ID for the document
-        final id = const Uuid().v4();
+        final id =  generateUuid();
         debugPrint("Generated unique ID for wallpaper: $id");
 
         // Compute perceptual hash for the uploaded image
@@ -271,7 +221,7 @@ class _UploadPageState extends State<UploadPage> {
           final localWebpPath = result['localThumbnailPath'];
           if (localWebpPath != null && File(localWebpPath).existsSync()) {
             final thumbFile = File(localWebpPath);
-            colors = await _extractDominantColors(thumbFile);
+            colors = await extractDominantColors(thumbFile);
             // Optionally delete the local webp after palette extraction
             thumbFile.deleteSync();
           } else {
@@ -382,7 +332,7 @@ class _UploadPageState extends State<UploadPage> {
             } else {
               thumbFile = File(thumbnailUrl);
             }
-            colors = await _extractDominantColors(thumbFile);
+            colors = await extractDominantColors(thumbFile);
           } catch (e) {
             debugPrint('Color extraction failed: $e');
           }

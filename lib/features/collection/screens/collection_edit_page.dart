@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../models/collection_model.dart';
-import '../../../models/wallpaper_model.dart';
-import '../../../services/firebase/collection_service.dart';
-import '../../../services/firebase/firebase_storage.dart' as custom_storage;
-import '../../../services/firebase/firebase_firestore_service.dart';
+import '../../../../../models/collection_model.dart';
+import '../../../../../models/wallpaper_model.dart';
+import '../../../app/services/firebase/collection_service.dart';
+import '../../../app/services/firebase/firebase_storage.dart' as custom_storage;
+import '../../../app/services/firebase/firebase_firestore_service.dart';
 
 class CollectionEditPage extends StatefulWidget {
   final Collection collection;

@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+import '../../../core/constant/api_routes.dart';
 
 final storageRef = FirebaseStorage.instance.ref();
 
@@ -68,26 +70,12 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     if (!thumbnailFile.existsSync() || thumbnailFile.lengthSync() == 0) {
       throw Exception('Thumbnail file is missing or empty');
     }
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('https://image-optimization-sooty.vercel.app/convert?quality=80'),
-    );
-    request.files.add(await http.MultipartFile.fromPath('file', thumbnailFile.path));
-    debugPrint('Converting thumbnail to webp: ${thumbnailFile.path}');
-    final streamedResponse = await request.send();
-    if (streamedResponse.statusCode != 200) {
-      final responseBody = await streamedResponse.stream.bytesToString();
-      log('API error response: $responseBody');
-      throw Exception('Failed to convert thumbnail to webp');
-    }
-    final webpBytes = await streamedResponse.stream.toBytes();
-    final thumbnailWebpFile = File('${file.parent.path}/thumbnail_$fileName.webp');
-    await thumbnailWebpFile.writeAsBytes(webpBytes);
+    final webpBytes = await convertImageToWebp(thumbnailFile);
 
     // Upload original and thumbnail (webp) to Firebase Storage
     final uploadTasks = [
       originalRef.putData(originalBytes),
-      thumbnailRef.putData(webpBytes),
+      thumbnailRef.putData(Uint8List.fromList(webpBytes)),
     ];
     await Future.wait(uploadTasks);
 
@@ -106,7 +94,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       'thumbnailUrl': thumbnailUrl,
       'originalSize': originalSize,
       'originalResolution': originalResolution,
-      'localThumbnailPath': thumbnailWebpFile.path, // Add local webp path for palette extraction
+      'localThumbnailPath': thumbnailFile.path, // Add local webp path for palette extraction
     };
   } catch (e) {
     log('Error uploading file: $e');
@@ -128,4 +116,46 @@ Future<void> uploadFileFromAppDocumentsDirectory(fileName) async {
   } catch (e) {
     log('Error accessing application documents directory: $e');
   }
+}
+
+Future<Map<String, dynamic>?> uploadFileToFirebaseWithProgress(File file, Function(double) onProgress) async {
+  try {
+    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    final originalRef = storageRef.child('collections/$fileName');
+
+    final uploadTask = originalRef.putFile(file);
+
+    uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+      final progress = snapshot.bytesTransferred / snapshot.totalBytes;
+      onProgress(progress);
+    });
+
+    final snapshot = await uploadTask;
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+
+    return {
+      'downloadUrl': downloadUrl,
+    };
+  } catch (e) {
+    log('Error uploading file with progress: $e');
+    return null;
+  }
+}
+
+Future<List<int>> convertImageToWebp(File imageFile, {int quality = 80}) async {
+  final request = http.MultipartRequest(
+    'POST',
+    Uri.parse('$imageOptimizationApi?quality=$quality'),
+  );
+  request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+  debugPrint('Converting image to webp: ${imageFile.path}');
+
+  final streamedResponse = await request.send();
+  if (streamedResponse.statusCode != 200) {
+    final responseBody = await streamedResponse.stream.bytesToString();
+    log('API error response: $responseBody');
+    throw Exception('Failed to convert image to webp');
+  }
+
+  return await streamedResponse.stream.toBytes();
 }
