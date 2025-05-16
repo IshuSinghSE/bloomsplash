@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/wallpaper_model.dart';
-import '../../../services/firebase/firebase_firestore_service.dart';
+import '../../../app/services/firebase/wallpaper_db.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';

@@ -1,0 +1,270 @@
+import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import '../../../app/services/firebase/collection_db.dart';
+import '../../../../models/collection_model.dart';
+import 'collection_detail_page.dart'; // Import the collection wallpapers page
+import 'collection_list_page.dart'; // Import the new collection list page
+
+class CollectionsPage extends StatefulWidget {
+  const CollectionsPage({super.key});
+
+  @override
+  State<CollectionsPage> createState() => _CollectionsPageState();
+}
+
+class _CollectionsPageState extends State<CollectionsPage> {
+  final CollectionService _collectionService = CollectionService();
+  List<Collection> _collections = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCollections();
+  }
+
+  Future<void> _fetchCollections() async {
+    // Try to load from Hive cache first
+    var box = await Hive.openBox('collections');
+    final cached = box.get('allCollections');
+    if (cached != null && cached is List) {
+      _collections =
+          List<Map<String, dynamic>>.from(
+            cached,
+          ).map((e) => Collection.fromJson(e)).toList();
+    }
+    // Always fetch latest from Firestore
+    final collections = await _collectionService.getAllCollections();
+    setState(() {
+      _collections = collections;
+    });
+    // Cache to Hive
+    await box.put(
+      'allCollections',
+      collections.map((c) => c.toJson()).toList(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Filter collections by type
+    final proCollections = _collections.where((c) => c.type == 'pro').toList();
+    final freeCollections = _collections.where((c) => c.type == 'free').toList();
+    final premiumCollections = _collections.where((c) => c.type == 'premium').toList();
+    
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      body: RefreshIndicator(
+        onRefresh: _fetchCollections,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Only show sections with non-empty collections
+              if (_collections.isNotEmpty)
+                _buildCollectionSection('All Collections', _collections),
+              
+              if (proCollections.isNotEmpty)
+                _buildCollectionSection('Pro Collections', proCollections),
+              
+              if (freeCollections.isNotEmpty)
+                _buildCollectionSection('Free Collections', freeCollections),
+              
+              if (premiumCollections.isNotEmpty)
+                _buildCollectionSection('Premium Collections', premiumCollections),
+              
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionSection(String title, List<Collection> collections) {
+    // Double-check that collections is not empty before building the section
+    if (collections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    // Determine what type this section represents
+    String? collectionType;
+    if (title.toLowerCase().contains('pro')) {
+      collectionType = 'pro';
+    } else if (title.toLowerCase().contains('free')) {
+      collectionType = 'free';
+    } else if (title.toLowerCase().contains('premium')) {
+      collectionType = 'premium';
+    } else if (!title.toLowerCase().contains('all')) {
+      // For custom categories, use the title directly
+      collectionType = title.toLowerCase();
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        title.toLowerCase().contains('free')
+                            ? Colors.amber
+                            : title.toLowerCase().contains('pro')
+                            ? Colors.cyanAccent
+                            : title.toLowerCase().contains('premium')
+                            ? Colors.purpleAccent
+                            : Colors.orangeAccent,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CollectionListPage(
+                          title: title,
+                          type: collectionType,
+                          initialCollections: _collections,
+                          // Don't pass bottom nav parameters from here
+                          // The bottom nav should only be shown on main app screens
+                          // showBottomNav: true,
+                          // currentNavIndex: 1,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('View all'),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 180,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              itemCount: collections.length,
+              separatorBuilder: (context, i) => const SizedBox(width: 16),
+              itemBuilder: (context, i) {
+                final collection = collections[i];
+                return GestureDetector(
+                  onTap: () async {
+                    final wallpapers = await _collectionService
+                        .getWallpapersForCollection(collection);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => CollectionDetailPage(
+                              title: collection.name,
+                              author: collection.createdBy,
+                              wallpapers:
+                                  wallpapers.map((w) => w.toJson()).toList(),
+                            ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 280,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(
+                          0.1,
+                        ), // Add border with subtle opacity
+                        width: 1.2,
+                      ),
+                      image:
+                          collection.coverImage.isNotEmpty
+                              ? DecorationImage(
+                                image: NetworkImage(collection.coverImage),
+                                fit: BoxFit.cover,
+                              )
+                              : null,
+                      color: Colors.grey[800],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.18),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              color: Colors.black.withOpacity(
+                                0.4,
+                              ), // Add overlay for better text visibility
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                collection.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 28,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(
+                                height: 4,
+                              ), // Add spacing between name and description
+                              Text(
+                                collection.description,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (collection.type == 'premium')
+                          Positioned(
+                            right: 18,
+                            top: 18,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: const Icon(
+                                Icons.lock,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

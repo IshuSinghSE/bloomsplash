@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:shimmer/shimmer.dart';
 import '../widgets/wallpaper_card.dart';
 import '../../../app/providers/favorites_provider.dart';
-import '../../../app/constants/config.dart';
+import '../../../core/constant/config.dart';
 // import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 import '../../../app/providers/auth_provider.dart';
 

@@ -1,11 +1,10 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/wallpaper_model.dart';
+import '../../../models/wallpaper_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // final CollectionReference _wallpapersCollection =
-  //     FirebaseFirestore.instance.collection('wallpapers');
+  final String _wallpapersCollection = 'wallpapers';
 
   Future<void> addImageDetailsToFirestore(Wallpaper wallpaper) async {
     try {
@@ -68,23 +67,6 @@ class FirestoreService {
     }
   }
 
-  Future<Map<String, dynamic>?> getImageDetailsFromFirestore(String id) async {
-    try {
-      log('Fetching image details from Firestore: $id');
-      final doc = await _firestore.collection('wallpapers').doc(id).get();
-      if (doc.exists) {
-        log('Image details fetched successfully: $id');
-        return doc.data();
-      } else {
-        log('No image details found for ID: $id');
-        return null;
-      }
-    } catch (e) {
-      log('Error fetching image details from Firestore: $e');
-      throw Exception('Error fetching image details from Firestore: $e');
-    }
-  }
-
   Future<List<Map<String, dynamic>>> getAllImageDetailsFromFirestore() async {
     try {
       log('Fetching all image details from Firestore');
@@ -98,60 +80,6 @@ class FirestoreService {
     } catch (e) {
       log('Error fetching all image details from Firestore: $e');
       throw Exception('Error fetching all image details from Firestore: $e');
-    }
-  }
-
-  Future<void> addImageToFavorites(String id) async {
-    try {
-      log('Adding image to favorites: $id');
-      await _firestore.collection('favorites').doc(id).set({
-        'id': id,
-      });
-      log('Image added to favorites successfully: $id');
-    } catch (e) {
-      log('Error adding image to favorites: $e');
-      throw Exception('Error adding image to favorites: $e');
-    }
-  }
-
-  Future<void> removeImageFromFavorites(String id) async {
-    try {
-      log('Removing image from favorites: $id');
-      await _firestore.collection('favorites').doc(id).delete();
-      log('Image removed from favorites successfully: $id');
-    } catch (e) {
-      log('Error removing image from favorites: $e');
-      throw Exception('Error removing image from favorites: $e');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getFavoriteImages() async {
-    try {
-      log('Fetching favorite images');
-      final snapshot = await _firestore.collection('favorites').get();
-      final List<Map<String, dynamic>> favoriteImagesList = [];
-      for (var doc in snapshot.docs) {
-        favoriteImagesList.add(doc.data());
-      }
-      log('Favorite images fetched successfully');
-      return favoriteImagesList;
-    } catch (e) {
-      log('Error fetching favorite images: $e');
-      throw Exception('Error fetching favorite images: $e');
-    }
-  }
-
-  Future<void> clearFavorites() async {
-    try {
-      log('Clearing all favorites');
-      final snapshot = await _firestore.collection('favorites').get();
-      for (var doc in snapshot.docs) {
-        await doc.reference.delete();
-      }
-      log('All favorites cleared successfully');
-    } catch (e) {
-      log('Error clearing favorites: $e');
-      throw Exception('Error clearing favorites: $e');
     }
   }
 
@@ -201,52 +129,15 @@ class FirestoreService {
     }
   }
 
-  // Save or update user profile (including savedWallpapers)
-  Future<void> saveOrUpdateUserProfile({
-    required String uid,
-    required String name,
-    required String email,
-    required String photoURL,
-    required List<String> savedWallpapers,
-    required List<String> uploadedWallpapers,
-    required bool isPremium,
-    required DateTime? premiumPurchasedAt,
-    required String authProvider,
-    required DateTime createdAt,
-  }) async {
-    final userDoc = _firestore.collection('users').doc(uid);
-    await userDoc.set({
-      'uid': uid,
-      'name': name,
-      'email': email,
-      'photoURL': photoURL,
-      'savedWallpapers': savedWallpapers,
-      'uploadedWallpapers': uploadedWallpapers,
-      'isPremium': isPremium,
-      'premiumPurchasedAt': premiumPurchasedAt,
-      'authProvider': authProvider,
-      'createdAt': createdAt,
-    }, SetOptions(merge: true));
-  }
-
-  // Get user profile (including savedWallpapers)
-  Future<Map<String, dynamic>?> getUserProfile(String uid) async {
-    final doc = await _firestore.collection('users').doc(uid).get();
-    return doc.data();
-  }
-
-  // Update savedWallpapers for user
-  Future<void> updateUserSavedWallpapers(String uid, List<String> savedWallpapers) async {
-    await _firestore.collection('users').doc(uid).update({
-      'savedWallpapers': savedWallpapers,
-    });
-  }
-
-  // Clear savedWallpapers (on sign out, local only, but method for completeness)
-  Future<void> clearUserSavedWallpapers(String uid) async {
-    await _firestore.collection('users').doc(uid).update({
-      'savedWallpapers': [],
-    });
+  Future<List<Wallpaper>> getAllWallpapers() async {
+    try {
+      final querySnapshot = await _firestore.collection(_wallpapersCollection).get();
+      return querySnapshot.docs
+          .map((doc) => Wallpaper.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      print('Error getting all wallpapers: $e');
+      return [];
+    }
   }
 }
-
