@@ -59,8 +59,17 @@ dependencies:
       url: https://github.com/IshuSinghSE/async_wallpaper.git
       ref: main
   shimmer: ^3.0.0
+  flutter_launcher_icons: ^0.11.0
   # blurhash: ^1.2.0
   # flutter_blurhash: ^0.9.1
+
+flutter_icons:
+        android: true
+        ios: true
+        remove_alpha_ios: true
+        image_path: "assets/icon/icon.png"
+        adaptive_icon_background: "#FFFFFF" # Only for Android 8.0+
+        adaptive_icon_foreground: "assets/icon/icon_foreground.png" # Only for Android 8.0+
 
 dev_dependencies:
   # --- Dev Dependencies ---
