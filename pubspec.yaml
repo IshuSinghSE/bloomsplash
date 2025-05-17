@@ -1,7 +1,7 @@
-name: flutter_application_1
-description: "A new Flutter project."
+name: bloomsplash
+description: "A beautiful wallpaper application"
 publish_to: "none"
-version: 1.0.0+1
+version: 0.1.2
 
 environment:
   sdk: ^3.7.2
