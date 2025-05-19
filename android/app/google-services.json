@@ -7,18 +7,18 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1035240251094:android:3f2bb1d7af2d645699b377",
+        "mobilesdk_app_id": "1:1035240251094:android:c87900012d0afe2199b377",
         "android_client_info": {
-          "package_name": "com.example.flutter_application_1"
+          "package_name": "com.devindeed.bloomsplash"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1035240251094-r3g4af13lere718mjc1ecqltlv9tc9bq.apps.googleusercontent.com",
+          "client_id": "1035240251094-lbk1boufojf1a6rb6ril4fcqo7jjjvt9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.flutter_application_1",
-            "certificate_hash": "882181e786360b6c282b9e6b37f70a26cd50b7df"
+            "package_name": "com.devindeed.bloomsplash",
+            "certificate_hash": "1df62ee623e413c7336a2503fa7dd15ab8fce156"
           }
         },
         {

@@ -67,9 +67,10 @@ flutter_icons:
         android: true
         ios: true
         remove_alpha_ios: true
-        image_path: "assets/icon/icon.png"
+        image_path: "assets/icons/ic_launcher_monochrome.png"
         adaptive_icon_background: "#FFFFFF" # Only for Android 8.0+
-        adaptive_icon_foreground: "assets/icon/icon_foreground.png" # Only for Android 8.0+
+        adaptive_icon_foreground: "assets/icons/ic_launcher.png" # Only for Android 8.0+
+        adaptive_icon_monochrome: "assets/icons/ic_launcher_monochrome.png" # Only for Android 8.0+
 
 dev_dependencies:
   # --- Dev Dependencies ---
@@ -84,7 +85,7 @@ flutter:
 
   assets:
     - assets/
-    - assets/icon/
+    - assets/icons/
     - assets/images/
 
   # fonts:

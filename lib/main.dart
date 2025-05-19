@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Wallpapers",
+          "BloomSplash",
           style: TextStyle(
             fontFamily: 'Raleway',
             fontSize: 24,
