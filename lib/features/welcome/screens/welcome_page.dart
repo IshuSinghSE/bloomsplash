@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../../../main.dart';
 import '../../../app/providers/auth_provider.dart';
-import '../../../app/constants/config.dart';
+import '../../../core/constant/config.dart';
 
 class WelcomePage extends StatelessWidget {
   final Box preferencesBox;

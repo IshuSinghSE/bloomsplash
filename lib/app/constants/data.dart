@@ -52,7 +52,7 @@ final List<Map<String, String>> categories = [
 
 
 final Map<String, List<Map<String, dynamic>>> collections = {
-  "Featured": [
+  "Trending": [
     {
       "title": "Autumn Hues",
       "image": "assets/images/placeholder.webp",

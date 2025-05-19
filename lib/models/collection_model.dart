@@ -24,17 +24,41 @@ class Collection {
     required this.createdAt,
   });
 
+  Collection copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? coverImage,
+    String? createdBy,
+    List<String>? tags,
+    String? type,
+    List<String>? wallpaperIds,
+    Timestamp? createdAt,
+  }) {
+    return Collection(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      coverImage: coverImage ?? this.coverImage,
+      createdBy: createdBy ?? this.createdBy,
+      tags: tags ?? this.tags,
+      type: type ?? this.type,
+      wallpaperIds: wallpaperIds ?? this.wallpaperIds,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   factory Collection.fromJson(Map<String, dynamic> json) {
     return Collection(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      coverImage: json['coverImage'] ?? '',
-      createdBy: json['createdBy'] ?? '',
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String? ?? '',
+      coverImage: json['coverImage'] as String? ?? '',
+      createdBy: json['createdBy'] as String? ?? '',
       tags: List<String>.from(json['tags'] ?? []),
-      type: json['type'] ?? '',
+      type: json['type'] as String? ?? '',
       wallpaperIds: List<String>.from(json['wallpaperIds'] ?? []),
-      createdAt: json['createdAt'] ?? Timestamp.now(),
+      createdAt: json['createdAt'] as Timestamp? ?? Timestamp.now(),
     );
   }
 

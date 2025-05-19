@@ -1,0 +1,1 @@
+const String imageOptimizationApi = 'https://image-optimization-sooty.vercel.app/convert';
