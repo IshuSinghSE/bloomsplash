@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter_application_1/core/utils/utils.dart';
+import 'package:bloomsplash/core/utils/utils.dart';
 import 'package:image_picker/image_picker.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../models/collection_model.dart';
