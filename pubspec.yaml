@@ -1,7 +1,7 @@
-name: flutter_application_1
-description: "A new Flutter project."
+name: bloomsplash
+description: "A beautiful wallpaper application"
 publish_to: "none"
-version: 1.0.0+1
+version: 0.1.2
 
 environment:
   sdk: ^3.7.2
@@ -59,8 +59,18 @@ dependencies:
       url: https://github.com/IshuSinghSE/async_wallpaper.git
       ref: main
   shimmer: ^3.0.0
+  flutter_launcher_icons: ^0.11.0
   # blurhash: ^1.2.0
   # flutter_blurhash: ^0.9.1
+
+flutter_icons:
+        android: true
+        ios: true
+        remove_alpha_ios: true
+        image_path: "assets/icons/ic_launcher_monochrome.png"
+        adaptive_icon_background: "#FFFFFF" # Only for Android 8.0+
+        adaptive_icon_foreground: "assets/icons/ic_launcher.png" # Only for Android 8.0+
+        adaptive_icon_monochrome: "assets/icons/ic_launcher_monochrome.png" # Only for Android 8.0+
 
 dev_dependencies:
   # --- Dev Dependencies ---

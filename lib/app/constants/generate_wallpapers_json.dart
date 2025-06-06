@@ -89,7 +89,7 @@ void generateWallpapersJson() {
   final jsonString = jsonEncode(wallpapers);
 
   // Write the JSON string to a file
-  final file = File('/home/ashu/Code/flutter/flutter_application_1/lib/constants/wallpapers.json');
+  final file = File('/home/ashu/Code/flutter/bloomsplash/lib/constants/wallpapers.json');
   file.writeAsStringSync(jsonString);
 
   // print('wallpapers.json has been generated successfully!');

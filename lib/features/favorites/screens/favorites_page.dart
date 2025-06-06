@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../app/providers/favorites_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
-import '../../../utils/image_cache_utils.dart';
-import '../../../app/constants/config.dart';
+import '../../../core/utils/image_cache_utils.dart';
+import '../../../core/constant/config.dart';
 
 class FavoritesPage extends StatelessWidget {
   final bool showAppBar;

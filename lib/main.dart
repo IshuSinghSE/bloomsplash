@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'app/providers/favorites_provider.dart';
 import 'app/providers/auth_provider.dart';
 import 'features/shared/widgets/custom_bottom_nav_bar.dart';
-import 'features/home/screens/explore_page.dart';
+import 'features/explore/screens/explore_page.dart';
 import 'features/favorites/screens/favorites_page.dart';
 import 'features/upload/screens/upload_page.dart';
 import 'features/welcome/screens/welcome_page.dart';
@@ -14,12 +15,13 @@ import 'app/config/firebase_options.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'app/constants/config.dart';
+import 'core/constant/config.dart';
+import 'features/collections/screens/collections_page.dart';
+
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
   try {
     debugPrint('Initializing Firebase...');
     await Firebase.initializeApp(
@@ -79,6 +81,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/explore': (context) => const ExplorePage(),
+        '/collection': (context) => const CollectionsPage(),
         '/favorites': (context) => const FavoritesPage(),
         '/upload': (context) => const UploadPage(),
         '/settings': (context) => const SettingsPage(),
@@ -89,14 +92,20 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   final Box preferencesBox;
-  const HomePage({super.key, required this.preferencesBox});
+  final int? initialSelectedIndex; // Add this parameter
+  
+  const HomePage({
+    super.key, 
+    required this.preferencesBox,
+    this.initialSelectedIndex, // Make it optional
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   // Conditionally include the UploadPage tab
   late final List<Widget> pages;
@@ -104,11 +113,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // Initialize _selectedIndex from the widget parameter if provided
+    _selectedIndex = widget.initialSelectedIndex ?? 0;
+
     var userData = widget.preferencesBox.get('userData', defaultValue: {});
     final userEmail = userData['email'] ?? '';
 
     pages = [
       const ExplorePage(),
+      const CollectionsPage(),
       const FavoritesPage(),
       if (userEmail == "ishu.111636@gmail.com") const UploadPage(),
     ];
@@ -122,12 +135,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final userData = widget.preferencesBox.get('userData', defaultValue: {});
+    final userPhotoUrl = userData['photoUrl'];
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Wallpapers", // Dynamic title
+          "BloomSplash",
           style: TextStyle(
-            fontFamily: 'Raleway', // Use Raleway font
+            fontFamily: 'Raleway',
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -145,10 +161,28 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
               icon: CircleAvatar(
-                backgroundImage:
-                    widget.preferencesBox.get('userData')?['photoUrl'] != null
-                        ? NetworkImage(widget.preferencesBox.get('userData')['photoUrl'])
-                        : AssetImage(AppConfig.avatarIconPath) as ImageProvider,
+                child: ClipOval(
+                  child: userPhotoUrl != null && userPhotoUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: userPhotoUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          cacheKey: 'user_avatar_${userData['uid'] ?? 'default'}',
+                          placeholder: (context, url) => Image.asset(
+                            AppConfig.avatarIconPath,
+                            fit: BoxFit.cover,
+                          ),
+                          errorWidget: (context, url, error) => Image.asset(
+                            AppConfig.avatarIconPath,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(
+                          AppConfig.avatarIconPath,
+                          fit: BoxFit.cover,
+                        ),
+                ),
               ),
               onPressed: () {
                 Navigator.push(

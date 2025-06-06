@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../app/providers/favorites_provider.dart';
 import '../widgets/details_container.dart';
-import '../../../app/constants/config.dart';
+import '../../../core/constant/config.dart';
 
 class WallpaperDetailsPage extends StatefulWidget {
   final Map<String, dynamic> wallpaper;
