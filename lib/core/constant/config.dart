@@ -3,7 +3,7 @@ library;
 
 class AppConfig {
   // Asset paths
-  static const String avatarIconPath = 'assets/icons/avatar.webp';
+  static const String avatarIconPath = 'assets/images/avatar.webp';
   static const String authorIconPath1 = 'assets/icons/author1.svg';
   static const String placeholderImagePath = 'assets/images/placeholder.webp';
   static const String welcomeImagePath = 'assets/welcome.webp';

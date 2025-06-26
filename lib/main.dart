@@ -17,7 +17,10 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'core/constant/config.dart';
 import 'features/collections/screens/collections_page.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +31,15 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('Firebase initialized successfully.');
+
+    // Enable Firebase Analytics in debug mode
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+
+    // Log app launch event
+    await analytics.logEvent(name: 'app_launch');
+
+    // Log a test event for Firebase Analytics debug
+    await analytics.logEvent(name: 'test_event', parameters: {'debug': true});
 
     // Initialize Firebase App Check
     await FirebaseAppCheck.instance.activate(
@@ -49,7 +61,7 @@ void main() async {
             create: (_) => AuthProvider()..checkLoginState(),
           ),
         ],
-        child: MyApp(preferencesBox: preferencesBox),
+        child: MyApp(preferencesBox: preferencesBox, analytics: analytics, observer: observer),
       ),
     );
   } catch (e) {
@@ -60,10 +72,17 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({
+    super.key,
+    required this.preferencesBox,
+    required this.analytics,
+    required this.observer,
+  });
+
   final Box preferencesBox;
-
-  const MyApp({super.key, required this.preferencesBox});
-
+  final FirebaseAnalytics analytics;
+  final FirebaseAnalyticsObserver observer;
+  // The preferencesBox is passed to the HomePage and WelcomePage to access user preferences
   @override
   Widget build(BuildContext context) {
     bool isFirstLaunch = preferencesBox.get(
@@ -74,10 +93,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Wallpaper App',
       theme: ThemeData.dark(),
-      home:
-          isFirstLaunch
-              ? WelcomePage(preferencesBox: preferencesBox)
-              : HomePage(preferencesBox: preferencesBox),
+      home: isFirstLaunch
+          ? WelcomePage(preferencesBox: preferencesBox)
+          : HomePage(preferencesBox: preferencesBox),
       debugShowCheckedModeBanner: false,
       routes: {
         '/explore': (context) => const ExplorePage(),
@@ -86,6 +104,7 @@ class MyApp extends StatelessWidget {
         '/upload': (context) => const UploadPage(),
         '/settings': (context) => const SettingsPage(),
       },
+      navigatorObservers: [observer],
     );
   }
 }
