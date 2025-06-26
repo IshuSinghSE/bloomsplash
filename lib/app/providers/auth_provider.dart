@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import '../../features/welcome/screens/welcome_page.dart';
 import '../constants/data.dart';
 import '../services/firebase/user_db.dart';
@@ -60,7 +61,13 @@ class AuthProvider with ChangeNotifier {
       _user = userCredential.user;
       _isLoggedIn = true;
 
-      debugPrint('Firebase user signed in: ${_user?.displayName}, ${_user?.email}');
+      debugPrint('Firebase user signed in: \\${_user?.displayName}, \\${_user?.email}');
+
+      // Log Google sign in event
+      await FirebaseAnalytics.instance.logEvent(name: 'sign_in_google', parameters: {
+        'email': _user?.email ?? '',
+        'uid': _user?.uid ?? '',
+      });
 
       // Save user data to local storage
       var preferencesBox = Hive.box('preferences');
@@ -71,6 +78,7 @@ class AuthProvider with ChangeNotifier {
         'email': _user?.email,
         'id': _user?.uid,
         'photoUrl': _user?.photoURL,
+        // Add more fields as needed, but ensure no Timestamp objects are stored
       });
 
       // Create the user document in Firestore on first login if it does not exist
@@ -105,6 +113,9 @@ class AuthProvider with ChangeNotifier {
     await FirebaseAuth.instance.signOut();
     _user = null;
     _isLoggedIn = false;
+
+    // Log sign out event
+    await FirebaseAnalytics.instance.logEvent(name: 'sign_out');
 
     // Clear local storage
     var preferencesBox = Hive.box('preferences');

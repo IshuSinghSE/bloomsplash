@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "1035240251094",
+    "firebase_url": "https://roomdesign-7-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "roomdesign-7",
     "storage_bucket": "roomdesign-7.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1035240251094-6pn3skf21pu29q31rgtgtmbku0nvs0sd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.devindeed.bloomsplash",
+            "certificate_hash": "287231f01a0705da11fd96304e2114446202be8b"
+          }
+        },
         {
           "client_id": "1035240251094-lbk1boufojf1a6rb6ril4fcqo7jjjvt9.apps.googleusercontent.com",
           "client_type": 1,
@@ -42,7 +51,7 @@
               "client_id": "1035240251094-10g72p73oumh2vmf7tklrp9a2vnubbps.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.flutterApplication1"
+                "bundle_id": "com.devindeed.bloomsplash"
               }
             }
           ]
