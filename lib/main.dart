@@ -38,7 +38,7 @@ void main() async {
     await analytics.logEvent(name: 'app_launch');
 
     // Log a test event for Firebase Analytics debug
-    await analytics.logEvent(name: 'test_event', parameters: {'debug': true});
+    await analytics.logEvent(name: 'test_event', parameters: {'debug': 'true'});
 
     // Initialize Firebase App Check
     await FirebaseAppCheck.instance.activate(

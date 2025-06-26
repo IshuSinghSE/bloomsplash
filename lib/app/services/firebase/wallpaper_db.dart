@@ -140,4 +140,15 @@ class FirestoreService {
       return [];
     }
   }
+
+  // Delete a wallpaper by ID
+  Future<void> deleteWallpaper(String id) async {
+    try {
+      await _firestore.collection(_wallpapersCollection).doc(id).delete();
+      log('Wallpaper deleted from Firestore: $id');
+    } catch (e) {
+      log('Error deleting wallpaper: $e');
+      throw Exception('Error deleting wallpaper: $e');
+    }
+  }
 }

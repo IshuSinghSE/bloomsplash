@@ -531,6 +531,158 @@ class _MyUploadsPageState extends State<MyUploadsPage>
     );
   }
 
+  // --- New Wallpaper Upload Dialog ---
+  Future<void> _showWallpaperUploadDialog() async {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+    final tagsController = TextEditingController();
+    final categoryController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    XFile? pickedImage;
+    bool isUploading = false;
+    String? uploadedOriginalUrl;
+    String? uploadedThumbnailUrl;
+    int? uploadedSize;
+    String? uploadedResolution;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Upload New Wallpaper'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      ),
+                      TextFormField(
+                        controller: descController,
+                        decoration: const InputDecoration(labelText: 'Description'),
+                      ),
+                      TextFormField(
+                        controller: tagsController,
+                        decoration: const InputDecoration(labelText: 'Tags (comma separated)'),
+                      ),
+                      TextFormField(
+                        controller: categoryController,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add_photo_alternate),
+                        label: const Text('Pick Image'),
+                        onPressed: isUploading
+                            ? null
+                            : () async {
+                                final picker = ImagePicker();
+                                final image = await picker.pickImage(source: ImageSource.gallery);
+                                if (image == null) return;
+                                setState(() {
+                                  pickedImage = image;
+                                  isUploading = true;
+                                });
+                                final file = File(image.path);
+                                final result = await custom_storage.uploadFileToFirebase(file);
+                                if (result != null && result['originalUrl'] != null && result['thumbnailUrl'] != null) {
+                                  setState(() {
+                                    uploadedOriginalUrl = result['originalUrl'];
+                                    uploadedThumbnailUrl = result['thumbnailUrl'];
+                                    uploadedSize = result['originalSize'];
+                                    uploadedResolution = result['originalResolution']?.toString();
+                                    isUploading = false;
+                                  });
+                                } else {
+                                  setState(() {
+                                    isUploading = false;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to upload image.')),
+                                  );
+                                }
+                              },
+                      ),
+                      if (isUploading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: LinearProgressIndicator(),
+                        ),
+                      if (uploadedThumbnailUrl != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Image.network(
+                            uploadedThumbnailUrl!,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+                    if (uploadedOriginalUrl == null || uploadedThumbnailUrl == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please pick and upload an image.')),
+                      );
+                      return;
+                    }
+                    final newWallpaper = Wallpaper(
+                      id: generateUuid(),
+                      name: nameController.text.trim(),
+                      imageUrl: uploadedOriginalUrl!,
+                      thumbnailUrl: uploadedThumbnailUrl!,
+                      downloads: 0,
+                      size: uploadedSize ?? 0,
+                      resolution: uploadedResolution ?? '',
+                      category: categoryController.text.trim(),
+                      author: 'admin', // Replace with actual user if available
+                      authorImage: '',
+                      description: descController.text.trim(),
+                      likes: 0,
+                      tags: tagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                      colors: [],
+                      orientation: '',
+                      license: '',
+                      status: 'active',
+                      createdAt: DateTime.now().toIso8601String(),
+                      isPremium: false,
+                      isAIgenerated: false,
+                      hash: '',
+                    );
+                    await FirestoreService().addImageDetailsToFirestore(newWallpaper);
+                    setState(() {
+                      _uploadedWallpapers.insert(0, newWallpaper);
+                    });
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Wallpaper uploaded!')),
+                    );
+                  },
+                  child: const Text('Upload'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
 // --- UI --- 
   @override
@@ -542,7 +694,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
           title: const Text('My Uploads'),
           bottom: TabBar(
             controller: _tabController,
-            tabs: const [Tab(text: 'My Uploads'), Tab(text: 'Collections')],
+            tabs: const [Tab(text: 'Wallpapers'), Tab(text: 'Collections')],
           ),
         ),
         body: TabBarView(
@@ -634,11 +786,17 @@ class _MyUploadsPageState extends State<MyUploadsPage>
         floatingActionButton:
             _tabController.index == 1
                 ? FloatingActionButton(
-                  onPressed: () => _showCollectionDialog(),
-                  tooltip: 'New Collection',
-                  child: const Icon(Icons.add),
-                )
-                : null,
+                    onPressed: () => _showCollectionDialog(),
+                    tooltip: 'New Collection',
+                    child: const Icon(Icons.add_to_photos_rounded),
+                  )
+                : _tabController.index == 0
+                    ? FloatingActionButton(
+                        onPressed: () => _showWallpaperUploadDialog(),
+                        tooltip: 'New Wallpaper',
+                        child: const Icon(Icons.add_a_photo),
+                      )
+                    : null,
       ),
     );
   }
