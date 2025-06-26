@@ -186,6 +186,43 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
     }
   }
 
+  void _confirmDeleteWallpaper() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Wallpaper'),
+        content: const Text('Are you sure you want to delete this wallpaper? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await _firestoreService.deleteWallpaper(widget.wallpaper.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Wallpaper deleted!')),
+                  );
+                  Navigator.pop(context, true);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error deleting wallpaper: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cachedImage = _getCachedImage(_selectedTab);
@@ -194,6 +231,24 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
       appBar: AppBar(
         title: const Text('Edit Wallpaper'),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 0.0),
+            child: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: _confirmDeleteWallpaper,
+              tooltip: 'Delete Wallpaper',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _saveChanges,
+              tooltip: 'Save Changes',
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

@@ -370,6 +370,54 @@ class _CollectionEditPageState extends State<CollectionEditPage> {
     }
   }
 
+  void _confirmDeleteCollection() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Collection'),
+        content: const Text('Are you sure you want to delete this collection? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: _isProcessing ? null : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: _isProcessing
+                ? null
+                : () async {
+                    Navigator.pop(context);
+                    setState(() {
+                      _isRemoving = true;
+                    });
+                    try {
+                      await CollectionService().deleteCollection(widget.collection.id);
+                      if (mounted) {
+                        setState(() {
+                          _isRemoving = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Collection deleted!')),
+                        );
+                        Navigator.pop(context, true);
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          _isRemoving = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error deleting collection: $e')),
+                        );
+                      }
+                    }
+                  },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -379,6 +427,14 @@ class _CollectionEditPageState extends State<CollectionEditPage> {
             title: const Text('Edit Collection'),
             centerTitle: true,
             actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 0.0),
+                child: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: _isProcessing ? null : _confirmDeleteCollection,
+                  tooltip: 'Delete Collection',
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: IconButton(
@@ -390,8 +446,8 @@ class _CollectionEditPageState extends State<CollectionEditPage> {
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
-            physics: _isProcessing 
-                ? const NeverScrollableScrollPhysics() 
+            physics: _isProcessing
+                ? const NeverScrollableScrollPhysics()
                 : const AlwaysScrollableScrollPhysics(),
             child: AbsorbPointer(
               absorbing: _isProcessing,
