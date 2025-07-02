@@ -52,32 +52,22 @@ class UserService {
   }
 
 
-  // Helper method to recursively clean data for Hive compatibility
-  dynamic _cleanDataForHive(dynamic data) {
-    if (data is Timestamp) {
-      return data.toDate().toIso8601String();
-    } else if (data is List) {
-      return data.map((item) => _cleanDataForHive(item)).toList();
-    } else if (data is Map) {
-      final cleanedMap = <String, dynamic>{};
-      data.forEach((key, value) {
-        cleanedMap[key.toString()] = _cleanDataForHive(value);
-      });
-      return cleanedMap;
-    } else {
-      // Keep primitive types (String, int, double, bool, null) as-is
-      return data;
-    }
-  }
-
   Future<Map<String, dynamic>?> getImageDetailsFromFirestore(String id) async {
     try {
       final doc = await _firestore.collection('wallpapers').doc(id).get();
       if (doc.exists) {
         final data = doc.data()!;
-        // Recursively clean all data for Hive compatibility
-        final cleanedData = _cleanDataForHive(data) as Map<String, dynamic>;
-        return cleanedData;
+        // Convert Timestamp objects to strings for Hive compatibility
+        final convertedData = <String, dynamic>{};
+        for (final entry in data.entries) {
+          if (entry.value is Timestamp) {
+            // Convert Timestamp to ISO string
+            convertedData[entry.key] = (entry.value as Timestamp).toDate().toIso8601String();
+          } else {
+            convertedData[entry.key] = entry.value;
+          }
+        }
+        return convertedData;
       } else {
         return null;
       }
