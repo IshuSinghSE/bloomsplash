@@ -90,7 +90,7 @@ class MyApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'Wallpaper App',
+      title: 'BloomSplash',
       theme: ThemeData.dark(),
       home: isFirstLaunch
           ? WelcomePage(preferencesBox: preferencesBox)
