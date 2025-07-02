@@ -56,7 +56,18 @@ class UserService {
     try {
       final doc = await _firestore.collection('wallpapers').doc(id).get();
       if (doc.exists) {
-        return doc.data();
+        final data = doc.data()!;
+        // Convert Timestamp objects to strings for Hive compatibility
+        final convertedData = <String, dynamic>{};
+        for (final entry in data.entries) {
+          if (entry.value is Timestamp) {
+            // Convert Timestamp to ISO string
+            convertedData[entry.key] = (entry.value as Timestamp).toDate().toIso8601String();
+          } else {
+            convertedData[entry.key] = entry.value;
+          }
+        }
+        return convertedData;
       } else {
         return null;
       }
