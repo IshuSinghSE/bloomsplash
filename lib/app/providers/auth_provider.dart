@@ -4,9 +4,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:provider/provider.dart';
 import '../../features/welcome/screens/welcome_page.dart';
+import '../../features/shared/widgets/sync_confirmation_dialog.dart';
 import '../constants/data.dart';
 import '../services/firebase/user_db.dart';
+import 'favorites_provider.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -62,7 +65,7 @@ class AuthProvider with ChangeNotifier {
       _user = userCredential.user;
       _isLoggedIn = true;
 
-      debugPrint('Firebase user signed in: \\${_user?.displayName}, \\${_user?.email}');
+      debugPrint('Firebase user signed in: ${_user?.displayName}, ${_user?.email}');
 
       // Log Google sign in event
       await FirebaseAnalytics.instance.logEvent(name: 'sign_in_google', parameters: {
@@ -104,6 +107,9 @@ class AuthProvider with ChangeNotifier {
         );
       }
 
+      // Sync favorites from Firestore after successful login
+      await _syncFavoritesAfterLogin();
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error during Google Sign-In: $e');
@@ -114,6 +120,22 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut(BuildContext context) async {
+    // Check for pending favorites sync
+    final favoritesProvider = Provider.of<FavoritesProvider>(context, listen: false);
+    
+    if (favoritesProvider.hasPendingChanges) {
+      // Show confirmation dialog if there are unsaved changes
+      await SyncConfirmationDialog.show(
+        context,
+        onConfirmSignOut: () => _performSignOut(context),
+      );
+    } else {
+      // Proceed with normal sign out
+      await _performSignOut(context);
+    }
+  }
+
+  Future<void> _performSignOut(BuildContext context) async {
     try {
       // Clear only user-specific cached data (not wallpapers)
       await _clearUserSpecificCache();
@@ -178,6 +200,11 @@ class AuthProvider with ChangeNotifier {
           debugPrint('User is logged in. Loading wallpapers...');
           await loadWallpapers();
           debugPrint('Wallpapers loaded successfully.');
+          
+          // Sync favorites from Firestore
+          debugPrint('Syncing favorites from Firestore...');
+          await _syncFavoritesAfterLogin();
+          debugPrint('Favorites synced successfully.');
         }
       }
     }
@@ -283,6 +310,41 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error clearing wallpaper cache: $e');
+    }
+  }
+
+  // Helper method to sync favorites from Firestore after login
+  Future<void> _syncFavoritesAfterLogin() async {
+    try {
+      if (_user?.uid != null) {
+        // Get the favorites provider from the context
+        // Since we can't access context here, we'll use a different approach
+        // by getting the favorites box directly
+        final favoritesBox = Hive.box<Map>('favorites');
+        
+        // Get user's saved wallpapers from Firestore
+        final firestoreService = UserService();
+        final userProfile = await firestoreService.getUserProfile(_user!.uid);
+        final savedIds = (userProfile?['savedWallpapers'] as List?)?.cast<String>() ?? [];
+        
+        // Clear local favorites first
+        await favoritesBox.clear();
+        
+        // Fetch and store each favorite wallpaper
+        for (final id in savedIds) {
+          final wallpaper = await firestoreService.getImageDetailsFromFirestore(id);
+          if (wallpaper != null) {
+            // Ensure the document ID is included in the wallpaper data
+            wallpaper['id'] = id;
+            // The getImageDetailsFromFirestore already cleans the data for Hive
+            await favoritesBox.add(wallpaper);
+          }
+        }
+        
+        debugPrint('Synced ${savedIds.length} favorites from Firestore');
+      }
+    } catch (e) {
+      debugPrint('Error syncing favorites after login: $e');
     }
   }
 }
