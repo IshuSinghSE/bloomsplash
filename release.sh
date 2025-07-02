@@ -106,16 +106,99 @@ yes_no "Tag the release as v$NEW_VERSION?" && {
 
 echo
 cat <<EOM
-Creating GitHub release
-----------------------
-This will use the GitHub CLI to create a release for v$NEW_VERSION and upload the tag.
-You can edit the release notes on GitHub later if needed.
+Building Flutter APKs
+--------------------
+This will clean previous builds and build release APKs for Android (universal, arm64-v8a, and armeabi-v7a).
+This step is required before creating the GitHub release with APK uploads.
+
+Note: Building APKs can take several minutes. If you have recent APKs and just want to 
+upload them, you can skip building and go directly to the GitHub release step.
 EOM
 
-yes_no "Create GitHub release with 'gh release create'?" && {
-    gh release create v$NEW_VERSION --title "v$NEW_VERSION" --notes "See CHANGELOG.md for details."
-    echo "GitHub release created."
-    SUMMARY+="- GitHub release created for v$NEW_VERSION\n"
+BUILD_APKS=false
+yes_no "Build Flutter APKs for release?" && {
+    BUILD_APKS=true
+    echo "Cleaning previous builds..."
+    flutter clean
+    echo "Getting dependencies..."
+    flutter pub get
+    echo "Building Flutter APKs..."
+    flutter build apk --release --split-per-abi
+    echo "APKs built successfully."
+    
+    # Verify APKs were created
+    APK_DIR="build/app/outputs/flutter-apk"
+    if [[ -f "$APK_DIR/app-release.apk" ]]; then
+        echo "✓ Universal APK created: $(du -h $APK_DIR/app-release.apk | cut -f1)"
+    fi
+    if [[ -f "$APK_DIR/app-arm64-v8a-release.apk" ]]; then
+        echo "✓ ARM64 APK created: $(du -h $APK_DIR/app-arm64-v8a-release.apk | cut -f1)"
+    fi
+    if [[ -f "$APK_DIR/app-armeabi-v7a-release.apk" ]]; then
+        echo "✓ ARM32 APK created: $(du -h $APK_DIR/app-armeabi-v7a-release.apk | cut -f1)"
+    fi
+    
+    SUMMARY+="- Built Flutter APKs for release\n"
+} || {
+    echo "Skipping APK build. Will use existing APKs if available."
+}
+
+echo
+cat <<EOM
+Creating GitHub release with APKs
+--------------------------------
+This will use the GitHub CLI to create a release for v$NEW_VERSION and upload the APK files.
+The following APKs will be uploaded (if they exist):
+- app-release.apk (universal)
+- app-arm64-v8a-release.apk (ARM 64-bit)
+- app-armeabi-v7a-release.apk (ARM 32-bit)
+EOM
+
+yes_no "Create GitHub release with APK uploads?" && {
+    # Check if APK files exist
+    APK_DIR="build/app/outputs/flutter-apk"
+    UNIVERSAL_APK="$APK_DIR/app-release.apk"
+    ARM64_APK="$APK_DIR/app-arm64-v8a-release.apk"
+    ARM32_APK="$APK_DIR/app-armeabi-v7a-release.apk"
+    
+    # Check which APKs are available
+    APKS_TO_UPLOAD=()
+    if [[ -f "$UNIVERSAL_APK" ]]; then
+        APKS_TO_UPLOAD+=("$UNIVERSAL_APK")
+        echo "✓ Found universal APK: $(du -h $UNIVERSAL_APK | cut -f1)"
+    fi
+    if [[ -f "$ARM64_APK" ]]; then
+        APKS_TO_UPLOAD+=("$ARM64_APK")
+        echo "✓ Found ARM64 APK: $(du -h $ARM64_APK | cut -f1)"
+    fi
+    if [[ -f "$ARM32_APK" ]]; then
+        APKS_TO_UPLOAD+=("$ARM32_APK")
+        echo "✓ Found ARM32 APK: $(du -h $ARM32_APK | cut -f1)"
+    fi
+    
+    if [[ ${#APKS_TO_UPLOAD[@]} -gt 0 ]]; then
+        echo "Uploading ${#APKS_TO_UPLOAD[@]} APK(s) to GitHub release..."
+        gh release create v$NEW_VERSION \
+            "${APKS_TO_UPLOAD[@]}" \
+            --title "v$NEW_VERSION" \
+            --notes "See CHANGELOG.md for details."
+        echo "GitHub release created with ${#APKS_TO_UPLOAD[@]} APK upload(s)."
+        SUMMARY+="- GitHub release created for v$NEW_VERSION with ${#APKS_TO_UPLOAD[@]} APK(s)\n"
+    else
+        echo "Warning: No APK files found. Creating release without APKs."
+        echo "You may want to build APKs first or upload them manually later."
+        
+        yes_no "Create release without APKs?" && {
+            gh release create v$NEW_VERSION \
+                --title "v$NEW_VERSION" \
+                --notes "See CHANGELOG.md for details."
+            echo "GitHub release created without APKs."
+            SUMMARY+="- GitHub release created for v$NEW_VERSION (no APKs)\n"
+        } || {
+            echo "Skipping GitHub release creation."
+            SUMMARY+="- Skipped GitHub release creation\n"
+        }
+    fi
 }
 
 echo
