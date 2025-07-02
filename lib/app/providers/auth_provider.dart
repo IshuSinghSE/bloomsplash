@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../../features/welcome/screens/welcome_page.dart';
 import '../constants/data.dart';
 import '../services/firebase/user_db.dart';
@@ -77,9 +78,13 @@ class AuthProvider with ChangeNotifier {
         'displayName': _user?.displayName,
         'email': _user?.email,
         'id': _user?.uid,
+        'uid': _user?.uid, // Also store as 'uid' for consistency
         'photoUrl': _user?.photoURL,
         // Add more fields as needed, but ensure no Timestamp objects are stored
       });
+
+      // Clear any previous user's cached avatar
+      await _clearPreviousUserCache();
 
       // Create the user document in Firestore on first login if it does not exist
       final firestoreService = UserService();
@@ -109,26 +114,39 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut(BuildContext context) async {
-    await GoogleSignIn().signOut();
-    await FirebaseAuth.instance.signOut();
-    _user = null;
-    _isLoggedIn = false;
+    try {
+      // Clear only user-specific cached data (not wallpapers)
+      await _clearUserSpecificCache();
+      
+      // Sign out from Google and Firebase
+      await GoogleSignIn().signOut();
+      await FirebaseAuth.instance.signOut();
+      
+      // Clear auth state
+      _user = null;
+      _isLoggedIn = false;
 
-    // Log sign out event
-    await FirebaseAnalytics.instance.logEvent(name: 'sign_out');
+      // Log sign out event
+      await FirebaseAnalytics.instance.logEvent(name: 'sign_out');
 
-    // Clear local storage
-    var preferencesBox = Hive.box('preferences');
-    preferencesBox.clear();
+      // Clear all local storage
+      await _clearAllLocalData();
 
-    notifyListeners();
+      notifyListeners();
 
-    // Navigate to WelcomePage
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => WelcomePage(preferencesBox: preferencesBox)),
-      (route) => false,
-    );
+      // Navigate to WelcomePage
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomePage(preferencesBox: Hive.box('preferences'))),
+        (route) => false,
+      );
+    } catch (e) {
+      debugPrint('Error during sign out: $e');
+      // Still proceed with logout even if there's an error
+      _user = null;
+      _isLoggedIn = false;
+      notifyListeners();
+    }
   }
 
   Future<void> checkLoginState() async {
@@ -165,5 +183,106 @@ class AuthProvider with ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // Helper method to clear only user-specific cache (not wallpapers)
+  Future<void> _clearUserSpecificCache() async {
+    try {
+      // Clear specific user avatar cache if user exists
+      if (_user?.uid != null) {
+        final cacheKey = 'user_avatar_${_user!.uid}';
+        await DefaultCacheManager().removeFile(cacheKey);
+        debugPrint('User avatar cache cleared for key: $cacheKey');
+      }
+      
+      // Don't clear general image cache (wallpapers) to save bandwidth
+      debugPrint('User-specific cache cleared successfully (wallpapers preserved)');
+    } catch (e) {
+      debugPrint('Error clearing user-specific cache: $e');
+    }
+  }
+
+  // Helper method to clear all local data
+  Future<void> _clearAllLocalData() async {
+    try {
+      // Clear preferences box
+      var preferencesBox = Hive.box('preferences');
+      await preferencesBox.clear();
+      
+      // Clear favorites box if it exists
+      if (Hive.isBoxOpen('favorites')) {
+        var favoritesBox = Hive.box<Map>('favorites');
+        await favoritesBox.clear();
+      }
+      
+      // Clear any other boxes that might store user-related data
+      if (Hive.isBoxOpen('uploadedWallpapers')) {
+        var uploadedWallpapersBox = Hive.box('uploadedWallpapers');
+        await uploadedWallpapersBox.clear();
+      }
+      
+      if (Hive.isBoxOpen('collections')) {
+        var collectionsBox = Hive.box('collections');
+        await collectionsBox.clear();
+      }
+      
+      debugPrint('All local data cleared successfully');
+    } catch (e) {
+      debugPrint('Error clearing local data: $e');
+    }
+  }
+
+  // Helper method to clear previous user's cache during new login
+  Future<void> _clearPreviousUserCache() async {
+    try {
+      // Get previous user data if exists
+      var preferencesBox = Hive.box('preferences');
+      var previousUserData = preferencesBox.get('userData');
+      
+      if (previousUserData != null && previousUserData['uid'] != null) {
+        final previousCacheKey = 'user_avatar_${previousUserData['uid']}';
+        await DefaultCacheManager().removeFile(previousCacheKey);
+        debugPrint('Previous user avatar cache cleared for key: $previousCacheKey');
+      }
+    } catch (e) {
+      debugPrint('Error clearing previous user cache: $e');
+    }
+  }
+
+  // Method to refresh user avatar cache - can be called from UI if needed
+  Future<void> refreshUserAvatar() async {
+    if (_user?.uid != null && _user?.photoURL != null) {
+      try {
+        final cacheKey = 'user_avatar_${_user!.uid}';
+        await DefaultCacheManager().removeFile(cacheKey);
+        debugPrint('User avatar cache refreshed for: $cacheKey');
+        notifyListeners(); // Trigger UI rebuild
+      } catch (e) {
+        debugPrint('Error refreshing user avatar cache: $e');
+      }
+    }
+  }
+
+  // Emergency method to clear ALL caches including wallpapers - use sparingly!
+  Future<void> clearAllCaches() async {
+    try {
+      // This method can clear everything including wallpapers if explicitly requested
+      await DefaultCacheManager().emptyCache();
+      debugPrint('All caches cleared successfully (including wallpapers)');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error clearing all caches: $e');
+    }
+  }
+
+  // Utility method to clear wallpaper cache if explicitly needed (bandwidth intensive)
+  Future<void> clearWallpaperCache() async {
+    try {
+      await DefaultCacheManager().emptyCache();
+      debugPrint('Wallpaper cache cleared - this will use more bandwidth on next load');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error clearing wallpaper cache: $e');
+    }
   }
 }
