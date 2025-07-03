@@ -1,13 +1,15 @@
+import 'package:bloomsplash/features/about_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../app/providers/auth_provider.dart';
 import '../../dashboard/screens/my_uploads_page.dart';
 import '../../../app/providers/favorites_provider.dart';
+import '../../../app/services/cache_service.dart'; // Import the new service
 import '../widgets/settings_tile.dart'; // Import the new widget
+import '../widgets/feedback_form.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -18,14 +20,17 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage>
     with SingleTickerProviderStateMixin {
+  // App version for dynamic display
+  String? _appVersion;
   int _cacheSize = 0; // Cache size in bytes
   bool _isSyncingFavorites = false;
   bool _isLoggingOut = false;
   bool _isClearingCache = false;
-  
+
   // Helper getter to check if any operation is in progress
-  bool get _isProcessing => _isSyncingFavorites || _isLoggingOut || _isClearingCache;
-  
+  bool get _isProcessing =>
+      _isSyncingFavorites || _isLoggingOut || _isClearingCache;
+
   late final AnimationController _syncController = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 1),
@@ -35,6 +40,21 @@ class _SettingsPageState extends State<SettingsPage>
   void initState() {
     super.initState();
     _updateCacheSize(); // Calculate cache size on initialization
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      setState(() {
+        _appVersion = 'v${info.version} (${info.buildNumber})';
+      });
+    } catch (e) {
+      debugPrint('Error loading app version: $e');
+      setState(() {
+        _appVersion = '';
+      });
+    }
   }
 
   @override
@@ -44,93 +64,55 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<void> _updateCacheSize() async {
-    try {
-      final cacheDirPath =
-          await getTemporaryDirectory(); // Get the temporary directory path
-      final cacheDir = Directory(
-        cacheDirPath.path,
-      ); // Create a Directory object
-      if (await cacheDir.exists()) {
-        final size = cacheDir
-            .listSync(recursive: true)
-            .whereType<File>()
-            .fold<int>(0, (sum, file) => sum + file.lengthSync());
-        setState(() {
-          _cacheSize = size; // Update the cache size
-        });
-      } else {
-        setState(() {
-          _cacheSize = 0; // Set cache size to 0 if directory doesn't exist
-        });
-      }
-    } catch (e) {
-      debugPrint('Error calculating cache size: $e');
+    final size = await CacheService.getCacheSize();
+    if (mounted) {
       setState(() {
-        _cacheSize = 0; // Fallback to 0 on error
+        _cacheSize = size;
       });
     }
   }
 
   Future<void> _clearCache() async {
     if (_isProcessing) return;
-    
+
     setState(() {
       _isClearingCache = true;
     });
-    
-    try {
-      final cacheDir = Directory(
-        (await getTemporaryDirectory()).path,
-      ); // Get the cache directory
-      if (await cacheDir.exists()) {
-        await cacheDir.delete(recursive: true);
+
+    final success = await CacheService.clearCache();
+
+    if (mounted) {
+      if (success) {
         await _updateCacheSize(); // Recalculate cache size after clearing
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image cache cleared successfully!')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image cache cleared successfully!')),
+        );
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('No cache to clear!')));
-        }
-      }
-    } catch (e) {
-      debugPrint('Error clearing cache: $e');
-      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Failed to clear cache!')));
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isClearingCache = false;
-        });
-      }
+      setState(() {
+        _isClearingCache = false;
+      });
     }
   }
-  
+
   Future<void> _logout() async {
     if (_isProcessing) return;
-    
+
     setState(() {
       _isLoggingOut = true;
     });
-    
+
     try {
-      await Provider.of<AuthProvider>(
-        context, 
-        listen: false,
-      ).signOut(context);
+      await Provider.of<AuthProvider>(context, listen: false).signOut(context);
     } catch (e) {
       debugPrint('Error logging out: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to log out: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to log out: $e')));
         setState(() {
           _isLoggingOut = false;
         });
@@ -148,72 +130,165 @@ class _SettingsPageState extends State<SettingsPage>
       children: [
         Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             title: const Text(
               'Settings',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             centerTitle: true,
             actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.login_outlined,
-                    color: Colors.deepOrange,
-                    semanticLabel: "Log out",
+              if (_appVersion != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Center(
+                    child: Text(
+                      _appVersion!,
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
                   ),
-                  onPressed: _isProcessing ? null : _logout,
                 ),
-              ),
             ],
           ),
           body: AbsorbPointer(
             absorbing: _isProcessing,
             child: ListView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 0),
               children: <Widget>[
-                Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    CircleAvatar(
-                      radius: 52,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: const Color.fromARGB(255, 56, 91, 114),
-                      ),
+                // Profile Card
+                Center(
+                  child: Container(
+                    width: 370,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 20,
                     ),
-                    if (userData['photoUrl'] != null && userData['photoUrl']!.isNotEmpty)
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundImage: CachedNetworkImageProvider(
-                          userData['photoUrl']!,
-                          cacheKey: userData['uid'] ?? 'user_avatar',
-                        ),
-                      )
-                    else
-                      const CircleAvatar(
-                        radius: 50,
-                        backgroundImage: AssetImage('assets/avatar/Itsycal.webp'),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.12),
+                        width: 1.5,
                       ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    userData['displayName'] ?? 'Guest User',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.10),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 48,
+                          backgroundColor: Colors.white,
+                          child:
+                              userData['photoUrl'] != null &&
+                                      userData['photoUrl']!.isNotEmpty
+                                  ? CircleAvatar(
+                                    radius: 46,
+                                    backgroundImage: CachedNetworkImageProvider(
+                                      userData['photoUrl']!,
+                                      cacheKey:
+                                          userData['uid'] ?? 'user_avatar',
+                                    ),
+                                  )
+                                  : const CircleAvatar(
+                                    radius: 46,
+                                    backgroundImage: AssetImage(
+                                      'assets/avatar/Itsycal.webp',
+                                    ),
+                                  ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          userData['displayName'] ?? 'Guest User',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          userData['email'] ?? 'No email available',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: 180,
+                          child: OutlinedButton.icon(
+                            icon: ShaderMask(
+                              shaderCallback: (Rect bounds) {
+                                return const LinearGradient(
+                                  colors: [
+                                    Color.fromARGB(255, 253, 56, 95),
+                                    Color(0xFFB22222),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ).createShader(bounds);
+                              },
+                              child: const Icon(
+                                Icons.logout,
+                                color: Colors.white,
+                              ),
+                            ),
+                            label: ShaderMask(
+                              shaderCallback: (Rect bounds) {
+                                return const LinearGradient(
+                                  colors: [
+                                    Color.fromARGB(255, 211, 58, 88),
+                                    Color.fromARGB(255, 255, 107, 107),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ).createShader(bounds);
+                              },
+                              child: const Text(
+                                'Sign Out',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color.fromARGB(255, 209, 60, 90),
+                                width: 2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                            ).copyWith(
+                              overlayColor: MaterialStateProperty.all(
+                                const Color.fromARGB(
+                                  255,
+                                  253,
+                                  10,
+                                  59,
+                                ).withOpacity(0.08),
+                              ),
+                            ),
+                            onPressed: _isProcessing ? null : _logout,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Center(
-                  child: Text(
-                    userData['email'] ?? 'No email available',
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ),
+
                 if (userData['email'] == "ishu.111636@gmail.com") ...[
-                  const SizedBox(height: 24),
                   SettingsTile(
                     icon: Icons.dashboard,
                     title: 'Admin Dashboard',
@@ -229,62 +304,56 @@ class _SettingsPageState extends State<SettingsPage>
                     },
                   ),
                 ],
-                
-                ListTile(
-                  leading: AnimatedBuilder(
-                    animation: _syncController,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _syncController.value * 6.28319, // 2*pi radians
-                        child: child,
-                      );
-                    },
-                    child: const Icon(Icons.sync),
-                  ),
-                  title: const Text('Sync Favorites'),
-                  subtitle: const Text(
-                    'Sync your favourites across all your devices',
-                  ),
-                  onTap: _isProcessing
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isSyncingFavorites = true;
-                          });
-                          _syncController.repeat();
-                          final authProvider = Provider.of<AuthProvider>(
-                            context,
-                            listen: false,
-                          );
-                          final favoritesProvider = Provider.of<FavoritesProvider>(
-                            context,
-                            listen: false,
-                          );
-                          final uid = authProvider.user?.uid;
-                          if (uid != null) {
-                            await favoritesProvider.saveFavoritesToFirestore(uid);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Favorites synced to cloud!'),
-                              ),
+
+                SettingsTile(
+                  icon: Icons.sync,
+                  title: 'Sync Favorites',
+                  subtitle: 'Sync your favorites across all devices',
+                  type: SettingsTileType.action,
+                  disabled: _isProcessing,
+                  onTap:
+                      _isProcessing
+                          ? null
+                          : () async {
+                            setState(() {
+                              _isSyncingFavorites = true;
+                            });
+                            _syncController.repeat();
+                            final authProvider = Provider.of<AuthProvider>(
+                              context,
+                              listen: false,
                             );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'You must be logged in to sync favorites.',
+                            final favoritesProvider =
+                                Provider.of<FavoritesProvider>(
+                                  context,
+                                  listen: false,
+                                );
+                            final uid = authProvider.user?.uid;
+                            if (uid != null) {
+                              await favoritesProvider.saveFavoritesToFirestore(
+                                uid,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Favorites synced to cloud!'),
                                 ),
-                              ),
-                            );
-                          }
-                          _syncController.stop();
-                          setState(() {
-                            _isSyncingFavorites = false;
-                          });
-                        },
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'You must be logged in to sync favorites.',
+                                  ),
+                                ),
+                              );
+                            }
+                            _syncController.stop();
+                            setState(() {
+                              _isSyncingFavorites = false;
+                            });
+                          },
                 ),
-                
-                // Replace with reusable widget for Clear Cache
+
                 SettingsTile(
                   icon: Icons.storage,
                   title: 'Clear Cache',
@@ -295,84 +364,61 @@ class _SettingsPageState extends State<SettingsPage>
                         ? 'Current size: ${(_cacheSize / (1024 * 1024)).toStringAsFixed(2)} MB'
                         : 'Current size: ${(_cacheSize / 1024).toStringAsFixed(2)} KB',
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: _isProcessing ? null : _clearCache,
-                  ),
+
                   onTap: _clearCache,
                 ),
-                
+
                 const Divider(),
-                
-                // Replace with reusable widget for Help & Support
+
+                // Grouped legal and info section
+
+                // New tiles for rating and feedback
                 SettingsTile(
-                  icon: Icons.headset_mic_rounded,
-                  title: 'Help & Support',
-                  subtitle: 'Got a question? We have answers!',
-                  type: SettingsTileType.dialog,
+                  icon: Icons.star_border,
+                  title: 'Rate & Review',
+                  subtitle: 'Let others know what you think',
+                  type: SettingsTileType.action,
                   disabled: _isProcessing,
-                  dialogTitle: 'Help & Support',
-                  dialogContent: const SelectableText(
-                    'For any questions or support, email us at:\n\n'
-                    'support@bloomsplash.app',
-                  ),
+                  onTap: () {
+                    // TODO: Implement rating functionality
+                  },
                 ),
-                
-                // Replace with reusable widget for Terms & Conditions
                 SettingsTile(
-                  icon: Icons.article,
-                  title: 'Terms & Conditions',
-                  subtitle: 'Read our terms and conditions.',
-                  type: SettingsTileType.dialog,
+                  icon: Icons.email_outlined,
+                  title: 'Help & Feedback',
+                  subtitle: 'Get help or send us feedback',
+                  type: SettingsTileType.action,
                   disabled: _isProcessing,
-                  dialogTitle: 'Terms & Conditions',
-                  dialogContent: const SingleChildScrollView(
-                    child: Text(
-                      'Here are the Terms & Conditions of the app. Please visit our website for the full document.',
-                    ),
-                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => FeedbackForm(
+                        onSubmitted: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    );
+                  },
                 ),
-                
-                // Replace with reusable widget for Privacy Policy
                 SettingsTile(
-                  icon: Icons.privacy_tip,
-                  title: 'Privacy Policy',
-                  subtitle: 'Read our privacy policy.',
-                  type: SettingsTileType.dialog,
-                  disabled: _isProcessing,
-                  dialogTitle: 'Privacy Policy',
-                  dialogContent: const SingleChildScrollView(
-                    child: Text(
-                      'Here is the Privacy Policy of the app. Please visit our website for the full document.',
-                    ),
-                  ),
-                ),
-                
-                // Replace with reusable widget for About
-                SettingsTile(
-                  icon: Icons.copyright,
+                  icon: Icons.info_outline,
                   title: 'About',
-                  subtitle: 'License & Credits',
-                  type: SettingsTileType.dialog,
+                  subtitle: 'Learn more about the app',
+                  type: SettingsTileType.action,
                   disabled: _isProcessing,
-                  dialogTitle: 'License & Credits',
-                  dialogContent: const SingleChildScrollView(
-                    child: Text(
-                      'This app is developed by BloomSplash Team.\n\n'
-                      'Credits:\n'
-                      '- Flutter & Dart\n'
-                      '- Open source packages\n\n'
-                      'All rights reserved.\n'
-                      'See our website for full license details.',
-                    ),
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutPage(),
+                      ),
+                    );
+                  },
                 ),
-                
-                // Replace with reusable widget for App Version
                 SettingsTile(
                   icon: Icons.info_outline,
                   title: 'App Version',
-                  subtitle: '1.0.0',
+                  subtitle: _appVersion ?? 'Loading...',
                   type: SettingsTileType.action,
                   disabled: true,
                 ),
@@ -380,7 +426,7 @@ class _SettingsPageState extends State<SettingsPage>
             ),
           ),
         ),
-        
+
         // Loading overlay for logout and clear cache
         if (_isLoggingOut || _isClearingCache)
           Positioned.fill(
@@ -397,7 +443,9 @@ class _SettingsPageState extends State<SettingsPage>
                         const CircularProgressIndicator(),
                         const SizedBox(height: 16.0),
                         Text(
-                          _isLoggingOut ? 'Logging out...' : 'Clearing cache...',
+                          _isLoggingOut
+                              ? 'Logging out...'
+                              : 'Clearing cache...',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],

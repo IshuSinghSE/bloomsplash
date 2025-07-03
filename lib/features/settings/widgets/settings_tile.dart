@@ -79,3 +79,4 @@ class SettingsTile extends StatelessWidget {
     );
   }
 }
+

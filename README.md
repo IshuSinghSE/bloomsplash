@@ -1,5 +1,23 @@
 # BloomSplash
 
+## Architecture Plan
+
+**Use Appwrite for:**
+- Wallpaper image storage (safe, scalable, free)
+- Wallpaper metadata (Database)
+- Future functions (e.g. moderation, approval, API logic)
+
+**Use Firebase for:**
+- Authentication (Google, Apple, etc.)
+- Notifications (FCM)
+- Analytics, Performance, Crashlytics
+- Release & app distribution (if using Firebase App Distribution)
+
+**Use Cloudflare as CDN provider:**
+- Serve wallpaper images globally with low latency and high reliability.
+
+By adding Cloudflare as the CDN, we ensure fast and reliable delivery of images to users worldwide.
+
 ## Rules
 1. Always ensure high-quality and original content is uploaded.
 

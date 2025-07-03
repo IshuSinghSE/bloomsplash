@@ -129,6 +129,9 @@ class _HomePageState extends State<HomePage> {
   // Conditionally include the UploadPage tab
   late final List<Widget> pages;
 
+  // Tab titles for the AppBar
+  late final List<String> tabTitles;
+
   @override
   void initState() {
     super.initState();
@@ -144,6 +147,13 @@ class _HomePageState extends State<HomePage> {
       const FavoritesPage(),
       if (userEmail == "ishu.111636@gmail.com") const UploadPage(),
     ];
+
+    tabTitles = [
+      "BloomSplash", // Explore
+      "Collections",
+      "Favorites",
+      if (userEmail == "ishu.111636@gmail.com") "Upload",
+    ];
   }
 
   void onItemTapped(int index) {
@@ -156,15 +166,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final userData = widget.preferencesBox.get('userData', defaultValue: {});
     final userPhotoUrl = userData['photoUrl'];
-    
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "BloomSplash",
-          style: TextStyle(
-            fontFamily: 'Raleway',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Text(
+            tabTitles[_selectedIndex],
+            style: const TextStyle(
+              fontFamily: 'Raleway',
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         backgroundColor: Colors.transparent,
