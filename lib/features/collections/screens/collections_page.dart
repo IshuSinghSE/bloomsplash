@@ -27,10 +27,9 @@ class _CollectionsPageState extends State<CollectionsPage> {
     var box = await Hive.openBox('collections');
     final cached = box.get('allCollections');
     if (cached != null && cached is List) {
-      _collections =
-          List<Map<String, dynamic>>.from(
-            cached,
-          ).map((e) => Collection.fromJson(e)).toList();
+      _collections = cached
+          .map((e) => Collection.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     }
     // Always fetch latest from Firestore
     final collections = await _collectionService.getAllCollections();
