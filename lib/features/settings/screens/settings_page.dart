@@ -47,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage>
     try {
       final info = await PackageInfo.fromPlatform();
       setState(() {
-        _appVersion = 'v${info.version} (${info.buildNumber})';
+        _appVersion = 'v${info.version}';
       });
     } catch (e) {
       debugPrint('Error loading app version: $e');
@@ -414,13 +414,6 @@ class _SettingsPageState extends State<SettingsPage>
                       ),
                     );
                   },
-                ),
-                SettingsTile(
-                  icon: Icons.info_outline,
-                  title: 'App Version',
-                  subtitle: _appVersion ?? 'Loading...',
-                  type: SettingsTileType.action,
-                  disabled: true,
                 ),
               ],
             ),
