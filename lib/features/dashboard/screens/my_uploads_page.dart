@@ -511,7 +511,11 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                               .toList(),
                       type: typeController.text.trim(),
                       wallpaperIds: collection?.wallpaperIds ?? [],
-                      createdAt: collection?.createdAt ?? Timestamp.now(),
+                      createdAt: collection?.createdAt is DateTime
+                          ? collection!.createdAt
+                          : (collection?.createdAt is Timestamp
+                              ? (collection!.createdAt as Timestamp).toDate()
+                              : DateTime.now()),
                     );
                     if (collection == null) {
                       await CollectionService().createCollection(newCollection);

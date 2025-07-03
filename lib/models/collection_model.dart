@@ -10,7 +10,7 @@ class Collection {
   final List<String> tags;
   final String type;
   final List<String> wallpaperIds;
-  final Timestamp createdAt;
+  final DateTime createdAt;
 
   Collection({
     required this.id,
@@ -33,7 +33,7 @@ class Collection {
     List<String>? tags,
     String? type,
     List<String>? wallpaperIds,
-    Timestamp? createdAt,
+    DateTime? createdAt,
   }) {
     return Collection(
       id: id ?? this.id,
@@ -49,16 +49,41 @@ class Collection {
   }
 
   factory Collection.fromJson(Map<String, dynamic> json) {
+    DateTime createdAt;
+    if (json['createdAt'] is Timestamp) {
+      createdAt = (json['createdAt'] as Timestamp).toDate();
+    } else if (json['createdAt'] is int) {
+      createdAt = DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int);
+    } else if (json['createdAt'] is String) {
+      createdAt = DateTime.tryParse(json['createdAt']) ?? DateTime.now();
+    } else if (json['createdAt'] is DateTime) {
+      createdAt = json['createdAt'] as DateTime;
+    } else {
+      createdAt = DateTime.now();
+    }
+
+    // Helper to safely cast to List<String>
+    List<String> _castStringList(dynamic value) {
+      if (value is List) {
+        return value.map((e) => e.toString()).toList();
+      }
+      return [];
+    }
+
+    // Ensure tags and wallpaperIds are always lists
+    final tagsRaw = json.containsKey('tags') && json['tags'] != null ? json['tags'] : [];
+    final wallpaperIdsRaw = json.containsKey('wallpaperIds') && json['wallpaperIds'] != null ? json['wallpaperIds'] : [];
+
     return Collection(
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String? ?? '',
       coverImage: json['coverImage'] as String? ?? '',
       createdBy: json['createdBy'] as String? ?? '',
-      tags: List<String>.from(json['tags'] ?? []),
+      tags: _castStringList(tagsRaw),
       type: json['type'] as String? ?? '',
-      wallpaperIds: List<String>.from(json['wallpaperIds'] ?? []),
-      createdAt: json['createdAt'] as Timestamp? ?? Timestamp.now(),
+      wallpaperIds: _castStringList(wallpaperIdsRaw),
+      createdAt: createdAt,
     );
   }
 
@@ -72,7 +97,8 @@ class Collection {
       'tags': tags,
       'type': type,
       'wallpaperIds': wallpaperIds,
-      'createdAt': createdAt,
+      // Store as int for Hive, convert to Timestamp for Firestore if needed
+      'createdAt': createdAt.millisecondsSinceEpoch,
     };
   }
 }
