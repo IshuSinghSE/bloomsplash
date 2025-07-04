@@ -77,7 +77,7 @@ class CollectionDetailPage extends StatelessWidget {
               itemCount: wallpapersList.length,
               itemBuilder: (context, index) {
                 final wallpaper = wallpapersList[index];
-                final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
+                final image = wallpaper["thumbnail"] ?? AppConfig.shimmerImagePath;
                 final name = wallpaper["name"] ?? "Untitled";
                 return GestureDetector(
                   onTap: () {
