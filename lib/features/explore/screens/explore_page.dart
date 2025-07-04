@@ -17,8 +17,9 @@ class ExplorePage extends StatefulWidget {
   State<ExplorePage> createState() => _ExplorePageState();
 }
 
-class _ExplorePageState extends State<ExplorePage> {
-  final ScrollController _scrollController = ScrollController();
+class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClientMixin {
+  // Use a ScrollController for infinite scroll and scroll restoration
+  late final ScrollController _scrollController;
   final List<Map<String, dynamic>> _wallpapers = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
@@ -29,8 +30,11 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   void initState() {
     super.initState();
-    _fetchWallpapers();
+    _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    if (_wallpapers.isEmpty) {
+      _fetchWallpapers();
+    }
   }
 
   @override
@@ -38,6 +42,8 @@ class _ExplorePageState extends State<ExplorePage> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  // No need to dispose a controller
 
   Future<void> _fetchWallpapers({bool isRefresh = false}) async {
     try {
@@ -140,6 +146,7 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _onScroll() {
+    // Infinite scroll
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
@@ -185,7 +192,11 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final uid = authProvider.user?.uid;
@@ -229,6 +240,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     ),
                   )
                 : CustomScrollView(
+                    key: const PageStorageKey('explore_scroll'),
                     controller: _scrollController,
                     physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                     slivers: [
@@ -333,4 +345,5 @@ class _ExplorePageState extends State<ExplorePage> {
       ),
     );
   }
+  
 }

@@ -211,9 +211,8 @@ class _HomePageState extends State<HomePage> {
           );
         },
         child: IndexedStack(
-          key: ValueKey<int>(_selectedIndex),
-          index: _selectedIndex, // Show the selected tab
-          children: pages, // Preserve the state of all tabs
+          index: _selectedIndex,
+          children: pages,
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
