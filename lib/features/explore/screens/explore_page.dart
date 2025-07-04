@@ -146,12 +146,20 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
   }
 
   void _onScroll() {
-    // Infinite scroll
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
-        !_isLoadingMore &&
-        !_hasReachedEnd) {
-      _loadMoreWallpapers();
+    // Trigger loading more wallpapers when the user is within 6 items of the end
+    if (!_isLoadingMore && !_hasReachedEnd && _wallpapers.length >= _loadedWallpapers) {
+      final threshold = 6; // Number of items from the end to trigger loading
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      final viewport = _scrollController.position.viewportDimension;
+      // Estimate the item height (since grid, use mainAxisExtent)
+      // We'll use the grid's childAspectRatio and crossAxisCount to estimate
+      // But for simplicity, just trigger when user is within threshold * itemHeight from the end
+      // This is a rough estimate, but works well for most grid layouts
+      final itemHeight = maxScroll / (_wallpapers.length / 2); // 2 columns
+      if (maxScroll - currentScroll <= threshold * itemHeight) {
+        _loadMoreWallpapers();
+      }
     }
   }
 
