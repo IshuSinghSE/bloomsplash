@@ -1,11 +1,11 @@
-import 'package:bloomsplash/features/about_page.dart';
+import 'package:bloomsplash/features/settings/screens/about_page.dart' deferred as about_page;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../../app/providers/auth_provider.dart';
-import '../../dashboard/screens/my_uploads_page.dart';
+import '../../dashboard/screens/my_uploads_page.dart' deferred as my_uploads_page;
 import '../../../app/providers/favorites_provider.dart';
 import '../../../app/services/cache_service.dart'; // Import the new service
 import '../widgets/settings_tile.dart'; // Import the new widget
@@ -167,15 +167,15 @@ class _SettingsPageState extends State<SettingsPage>
                       horizontal: 20,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.04),
+                      color: Colors.white.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.12),
+                        color: Colors.white.withValues(alpha: 0.12),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
+                          color: Colors.black.withValues(alpha: 0.10),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -277,7 +277,7 @@ class _SettingsPageState extends State<SettingsPage>
                                   253,
                                   10,
                                   59,
-                                ).withOpacity(0.08),
+                                ).withValues(alpha: 0.08),
                               ),
                             ),
                             onPressed: _isProcessing ? null : _logout,
@@ -294,11 +294,13 @@ class _SettingsPageState extends State<SettingsPage>
                     title: 'Admin Dashboard',
                     type: SettingsTileType.action,
                     disabled: _isProcessing,
-                    onTap: () {
+                    onTap: () async {
+                      await my_uploads_page.loadLibrary();
+                      if (!mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MyUploadsPage(),
+                          builder: (context) => my_uploads_page.MyUploadsPage(),
                         ),
                       );
                     },
@@ -406,14 +408,16 @@ class _SettingsPageState extends State<SettingsPage>
                   subtitle: 'Learn more about the app',
                   type: SettingsTileType.action,
                   disabled: _isProcessing,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AboutPage(),
-                      ),
-                    );
-                  },
+                  onTap: () async {
+                      await about_page.loadLibrary();
+                      if (!mounted) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>  about_page.AboutPage(),
+                        ),
+                      );
+                    },
                 ),
               ],
             ),
@@ -424,7 +428,7 @@ class _SettingsPageState extends State<SettingsPage>
         if (_isLoggingOut || _isClearingCache)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               child: Center(
                 child: Card(
                   elevation: 8.0,

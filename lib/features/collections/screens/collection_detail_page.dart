@@ -5,7 +5,7 @@ import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 import '../../../core/constant/config.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../shared/widgets/custom_bottom_nav_bar.dart';
-import '../../../main.dart';
+import '../../home/screens/home_page.dart';
 
 class CollectionDetailPage extends StatelessWidget {
   final String title;
@@ -123,9 +123,9 @@ class CollectionDetailPage extends StatelessWidget {
                                 end: Alignment.bottomRight,
                                 colors: [
                                   Colors.transparent,
-                                  Colors.amber.withOpacity(0.08),
-                                  Colors.purpleAccent.withOpacity(0.10),
-                                  Colors.orangeAccent.withOpacity(0.10),
+                                  Colors.amber.withValues(alpha: 0.08),
+                                  Colors.purpleAccent.withValues(alpha: 0.10),
+                                  Colors.orangeAccent.withValues(alpha: 0.10),
                                 ],
                                 stops: const [0.0, 0.5, 0.8, 1.0],
                               ),

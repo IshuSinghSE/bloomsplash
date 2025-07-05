@@ -1,9 +1,9 @@
+import 'package:bloomsplash/features/home/screens/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../../../main.dart';
 import '../../../app/providers/auth_provider.dart';
 import '../../../core/constant/config.dart';
 
@@ -28,9 +28,10 @@ class WelcomePage extends StatelessWidget {
       ),
     );
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (authProvider.isLoading) {
+    return PopScope(
+      canPop: !authProvider.isLoading,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop && authProvider.isLoading) {
           await authProvider.cancelLogin(); // Abort the login process
           Future.delayed(Duration.zero, () {
             Fluttertoast.cancel(); // Clear any previous toasts
@@ -42,9 +43,7 @@ class WelcomePage extends StatelessWidget {
               textColor: Colors.white,
             );
           });
-          return false; // Prevent navigating back during login
         }
-        return true; // Allow back navigation if not logging in
       },
       child: Stack(
         children: [

@@ -5,7 +5,7 @@ import '../../../../models/collection_model.dart';
 import '../../../app/services/firebase/collection_db.dart';
 import '../../../features/shared/widgets/custom_bottom_nav_bar.dart';
 import 'collection_detail_page.dart';
-import '../../../../main.dart';
+import '../../home/screens/home_page.dart';
 
 class CollectionListPage extends StatefulWidget {
   final String title;
@@ -152,13 +152,13 @@ class _CollectionListPageState extends State<CollectionListPage> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 width: 1,
                               ),
                               color: Colors.grey[800],
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -188,7 +188,7 @@ class _CollectionListPageState extends State<CollectionListPage> {
                                         end: Alignment.bottomCenter,
                                         colors: [
                                           Colors.transparent,
-                                          Colors.black.withOpacity(0.7),
+                                          Colors.black.withValues(alpha: 0.7),
                                         ],
                                       ),
                                     ),
@@ -227,7 +227,7 @@ class _CollectionListPageState extends State<CollectionListPage> {
                                             Text(
                                               collection.tags.first,
                                               style: TextStyle(
-                                                color: Colors.white.withOpacity(0.6),
+                                                color: Colors.white.withValues(alpha: 0.6),
                                                 fontSize: 14,
                                               ),
                                             ),
@@ -243,7 +243,7 @@ class _CollectionListPageState extends State<CollectionListPage> {
                                     top: 12,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.5),
+                                        color: Colors.black.withValues(alpha: 0.5),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       padding: const EdgeInsets.symmetric(

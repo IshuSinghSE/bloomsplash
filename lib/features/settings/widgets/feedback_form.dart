@@ -206,12 +206,12 @@ class _FeedbackFormState extends State<FeedbackForm> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: theme.dividerColor.withOpacity(0.18),
+            color: theme.dividerColor.withValues(alpha: 0.18),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.07),
+              color: theme.shadowColor.withValues(alpha: 0.07),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -244,7 +244,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
                     labelText: 'Type',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)),
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   ),
@@ -263,11 +263,11 @@ class _FeedbackFormState extends State<FeedbackForm> {
                     labelText: 'Describe your feedback',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: theme.colorScheme.primary.withOpacity(0.5), width: 1.5),
+                      borderSide: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1.5),
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
                   ),
@@ -291,7 +291,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.3)),
+                        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                         foregroundColor: theme.colorScheme.primary,
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       ),
@@ -319,7 +319,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
                               onTap: _removeScreenshot,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: Colors.white.withValues(alpha: 0.5),
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(2),
@@ -343,14 +343,14 @@ class _FeedbackFormState extends State<FeedbackForm> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                         side: BorderSide(
-                          color: theme.colorScheme.primary.withOpacity(0.18),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.18),
                           width: 1.2,
                         ),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 11),
                       textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                       elevation: 0,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
                     ),
                     onPressed: _isSubmitting ? null : _submit,
                     child: _isSubmitting

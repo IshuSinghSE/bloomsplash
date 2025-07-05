@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:ui' as ui;
+
 import '../../../app/services/firebase/firebase_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -9,7 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import '../../../models/wallpaper_model.dart';
-import 'package:image/image.dart' as img;
+import '../../../core/utils/image_utils.dart' as img_utils;
 import 'package:hive/hive.dart';
 import '../../../core/utils/utils.dart';
 import '../../../core/utils/hash_utils.dart';
@@ -34,35 +34,8 @@ class _UploadPageState extends State<UploadPage> {
   bool _showImageSizeError = false; // Track image size error state
 
   Future<File> _fixImageOrientation(File imageFile) async {
-    final bytes = await imageFile.readAsBytes();
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    // Draw the image with correct orientation
-    canvas.drawImage(image, Offset.zero, Paint());
-
-    final picture = recorder.endRecording();
-    final fixedUiImage = await picture.toImage(image.width, image.height);
-    final byteData = await fixedUiImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-
-    // Use the same file extension as the original
-    final ext = imageFile.path.split('.').last.toLowerCase();
-    final imgLib = img.decodeImage(bytes);
-    if (imgLib == null) throw Exception('Failed to decode image');
-    final fixedImage = img.Image.fromBytes(image.width, image.height, byteData!.buffer.asUint8List());
-    List<int> encoded;
-    if (ext == 'jpg' || ext == 'jpeg') {
-      encoded = img.encodeJpg(fixedImage, quality: 95);
-    } else {
-      encoded = img.encodePng(fixedImage);
-    }
-    final fixedImageFile = File(imageFile.path);
-    await fixedImageFile.writeAsBytes(encoded);
-    return fixedImageFile;
+    // Use the new util for resizing and orientation fix
+    return await img_utils.resizeAndFixImage(imageFile);
   }
 
 
@@ -210,7 +183,7 @@ class _UploadPageState extends State<UploadPage> {
 
         // Compute perceptual hash for the uploaded image
         debugPrint("Computing perceptual hash...");
-        final imageHash = computeImageHash(_selectedImage!);
+        final imageHash = await img_utils.computeImageHash(_selectedImage!);
         debugPrint("Perceptual hash computed: $imageHash");
 
         // Extract dominant colors from the webp thumbnail image returned by the API (local file)
@@ -316,7 +289,7 @@ class _UploadPageState extends State<UploadPage> {
 
           // Generate a unique ID for the document
           final id = const Uuid().v4();
-          final imageHash = computeImageHash(image);
+          final imageHash = await img_utils.computeImageHash(image);
 
           // Extract dominant colors from the thumbnail image
           List<String> colors = [];
@@ -439,7 +412,7 @@ class _UploadPageState extends State<UploadPage> {
                               48,
                               51,
                               65,
-                            ).withOpacity(0.3),
+                            ).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(24),
                             border: _showImageSizeError
                                 ? Border.all(color: Colors.pinkAccent, width: 3)
@@ -471,7 +444,7 @@ class _UploadPageState extends State<UploadPage> {
                             height: 300,
                             width: 300,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: const Center(

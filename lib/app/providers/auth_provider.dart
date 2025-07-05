@@ -7,7 +7,6 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:provider/provider.dart';
 import '../../features/welcome/screens/welcome_page.dart';
 import '../../features/shared/widgets/sync_confirmation_dialog.dart';
-import '../constants/data.dart';
 import '../services/firebase/user_db.dart';
 import 'favorites_provider.dart';
 
@@ -73,7 +72,7 @@ class AuthProvider with ChangeNotifier {
         'uid': _user?.uid ?? '',
       });
 
-      // Save user data to local storage
+      // Save user data to local storage (will update after Firestore fetch below)
       var preferencesBox = Hive.box('preferences');
       preferencesBox.put('isLoggedIn', true);
       preferencesBox.put('isFirstLaunch', false);
@@ -83,11 +82,13 @@ class AuthProvider with ChangeNotifier {
         'id': _user?.uid,
         'uid': _user?.uid, // Also store as 'uid' for consistency
         'photoUrl': _user?.photoURL,
+        'isAdmin': false, // Default to false, will update after Firestore fetch
         // Add more fields as needed, but ensure no Timestamp objects are stored
       });
 
       // Clear any previous user's cached avatar
       await _clearPreviousUserCache();
+
 
       // Create the user document in Firestore on first login if it does not exist
       final firestoreService = UserService();
@@ -104,7 +105,17 @@ class AuthProvider with ChangeNotifier {
           premiumPurchasedAt: null,
           authProvider: 'google', // or 'apple' if using Apple sign-in
           createdAt: DateTime.now(),
+          isAdmin: false, // Always set to false for new users
         );
+      }
+      // Always fetch the latest user profile from Firestore and update Hive
+      final latestUserDoc = await firestoreService.getUserProfile(_user!.uid);
+      if (latestUserDoc != null) {
+        // Defensive: handle both isAdmin and isadmin
+        final isAdmin = latestUserDoc['isAdmin'] ?? latestUserDoc['isadmin'] ?? false;
+        var userData = preferencesBox.get('userData', defaultValue: {});
+        userData['isAdmin'] = isAdmin;
+        preferencesBox.put('userData', userData);
       }
 
       // Sync favorites from Firestore after successful login
@@ -195,11 +206,6 @@ class AuthProvider with ChangeNotifier {
         if (_user != null) {
           userData['photoUrl'] = _user?.photoURL;
           preferencesBox.put('userData', userData);
-
-          // Load wallpapers after login
-          debugPrint('User is logged in. Loading wallpapers...');
-          await loadWallpapers();
-          debugPrint('Wallpapers loaded successfully.');
           
           // Sync favorites from Firestore
           debugPrint('Syncing favorites from Firestore...');

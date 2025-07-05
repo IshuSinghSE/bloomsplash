@@ -2,8 +2,6 @@ name: Flutter Android APK Release Build & Modular Release
 
 on:
   push:
-    tags:
-      - 'v*'
     branches:
       - 'release/v*'
 
@@ -16,6 +14,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      # Prepare pubspec for cache key (ignore version line)
+      - name: Prepare pubspec for cache key (ignore version)
+        run: grep -v '^version:' pubspec.yaml > pubspec-noversion.yaml
       - name: Detect Flutter version from pubspec.yaml
         id: detect_flutter_version
         run: |
@@ -38,7 +39,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
-          key: pub-cache-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          key: pub-cache-${{ runner.os }}-${{ hashFiles('pubspec-noversion.yaml') }}
           restore-keys: pub-cache-${{ runner.os }}-
       - name: Cache Android build intermediates
         uses: actions/cache@v4
@@ -181,50 +182,21 @@ jobs:
       - name: Set Build Number
         run: |
           echo "APP_BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
-      - name: Ensure unique release version (auto-increment minor if tag exists)
-        id: ensure_version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BASE_VERSION="${APP_VERSION_NAME:-0.1.0}"
-          OWNER_REPO="${GITHUB_REPOSITORY}"
-          VERSION="$BASE_VERSION"
-          MAJOR=$(echo "$VERSION" | awk -F. '{print $1}')
-          MINOR=$(echo "$VERSION" | awk -F. '{print $2}')
-          PATCH=$(echo "$VERSION" | awk -F. '{print $3}')
-          if [ -z "$MINOR" ]; then
-            MINOR=0
-          fi
-          if [ -z "$PATCH" ]; then
-            PATCH=0
-          fi
-          PREFIX="v"
-          while true; do
-            TAG="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
-            if curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${OWNER_REPO}/git/refs/tags/${TAG}" | grep -q '"ref":'; then
-              PATCH=$((PATCH + 1))
-            else
-              break
-            fi
-          done
-          VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "Using version: $VERSION"
-          echo "APP_VERSION_NAME=$VERSION" >> $GITHUB_ENV
-          echo "Final APP_VERSION_NAME: $VERSION"
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create or Update GitHub Release
+        id: create_or_update_release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION_NAME }}
-          release_name: Release ${{ env.APP_VERSION_NAME }}
+          name: Release ${{ env.APP_VERSION_NAME }}
           draft: false
           prerelease: false
+          update_existing: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The rest of the steps remain unchanged
       - name: Find and Upload APKs to Release
         run: |
-          UPLOAD_URL="${{ steps.create_release.outputs.upload_url }}"
+          UPLOAD_URL="${{ steps.create_or_update_release.outputs.upload_url }}"
           DOWNLOADED_APKS_DIR="./apks"
           UPLOAD_URL="${UPLOAD_URL%\{*}"
           echo "Listing APKs in $DOWNLOADED_APKS_DIR:"
