@@ -196,14 +196,12 @@ class _CollectionsPageState extends State<CollectionsPage> {
                       borderRadius: BorderRadius.circular(28),
                       child: Stack(
                         children: [
-                          if ((collection.coverImage.isNotEmpty) || collection.coverImage.isNotEmpty)
+                          if (collection.coverImage.isNotEmpty)
                             Positioned.fill(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(28),
                                 child: CachedNetworkImage(
-                                  imageUrl: (collection.coverImage.isNotEmpty)
-                                      ? collection.coverImage
-                                      : collection.coverImage,
+                                  imageUrl: collection.coverImage,
                                   fit: BoxFit.cover,
                                   alignment: Alignment.center,
                                   placeholder: (context, url) => Container(color: Colors.grey[700]),
