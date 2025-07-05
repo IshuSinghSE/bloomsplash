@@ -32,7 +32,7 @@ class AppUser {
     } else if (json['premiumPurchasedAt'] is int) {
       premiumPurchasedAt = DateTime.fromMillisecondsSinceEpoch(json['premiumPurchasedAt'] as int);
     } else if (json['premiumPurchasedAt'] is String) {
-      premiumPurchasedAt = DateTime.tryParse(json['premiumPurchasedAt']) ?? null;
+      premiumPurchasedAt = DateTime.tryParse(json['premiumPurchasedAt']);
     } else if (json['premiumPurchasedAt'] is DateTime) {
       premiumPurchasedAt = json['premiumPurchasedAt'] as DateTime;
     } else {

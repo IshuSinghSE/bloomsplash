@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -196,14 +195,12 @@ class _CollectionsPageState extends State<CollectionsPage> {
                       borderRadius: BorderRadius.circular(28),
                       child: Stack(
                         children: [
-                          if ((collection.coverImage != null && collection.coverImage!.isNotEmpty) || collection.coverImage.isNotEmpty)
+                          if (collection.coverImage.isNotEmpty)
                             Positioned.fill(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(28),
                                 child: CachedNetworkImage(
-                                  imageUrl: (collection.coverImage != null && collection.coverImage!.isNotEmpty)
-                                      ? collection.coverImage!
-                                      : collection.coverImage,
+                                  imageUrl: collection.coverImage,
                                   fit: BoxFit.cover,
                                   alignment: Alignment.center,
                                   placeholder: (context, url) => Container(color: Colors.grey[700]),

@@ -225,7 +225,6 @@ Release process complete. Please review your repository and GitHub release page.
 EOM
 
 echo -e "$SUMMARY"
-#!/bin/bash
 
 # Interactive release script for Flutter project
 # This script will guide you through version bump, changelog update, git operations, and GitHub release.

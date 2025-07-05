@@ -53,11 +53,22 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final originalSize = file.lengthSync();
     final originalResolution = '${originalImage.width}x${originalImage.height}';
 
-    // Resize for thumbnail (fixed size: 1440x870) only if dimensions differ
-    const int thumbWidth = 1440;
-    const int thumbHeight = 870;
+    // Resize for thumbnail dynamically to maintain aspect ratio
+    const int maxThumbWidth = 1440;
+    const int maxThumbHeight = 870;
     img.Image thumbnailImage;
-    if (originalImage.width != thumbWidth || originalImage.height != thumbHeight) {
+    if (originalImage.width > maxThumbWidth || originalImage.height > maxThumbHeight) {
+      final double aspectRatio = originalImage.width / originalImage.height;
+      int thumbWidth, thumbHeight;
+      if (aspectRatio > 1) {
+        // Landscape orientation
+        thumbWidth = maxThumbWidth;
+        thumbHeight = (maxThumbWidth / aspectRatio).round();
+      } else {
+        // Portrait or square orientation
+        thumbHeight = maxThumbHeight;
+        thumbWidth = (maxThumbHeight * aspectRatio).round();
+      }
       thumbnailImage = img.copyResize(
         originalImage,
         width: thumbWidth,
