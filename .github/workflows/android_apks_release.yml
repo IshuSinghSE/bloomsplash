@@ -196,7 +196,7 @@ jobs:
       # The rest of the steps remain unchanged
       - name: Find and Upload APKs to Release
         run: |
-          UPLOAD_URL="${{ steps.create_release.outputs.upload_url }}"
+          UPLOAD_URL="${{ steps.create_or_update_release.outputs.upload_url }}"
           DOWNLOADED_APKS_DIR="./apks"
           UPLOAD_URL="${UPLOAD_URL%\{*}"
           echo "Listing APKs in $DOWNLOADED_APKS_DIR:"
