@@ -3,7 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:image/image.dart' as img;
+import '../../../core/utils/image_utils.dart' as img_utils;
 import 'dart:typed_data';
 import '../external_api/image_optimization.dart';
 
@@ -25,79 +25,24 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final originalRef = storageRef.child('wallpapers/original/$fileName');
     final thumbnailRef = storageRef.child('wallpapers/thumbnail/$fileName');
 
-    // Read the original image
-    final originalBytes = await file.readAsBytes();
-    if (originalBytes.isEmpty) {
-      throw Exception('File is empty: ${file.path}');
-    }
-    img.Image? originalImage0 = img.decodeImage(originalBytes);
-    if (originalImage0 == null) {
-      throw Exception('Failed to decode image: ${file.path}');
-    }
-    img.Image originalImage = originalImage0;
-
-    // --- EXIF orientation fix ---
-    // If the image has an orientation tag, fix it
-    try {
-      final exifData = img.JpegData()..read(originalBytes);
-      final orientation = exifData.exif.orientation ?? 0;
-      if (orientation != 0 && orientation != 1) {
-        originalImage = img.bakeOrientation(originalImage);
-      }
-    } catch (e) {
-      debugPrint('EXIF orientation parse failed: $e');
-    }
-    // --- END EXIF orientation fix ---
-
     // Get original image size and resolution
     final originalSize = file.lengthSync();
-    final originalResolution = '${originalImage.width}x${originalImage.height}';
+    final originalResolution = await img_utils.getImageResolution(file);
+    final originalBytes = await file.readAsBytes();
 
-    // Resize for thumbnail dynamically to maintain aspect ratio
-    const int maxThumbWidth = 1440;
-    const int maxThumbHeight = 870;
-    img.Image thumbnailImage;
-    if (originalImage.width > maxThumbWidth || originalImage.height > maxThumbHeight) {
-      final double aspectRatio = originalImage.width / originalImage.height;
-      int thumbWidth, thumbHeight;
-      if (aspectRatio > 1) {
-        // Landscape orientation
-        thumbWidth = maxThumbWidth;
-        thumbHeight = (maxThumbWidth / aspectRatio).round();
-      } else {
-        // Portrait or square orientation
-        thumbHeight = maxThumbHeight;
-        thumbWidth = (maxThumbHeight * aspectRatio).round();
-      }
-      thumbnailImage = img.copyResize(
-        originalImage,
-        width: thumbWidth,
-        height: thumbHeight,
-      );
-    } else {
-      thumbnailImage = originalImage;
-    }
+    // Resize and fix orientation for wallpaper and thumbnail
+    // For wallpaper (main image): 1400x3100 (maintain aspect ratio)
 
-    // Use the same format as the user uploaded (JPEG/PNG)
-    String ext = file.path.split('.').last.toLowerCase();
-    List<int> thumbBytes;
-    String thumbExt;
-    if (ext == 'jpg' || ext == 'jpeg') {
-      thumbBytes = img.encodeJpg(
-        thumbnailImage,
-        quality: 85,
-      ); // Reduced quality from 95 to 85
-      thumbExt = 'jpg';
-    } else {
-      thumbBytes = img.encodePng(thumbnailImage);
-      thumbExt = 'png';
-    }
-    final thumbnailFile = File(
-      '${file.parent.path}/thumbnail_$fileName.$thumbExt',
+    // For thumbnail: 800x1420 (maintain aspect ratio)
+    final thumbnailFile = await img_utils.resizeAndFixImage(
+      file,
+      targetWidth: 800,
+      targetHeight: 1420,
+      outputPath: '${file.parent.path}/thumbnail_$fileName.png',
+      maintainAspectRatio: true,
     );
-    await thumbnailFile.writeAsBytes(thumbBytes);
     debugPrint(
-      'Thumbnail $thumbExt file size: \n  ${thumbnailFile.lengthSync()} bytes \n  ${(thumbnailFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
+      'Thumbnail png file size: \n  ${thumbnailFile.lengthSync()} bytes \n  ${(thumbnailFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
     );
 
     // Convert thumbnail to webp using external API

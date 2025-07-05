@@ -1,30 +1,10 @@
 import 'dart:io';
-import 'package:image/image.dart' as img;
+import 'image_utils.dart' as img;
 import '../../app/services/firebase/wallpaper_db.dart';
 
 /// Compute perceptual hash (pHash) of an image
-String computeImageHash(File imageFile) {
-  final image = img.decodeImage(imageFile.readAsBytesSync());
-  if (image == null) {
-    throw Exception("Failed to decode image.");
-  }
-
-  // Resize to 8x8 and convert to grayscale
-  final resized = img.copyResize(image, width: 8, height: 8);
-  final grayscale = img.grayscale(resized);
-
-  // Compute average pixel value
-  final avgPixelValue =
-      grayscale.getBytes().map((pixel) => pixel).reduce((a, b) => a + b) ~/
-      grayscale.getBytes().length;
-
-  // Generate hash based on whether pixel values are above or below the average
-  final hash =
-      grayscale
-          .getBytes()
-          .map((pixel) => pixel > avgPixelValue ? '1' : '0')
-          .join();
-  return hash;
+Future<String> computeImageHash(File imageFile) async {
+  return await img.computeImageHash(imageFile);
 }
  
 /// Function to check for duplicate wallpapers

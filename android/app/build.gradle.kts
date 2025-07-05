@@ -55,14 +55,30 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            // proguardFiles(
-            //     getDefaultProguardFile("proguard-android-optimize.txt"),
-            //     "proguard-rules.pro"
-            // )
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("com.google.android.play:core:1.10.3") {
+        exclude(group = "com.google.android.play", module = "core-common")
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("com.google.android.play:core:1.10.3")
+        force("com.google.android.play:core-common:2.0.3")
+    }
+    exclude(group = "com.google.android.play", module = "core-common")
 }

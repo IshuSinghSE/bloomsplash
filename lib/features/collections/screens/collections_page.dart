@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -179,13 +178,13 @@ class _CollectionsPageState extends State<CollectionsPage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.10),
+                        color: Colors.white.withValues(alpha: 0.10),
                         width: 1.0,
                       ),
-                      color: Colors.white.withOpacity(0.08), // glass effect base
+                      color: Colors.white.withValues(alpha: 0.08), // glass effect base
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.18),
+                          color: Colors.black.withValues(alpha: 0.18),
                           blurRadius: 24,
                           offset: const Offset(0, 10),
                         ),
@@ -218,7 +217,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.black.withOpacity(0.55),
+                                    Colors.black.withValues(alpha: 0.55),
                                   ],
                                 ),
                               ),
@@ -277,7 +276,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
                               top: 18,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(color: Colors.white24, width: 1),
                                 ),

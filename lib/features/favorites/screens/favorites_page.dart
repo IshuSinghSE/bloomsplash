@@ -110,9 +110,9 @@ class FavoritesPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: Colors.orange[900]?.withOpacity(0.3),
+                    color: Colors.orange[900]?.withValues(alpha: 0.3),
                     border: Border.all(
-                      color: Colors.orange[400]!.withOpacity(0.5),
+                      color: Colors.orange[400]!.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),

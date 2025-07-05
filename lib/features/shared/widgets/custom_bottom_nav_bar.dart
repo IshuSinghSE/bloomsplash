@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
+import 'dart:ui';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -29,114 +30,115 @@ class CustomBottomNavBar extends StatelessWidget {
     // Retrieve user email from Hive
     var preferencesBox = Hive.box('preferences');
     var userData = preferencesBox.get('userData', defaultValue: {});
-    final userEmail = userData['email'] ?? '';
+    final isAdmin = userData['isAdmin'] ?? false;
+
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(199, 9, 9, 12), // Solid semi-transparent color
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: Colors.white.withOpacity(.08), // Sleek subtle border
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color.fromARGB(230, 65, 90, 114),
-                  blurRadius: 0,
-                  offset: const Offset(0, 0),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16), // Adjust blur strength as needed
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(50, 0, 0, 12), // More transparent for glass effect
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: .25), // Sleek subtle border
+                  width: 1,
                 ),
-              ],
-            ),
-            child: NavigationBarTheme(
-              data: NavigationBarThemeData(
-                height: 64,
-                indicatorShape: const CircleBorder(),
-                indicatorColor: const Color.fromARGB(180, 21, 134, 226),
               ),
-              child: NavigationBar(
-                backgroundColor: Colors.transparent,
-                selectedIndex: selectedIndex,
-                onDestinationSelected: (index) {
-                  // Prevent selecting the Upload tab if it's not available
-                  if (index == 3 && userEmail != "ishu.111636@gmail.com") return;
-                  onItemTapped(index);
-                },
-                destinations: [
-                  GestureDetector(
-                    onTap: () => onItemTapped(0),
-                    child: Tooltip(
-                      message: 'Explore',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selectedIndex == 0 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
-                        ),
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          selectedIndex == 0 ? Icons.explore : Icons.explore_outlined,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ), GestureDetector(
-                    onTap: () => onItemTapped(1),
-                    child: Tooltip(
-                      message: 'Collections',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selectedIndex == 1 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
-                        ),
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          selectedIndex == 1 ? Icons.collections : Icons.collections_outlined,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => onItemTapped(2),
-                    child: Tooltip(
-                      message: 'Favorites',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selectedIndex == 2 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
-                        ),
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          selectedIndex == 2 ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                 
-                  if (userEmail == "ishu.111636@gmail.com")
+              child: NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  height: 56,
+                  indicatorShape: const CircleBorder(),
+                  indicatorColor: const Color.fromARGB(180, 21, 134, 226),
+                ),
+                child: NavigationBar(
+                  backgroundColor: Colors.transparent,
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (index) {
+                    // Prevent selecting the Upload tab if it's not available
+                    if (index == 3 && isAdmin) return;
+                    onItemTapped(index);
+                  },
+                  destinations: [
+                    // Explore tab (all users)
                     GestureDetector(
-                      onTap: () => onItemTapped(3),
+                      onTap: () => onItemTapped(0),
                       child: Tooltip(
-                        message: 'Upload',
+                        message: 'Explore',
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: selectedIndex == 3 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                            color: selectedIndex == 0 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
                           ),
                           padding: const EdgeInsets.all(8.0),
                           child: Icon(
-                            selectedIndex == 3 ? Icons.upload_rounded : Icons.upload_outlined,
+                            selectedIndex == 0 ? Icons.explore : Icons.explore_outlined,
                             color: Colors.white,
                           ),
                         ),
                       ),
                     ),
-                ],
+                    // Collections tab (all users)
+                    GestureDetector(
+                      onTap: () => onItemTapped(1),
+                      child: Tooltip(
+                        message: 'Collections',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: selectedIndex == 1 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                          ),
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(
+                            selectedIndex == 1 ? Icons.collections : Icons.collections_outlined,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Favorites tab (all users)
+                    GestureDetector(
+                      onTap: () => onItemTapped(2),
+                      child: Tooltip(
+                        message: 'Favorites',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: selectedIndex == 2 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                          ),
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(
+                            selectedIndex == 2 ? Icons.favorite : Icons.favorite_border,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Upload tab (admin only)
+                    if (isAdmin)
+                      GestureDetector(
+                        onTap: () => onItemTapped(3),
+                        child: Tooltip(
+                          message: 'Upload',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: selectedIndex == 3 ? const Color.fromARGB(180, 21, 134, 226) : Colors.transparent,
+                            ),
+                            padding: const EdgeInsets.all(8.0),
+                            child: Icon(
+                              selectedIndex == 3 ? Icons.upload_rounded : Icons.upload_outlined,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

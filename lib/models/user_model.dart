@@ -11,6 +11,7 @@ class AppUser {
   final DateTime? premiumPurchasedAt;
   final String authProvider; // "google" | "apple"
   final DateTime createdAt;
+  final bool isAdmin;
 
   AppUser({
     required this.uid,
@@ -23,6 +24,7 @@ class AppUser {
     required this.premiumPurchasedAt,
     required this.authProvider,
     required this.createdAt,
+    required this.isAdmin,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -63,6 +65,7 @@ class AppUser {
       premiumPurchasedAt: premiumPurchasedAt,
       authProvider: json['authProvider'] ?? 'google',
       createdAt: createdAt,
+      isAdmin: json['isAdmin'] ?? json['isadmin'] ?? false,
     );
   }
 
@@ -78,6 +81,7 @@ class AppUser {
       'premiumPurchasedAt': premiumPurchasedAt?.millisecondsSinceEpoch,
       'authProvider': authProvider,
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'isAdmin': isAdmin,
     };
   }
 }

@@ -15,6 +15,7 @@ class UserService {
     required DateTime? premiumPurchasedAt,
     required String authProvider,
     required DateTime createdAt,
+    bool isAdmin = false, // default to false for new users
   }) async {
     final userDoc = _firestore.collection('users').doc(uid);
     await userDoc.set({
@@ -28,6 +29,7 @@ class UserService {
       'premiumPurchasedAt': premiumPurchasedAt,
       'authProvider': authProvider,
       'createdAt': createdAt,
+      'isAdmin': isAdmin,
     }, SetOptions(merge: true));
   }
 
