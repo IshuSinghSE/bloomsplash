@@ -60,7 +60,7 @@ class CustomBottomNavBar extends StatelessWidget {
                   selectedIndex: selectedIndex,
                   onDestinationSelected: (index) {
                     // Prevent selecting the Upload tab if it's not available
-                    if (index == 3 && isAdmin) return;
+                    if (index == 3 && !isAdmin) return;
                     onItemTapped(index);
                   },
                   destinations: [
