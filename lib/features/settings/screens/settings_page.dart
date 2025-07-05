@@ -271,7 +271,7 @@ class _SettingsPageState extends State<SettingsPage>
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                             ).copyWith(
-                              overlayColor: MaterialStateProperty.all(
+                              overlayColor: WidgetStateProperty.all(
                                 const Color.fromARGB(
                                   255,
                                   253,

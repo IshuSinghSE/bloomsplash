@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../models/wallpaper_model.dart';
-import '../../../app/services/firebase/wallpaper_db.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../../wallpaper_details/widgets/wallpaper_utils.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import '../../../app/services/firebase/wallpaper_db.dart';
 
 class EditWallpaperPage extends StatefulWidget {
   final Wallpaper wallpaper;

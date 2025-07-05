@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'app/providers/favorites_provider.dart';
 import 'app/providers/auth_provider.dart';
 import 'features/shared/widgets/custom_bottom_nav_bar.dart';
@@ -99,7 +98,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/explore': (context) => const ExplorePage(),
-        '/collection': (context) => const CollectionsPage(),
         '/favorites': (context) => const FavoritesPage(),
         '/upload': (context) => const UploadPage(),
         '/settings': (context) => const SettingsPage(),
@@ -111,13 +109,8 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   final Box preferencesBox;
-  final int? initialSelectedIndex; // Add this parameter
-  
-  const HomePage({
-    super.key, 
-    required this.preferencesBox,
-    this.initialSelectedIndex, // Make it optional
-  });
+  final int? initialSelectedIndex;
+  const HomePage({super.key, required this.preferencesBox, this.initialSelectedIndex});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -193,28 +186,10 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
               icon: CircleAvatar(
-                child: ClipOval(
-                  child: userPhotoUrl != null && userPhotoUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: userPhotoUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          cacheKey: 'user_avatar_${userData['uid'] ?? 'default'}',
-                          placeholder: (context, url) => Image.asset(
-                            AppConfig.avatarIconPath,
-                            fit: BoxFit.cover,
-                          ),
-                          errorWidget: (context, url, error) => Image.asset(
-                            AppConfig.avatarIconPath,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Image.asset(
-                          AppConfig.avatarIconPath,
-                          fit: BoxFit.cover,
-                        ),
-                ),
+                backgroundImage:
+                    widget.preferencesBox.get('userData')?['photoUrl'] != null
+                        ? NetworkImage(widget.preferencesBox.get('userData')['photoUrl'])
+                        : AssetImage(AppConfig.avatarIconPath) as ImageProvider,
               ),
               onPressed: () {
                 Navigator.push(
@@ -238,9 +213,8 @@ class _HomePageState extends State<HomePage> {
           );
         },
         child: IndexedStack(
-          key: ValueKey<int>(_selectedIndex),
-          index: _selectedIndex, // Show the selected tab
-          children: pages, // Preserve the state of all tabs
+          index: _selectedIndex,
+          children: pages,
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(

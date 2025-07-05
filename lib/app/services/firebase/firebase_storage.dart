@@ -15,7 +15,8 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
     if (file.lengthSync() > maxFileSize) {
       debugPrint(
-        'Image file size is too large: \n  ${file.lengthSync()} bytes (max 4 MB)',
+
+        'Image file size is too large: \n  [33m[1m${file.lengthSync()} bytes (max 4 MB)[0m',
       );
       throw Exception('Image file size exceeds 4 MB.');
     }
@@ -26,31 +27,45 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
 
     // Read the original image
     final originalBytes = await file.readAsBytes();
-    final originalImage = img.decodeImage(originalBytes);
-
-    if (originalImage == null) {
-      throw Exception('Failed to decode image');
+    if (originalBytes.isEmpty) {
+      throw Exception('File is empty: ${file.path}');
     }
+    img.Image? originalImage0 = img.decodeImage(originalBytes);
+    if (originalImage0 == null) {
+      throw Exception('Failed to decode image: ${file.path}');
+    }
+    img.Image originalImage = originalImage0;
+
+    // --- EXIF orientation fix ---
+    // If the image has an orientation tag, fix it
+    try {
+      final exifData = img.JpegData()..read(originalBytes);
+      final orientation = exifData.exif.orientation ?? 0;
+      if (orientation != 0 && orientation != 1) {
+        originalImage = img.bakeOrientation(originalImage);
+      }
+    } catch (e) {
+      debugPrint('EXIF orientation parse failed: $e');
+    }
+    // --- END EXIF orientation fix ---
 
     // Get original image size and resolution
     final originalSize = file.lengthSync();
     final originalResolution = '${originalImage.width}x${originalImage.height}';
 
-    // Resize for thumbnail (optimized for list views, 800px max width)
-    final maxThumbWidth = 800; // Reduced from 1080 for better performance
-    final maxThumbHeight = 1420; // Reduced from 1920 for better performance
-    final thumbAspect = originalImage.width / originalImage.height;
-    int thumbWidth = maxThumbWidth;
-    int thumbHeight = (maxThumbWidth / thumbAspect).round();
-    if (thumbHeight > maxThumbHeight) {
-      thumbHeight = maxThumbHeight;
-      thumbWidth = (maxThumbHeight * thumbAspect).round();
+    // Resize for thumbnail (fixed size: 1440x870) only if dimensions differ
+    const int thumbWidth = 1440;
+    const int thumbHeight = 870;
+    img.Image thumbnailImage;
+    if (originalImage.width != thumbWidth || originalImage.height != thumbHeight) {
+      thumbnailImage = img.copyResize(
+        originalImage,
+        width: thumbWidth,
+        height: thumbHeight,
+      );
+    } else {
+      thumbnailImage = originalImage;
     }
-    final thumbnailImage = img.copyResize(
-      originalImage,
-      width: thumbWidth,
-      height: thumbHeight,
-    );
 
     // Use the same format as the user uploaded (JPEG/PNG)
     String ext = file.path.split('.').last.toLowerCase();

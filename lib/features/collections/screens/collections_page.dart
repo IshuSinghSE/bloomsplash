@@ -1,5 +1,8 @@
+import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../app/services/firebase/collection_db.dart';
 import '../../../../models/collection_model.dart';
 import 'collection_detail_page.dart'; // Import the collection wallpapers page
@@ -100,7 +103,7 @@ class _CollectionsPageState extends State<CollectionsPage> {
     }
     
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -175,87 +178,122 @@ class _CollectionsPageState extends State<CollectionsPage> {
                   child: Container(
                     width: 280,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: Colors.white.withOpacity(
-                          0.1,
-                        ), // Add border with subtle opacity
-                        width: 1.2,
+                        color: Colors.white.withOpacity(0.10),
+                        width: 1.0,
                       ),
-                      image:
-                          collection.coverImage.isNotEmpty
-                              ? DecorationImage(
-                                image: NetworkImage(collection.coverImage),
-                                fit: BoxFit.cover,
-                              )
-                              : null,
-                      color: Colors.grey[800],
+                      color: Colors.white.withOpacity(0.08), // glass effect base
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.18),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
+                          blurRadius: 24,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              color: Colors.black.withOpacity(
-                                0.4,
-                              ), // Add overlay for better text visibility
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Stack(
+                        children: [
+                          if ((collection.coverImage.isNotEmpty) || collection.coverImage.isNotEmpty)
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(28),
+                                child: CachedNetworkImage(
+                                  imageUrl: (collection.coverImage.isNotEmpty)
+                                      ? collection.coverImage
+                                      : collection.coverImage,
+                                  fit: BoxFit.cover,
+                                  alignment: Alignment.center,
+                                  placeholder: (context, url) => Container(color: Colors.grey[700]),
+                                  errorWidget: (context, url, error) => Container(color: Colors.grey[900]),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                collection.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 28,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(
-                                height: 4,
-                              ), // Add spacing between name and description
-                              Text(
-                                collection.description,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (collection.type == 'premium')
-                          Positioned(
-                            right: 18,
-                            top: 18,
+                          // Gradient overlay for text readability
+                          Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              padding: const EdgeInsets.all(6),
-                              child: const Icon(
-                                Icons.lock,
-                                color: Colors.white,
-                                size: 22,
+                                borderRadius: BorderRadius.circular(28),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.55),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                      ],
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  collection.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 26,
+                                    letterSpacing: 0.5,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black54,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  collection.description,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0.1,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black38,
+                                        blurRadius: 6,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (collection.type == 'premium')
+                            Positioned(
+                              right: 18,
+                              top: 18,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.white24, width: 1),
+                                ),
+                                padding: const EdgeInsets.all(6),
+                                child: const Icon(
+                                  Icons.lock,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );

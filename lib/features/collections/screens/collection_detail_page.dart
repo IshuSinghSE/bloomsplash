@@ -77,7 +77,7 @@ class CollectionDetailPage extends StatelessWidget {
               itemCount: wallpapersList.length,
               itemBuilder: (context, index) {
                 final wallpaper = wallpapersList[index];
-                final image = wallpaper["image"] ?? AppConfig.shimmerImagePath;
+                final image = wallpaper["thumbnail"] ?? AppConfig.shimmerImagePath;
                 final name = wallpaper["name"] ?? "Untitled";
                 return GestureDetector(
                   onTap: () {
@@ -98,8 +98,15 @@ class CollectionDetailPage extends StatelessWidget {
                             fit: BoxFit.cover,
                             width: double.infinity,
                             height: double.infinity,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 50)),
+                            placeholder: (context, url) => Image.asset(
+                              AppConfig.shimmerImagePath,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                            errorWidget: (context, url, error) => const Center(
+                              child: Icon(Icons.broken_image, color: Colors.grey, size: 50),
+                            ),
                           )
                         else
                           Image.asset(
@@ -112,12 +119,15 @@ class CollectionDetailPage extends StatelessWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                                 colors: [
-                                  AppColors.gradientStart,
-                                  AppColors.gradientEnd,
+                                  Colors.transparent,
+                                  Colors.amber.withOpacity(0.08),
+                                  Colors.purpleAccent.withOpacity(0.10),
+                                  Colors.orangeAccent.withOpacity(0.10),
                                 ],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
+                                stops: const [0.0, 0.5, 0.8, 1.0],
                               ),
                             ),
                           ),
