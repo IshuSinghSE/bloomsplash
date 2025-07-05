@@ -30,17 +30,17 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     if (originalBytes.isEmpty) {
       throw Exception('File is empty: ${file.path}');
     }
-    img.Image? _originalImage = img.decodeImage(originalBytes);
-    if (_originalImage == null) {
+    img.Image? originalImage0 = img.decodeImage(originalBytes);
+    if (originalImage0 == null) {
       throw Exception('Failed to decode image: ${file.path}');
     }
-    img.Image originalImage = _originalImage;
+    img.Image originalImage = originalImage0;
 
     // --- EXIF orientation fix ---
     // If the image has an orientation tag, fix it
     try {
       final exifData = img.JpegData()..read(originalBytes);
-      final orientation = exifData.exif?.orientation ?? 0;
+      final orientation = exifData.exif.orientation ?? 0;
       if (orientation != 0 && orientation != 1) {
         originalImage = img.bakeOrientation(originalImage);
       }
