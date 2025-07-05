@@ -64,7 +64,7 @@ class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
                     Navigator.pop(context, _selectedWallpapers.toList());
                   },
             icon: const Icon(Icons.check),
-            label: Text('Add [38;5;5m${_selectedWallpapers.length}[0m'),
+            label: Text('Add ${_selectedWallpapers.length}'),
             style: TextButton.styleFrom(
               foregroundColor: Colors.white,
             ),
