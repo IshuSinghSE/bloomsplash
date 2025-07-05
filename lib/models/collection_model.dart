@@ -63,7 +63,7 @@ class Collection {
     }
 
     // Helper to safely cast to List<String>
-    List<String> _castStringList(dynamic value) {
+    List<String> castStringList(dynamic value) {
       if (value is List) {
         return value.map((e) => e.toString()).toList();
       }
@@ -80,9 +80,9 @@ class Collection {
       description: json['description'] as String? ?? '',
       coverImage: json['coverImage'] as String? ?? '',
       createdBy: json['createdBy'] as String? ?? '',
-      tags: _castStringList(tagsRaw),
+      tags: castStringList(tagsRaw),
       type: json['type'] as String? ?? '',
-      wallpaperIds: _castStringList(wallpaperIdsRaw),
+      wallpaperIds: castStringList(wallpaperIdsRaw),
       createdAt: createdAt,
     );
   }

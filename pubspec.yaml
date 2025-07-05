@@ -1,10 +1,11 @@
 name: bloomsplash
 description: "A beautiful wallpaper application"
 publish_to: "none"
-version: 0.1.5
+version: 0.1.6
 
 environment:
   sdk: ^3.7.2
+  flutter: 3.32.2
 
 dependencies:
   # --- Flutter SDK ---

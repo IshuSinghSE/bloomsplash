@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../models/collection_model.dart';
 import '../../../app/services/firebase/collection_db.dart';
 import '../../../features/shared/widgets/custom_bottom_nav_bar.dart';
@@ -154,12 +155,6 @@ class _CollectionListPageState extends State<CollectionListPage> {
                                 color: Colors.white.withOpacity(0.1),
                                 width: 1,
                               ),
-                              image: collection.coverImage.isNotEmpty
-                                  ? DecorationImage(
-                                      image: NetworkImage(collection.coverImage),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
                               color: Colors.grey[800],
                               boxShadow: [
                                 BoxShadow(
@@ -171,6 +166,18 @@ class _CollectionListPageState extends State<CollectionListPage> {
                             ),
                             child: Stack(
                               children: [
+                               if (collection.coverImage.isNotEmpty)
+                                  Positioned.fill(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: CachedNetworkImage(
+                                        imageUrl: collection.coverImage,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Container(color: Colors.grey[700]),
+                                        errorWidget: (context, url, error) => Container(color: Colors.grey[900]),
+                                      ),
+                                    ),
+                                  ),
                                 // Overlay for better text visibility
                                 Positioned.fill(
                                   child: Container(
@@ -187,7 +194,6 @@ class _CollectionListPageState extends State<CollectionListPage> {
                                     ),
                                   ),
                                 ),
-                                
                                 // Collection info
                                 Positioned(
                                   left: 16,
@@ -230,7 +236,6 @@ class _CollectionListPageState extends State<CollectionListPage> {
                                     ],
                                   ),
                                 ),
-                                
                                 // Premium indicator
                                 if (collection.type == 'premium')
                                   Positioned(

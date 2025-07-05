@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../models/wallpaper_model.dart';
 
 class WallpaperSelectionPage extends StatefulWidget {
@@ -49,7 +50,7 @@ class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
       }
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +103,6 @@ class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
                     itemBuilder: (context, index) {
                       final wallpaper = _filteredWallpapers[index];
                       final isSelected = _selectedWallpapers.contains(wallpaper);
-                      
                       return GestureDetector(
                         onTap: () => _toggleWallpaperSelection(wallpaper),
                         child: Stack(
@@ -110,11 +110,19 @@ class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: wallpaper.thumbnailUrl.isNotEmpty
-                                  ? Image.network(
-                                      wallpaper.thumbnailUrl,
+                                  ? CachedNetworkImage(
+                                      imageUrl: wallpaper.thumbnailUrl,
                                       fit: BoxFit.cover,
                                       width: double.infinity,
                                       height: double.infinity,
+                                      placeholder: (context, url) => Container(
+                                        color: Colors.grey[300],
+                                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                      ),
+                                      errorWidget: (context, url, error) => Container(
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.broken_image, size: 48),
+                                      ),
                                     )
                                   : Container(
                                       color: Colors.grey[300],

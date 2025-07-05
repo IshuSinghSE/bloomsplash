@@ -28,13 +28,13 @@
   - Description: Clear only user-specific cached data (avatar) on logout, preserve wallpaper cache to save bandwidth
   - Files: `lib/app/providers/auth_provider.dart`
 
-- [ ] **Resolve memory leaks in image caching**
+- [] **Resolve memory leaks in image caching**
   - Status: Not Started
   - Priority: High
   - Description: Optimize cache management for better performance
   - Files: `lib/features/dashboard/screens/edit_wallpaper_page.dart`
 
-- [ ] **Fix wallpaper upload validation errors**
+- [x] **Fix wallpaper upload validation errors**
   - Status: Not Started
   - Priority: Medium
   - Description: Better error handling during image upload process
