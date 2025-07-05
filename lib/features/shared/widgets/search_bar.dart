@@ -16,11 +16,11 @@ class SearchBar extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 48, 51, 65).withOpacity(0.5),
+              color: const Color.fromARGB(255, 48, 51, 65).withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: const Color.fromARGB(255, 65, 90, 114).withOpacity(0.2),
+                  color: const Color.fromARGB(255, 65, 90, 114).withValues(alpha: 0.2),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),

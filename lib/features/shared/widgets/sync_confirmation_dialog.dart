@@ -15,22 +15,19 @@ class SyncConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final favoritesProvider = Provider.of<FavoritesProvider>(context, listen: false);
+    final favoritesProvider = Provider.of<FavoritesProvider>(
+      context,
+      listen: false,
+    );
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final uid = authProvider.user?.uid;
 
     return AlertDialog(
       backgroundColor: Colors.grey[900],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          Icon(
-            Icons.sync_problem,
-            color: Colors.orange[400],
-            size: 28,
-          ),
+          Icon(Icons.sync_problem, color: Colors.orange[400], size: 28),
           const SizedBox(width: 12),
           const Text(
             'Unsaved Changes',
@@ -58,20 +55,16 @@ class SyncConfirmationDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.orange[900]?.withOpacity(0.3),
+              color: Colors.orange[900]?.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.orange[400]!.withOpacity(0.5),
+                color: Colors.orange[400]!.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.warning_amber,
-                  color: Colors.orange[400],
-                  size: 20,
-                ),
+                Icon(Icons.warning_amber, color: Colors.orange[400], size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -94,13 +87,10 @@ class SyncConfirmationDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
             'Cancel',
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey[400], fontSize: 16),
           ),
         ),
-        
+
         // Sync now button
         ElevatedButton.icon(
           onPressed: () async {
@@ -110,21 +100,21 @@ class SyncConfirmationDialog extends StatelessWidget {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (context) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  builder:
+                      (context) =>
+                          const Center(child: CircularProgressIndicator()),
                 );
-                
+
                 await favoritesProvider.forceSyncNow(uid);
-                
+
                 // Close loading dialog
                 Navigator.of(context).pop();
                 // Close confirmation dialog
                 Navigator.of(context).pop();
-                
+
                 // Proceed with sign out
                 onConfirmSignOut();
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Row(
@@ -140,7 +130,7 @@ class SyncConfirmationDialog extends StatelessWidget {
               } catch (e) {
                 // Close loading dialog
                 Navigator.of(context).pop();
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Row(
@@ -169,7 +159,7 @@ class SyncConfirmationDialog extends StatelessWidget {
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
-        
+
         // Sign out anyway button
         TextButton(
           onPressed: () {

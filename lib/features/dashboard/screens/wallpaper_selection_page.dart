@@ -16,7 +16,7 @@ class WallpaperSelectionPage extends StatefulWidget {
 
 class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
   final Set<Wallpaper> _selectedWallpapers = {};
-  String _searchQuery = '';
+  // String _searchQuery = '';
   List<Wallpaper> _filteredWallpapers = [];
   
   @override
@@ -27,7 +27,7 @@ class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
   
   void _filterWallpapers(String query) {
     setState(() {
-      _searchQuery = query;
+      // _searchQuery = query;
       if (query.isEmpty) {
         _filteredWallpapers = widget.availableWallpapers;
       } else {
@@ -139,7 +139,7 @@ class _WallpaperSelectionPageState extends State<WallpaperSelectionPage> {
                                     begin: Alignment.bottomCenter,
                                     end: Alignment.topCenter,
                                     colors: [
-                                      Colors.black.withOpacity(0.7),
+                                      Colors.black.withValues(alpha: 0.7),
                                       Colors.transparent,
                                     ],
                                   ),

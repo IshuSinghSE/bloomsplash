@@ -30,7 +30,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
   bool _isLoadingMore = false;
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
-  final String _selectedFilter = 'All';
+  // final String _selectedFilter = 'All';
   late Box _wallpapersBox;
 
   // Collections tab state
@@ -224,7 +224,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
     );
     final typeController = TextEditingController(text: collection?.type ?? '');
     final formKey = GlobalKey<FormState>();
-    XFile? pickedImage;
+    // XFile? pickedImage;
     String? uploadedImageUrl;
     bool isUploading = false;
     double uploadProgress = 0;
@@ -242,7 +242,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
       final image = await picker.pickImage(source: ImageSource.gallery);
       if (image == null) return;
       setState(() {
-        pickedImage = image;
+        // pickedImage = image;
         isUploading = true;
         uploadProgress = 0;
         selectedWallpaperId = null; // Clear wallpaper selection if uploading
@@ -453,7 +453,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                               onChanged: (val) {
                                 setState(() {
                                   selectedWallpaperId = val;
-                                  pickedImage = null;
+                                  // pickedImage = null;
                                   uploadedImageUrl = null;
                                   if (val != null) {
                                     final selected = availableWallpapers
@@ -542,7 +542,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
     final tagsController = TextEditingController();
     final categoryController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    XFile? pickedImage;
+    // XFile? pickedImage;
     bool isUploading = false;
     String? uploadedOriginalUrl;
     String? uploadedThumbnailUrl;
@@ -590,7 +590,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                                 final image = await picker.pickImage(source: ImageSource.gallery);
                                 if (image == null) return;
                                 setState(() {
-                                  pickedImage = image;
+                                  // pickedImage = image;
                                   isUploading = true;
                                 });
                                 final file = File(image.path);

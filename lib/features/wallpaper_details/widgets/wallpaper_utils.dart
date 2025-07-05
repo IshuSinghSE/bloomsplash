@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle, PlatformException;
 import 'package:async_wallpaper/async_wallpaper.dart';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:media_scanner/media_scanner.dart';
 import '../../shared/widgets/shared_widgets.dart';
@@ -39,8 +39,13 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
     final filePath = '${bloomsplashDir.path}/$resolvedFileName';
 
     if (url.startsWith('http')) {
-      final dio = Dio();
-      await dio.download(url, filePath);
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+      } else {
+        throw Exception('Failed to download file: ${response.statusCode}');
+      }
     } else {
       final byteData = await rootBundle.load(url);
       final file = File(filePath);
@@ -111,7 +116,7 @@ void showSetWallpaperDialog(BuildContext context, String wallpaperImage) {
             child: Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(16.0),
               ),
               child: Column(

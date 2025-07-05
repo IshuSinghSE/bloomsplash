@@ -30,7 +30,7 @@ class DetailsContainer extends StatelessWidget {
     final authorImage =
         wallpaper['authorImage']?.startsWith('http') == true
             ? wallpaper['authorImage']
-            : AppConfig.authorIconPath1;
+            : AppConfig.authorIconPath;
     final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
     final download = wallpaper['download'] ?? '0';
@@ -42,7 +42,7 @@ class DetailsContainer extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           // Always use semi-transparent black background
-          color: Colors.black.withOpacity(0.55),
+          color: Colors.black.withValues(alpha: 0.55),
         ),
         child: Container(
           padding: const EdgeInsets.all(16.0),

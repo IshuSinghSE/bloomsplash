@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:uuid/uuid.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +20,6 @@ Future<List<String>> extractDominantColors(
     maximumColorCount: colorCount,
   );
   return palette.colors
-      .map((c) => '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}')
+      .map((c) => '#${c.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}')
       .toList();
 }
