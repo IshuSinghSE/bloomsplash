@@ -31,16 +31,18 @@ Widget buildPillButton(
 Widget buildCircularActionButton(
   IconData icon,
   String label,
-  VoidCallback onPressed,
-) {
+  VoidCallback? onPressed, {
+  bool disabled = false,
+  Color iconColor = Colors.white,
+}) {
   return Column(
     children: [
       ClipOval(
         child: Material(
-          color: Colors.black.withValues(alpha: .5),
+          color: Colors.black.withOpacity(0.5),
           child: IconButton(
-            icon: Icon(icon, color: Colors.white),
-            onPressed: onPressed,
+            icon: Icon(icon, color: iconColor),
+            onPressed: disabled ? null : onPressed,
           ),
         ),
       ),

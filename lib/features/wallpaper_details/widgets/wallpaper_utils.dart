@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:media_scanner/media_scanner.dart';
 import '../../shared/widgets/shared_widgets.dart';
+import '../../../app/services/firebase/wallpaper_db.dart';
 
 enum WallpaperType { home, lock, both }
 
@@ -15,16 +16,16 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
     Directory bloomsplashDir;
   if (Platform.isLinux) {
       final homeDir = Platform.environment['HOME'] ?? Directory.current.path;
-      bloomsplashDir = Directory('$homeDir/Downloads/bloomsplash');
+      bloomsplashDir = Directory('$homeDir/Downloads/BloomSplash');
     } else if (Platform.isAndroid) {
-      final directory = Directory('/storage/emulated/0/DCIM/bloomsplash');
+      final directory = Directory('/storage/emulated/0/Pictures/BloomSplash');
       bloomsplashDir = directory;
     } else if (Platform.isMacOS || Platform.isWindows) {
       final downloadsDir = await getDownloadsDirectory();
-      bloomsplashDir = Directory('${downloadsDir!.path}/bloomsplash');
+      bloomsplashDir = Directory('${downloadsDir!.path}/BloomSplash');
     } else {
       final directory = await getApplicationDocumentsDirectory();
-      bloomsplashDir = Directory('${directory.path}/bloomsplash');
+      bloomsplashDir = Directory('${directory.path}/BloomSplash');
     }
 
     if (!await bloomsplashDir.exists()) {
@@ -58,24 +59,28 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
   }
 }
 
-Future<void> downloadWallpaper(BuildContext context, String url, {String? fileName}) async {
+Future<void> downloadWallpaper(BuildContext context, String url, {String? fileName, String? wallpaperId}) async {
   try {
     final filePath = await _getFilePath(context, url, fileName: fileName);
     String directoryName;
 
     if (Platform.isLinux) {
-      directoryName = 'bloomsplash'; // For Linux, just show /bloomsplash
+      directoryName = 'BloomSplash';
     } else if (Platform.isAndroid) {
-      directoryName = 'DCIM/bloomsplash'; // For Android, show DCIM/bloomsplash
+      directoryName = 'Pictures/BloomSplash';
     } else if (Platform.isMacOS || Platform.isWindows) {
-      directoryName =
-          'bloomsplash'; // For macOS/Windows, just show /bloomsplash
+      directoryName = 'BloomSplash';
     } else {
-      directoryName = 'bloomsplash'; // Default fallback
+      directoryName = 'BloomSplash';
     }
 
     if (Platform.isAndroid) {
       await MediaScanner.loadMedia(path: filePath);
+    }
+
+    // Efficiently increment download count after successful download using Firebase
+    if (wallpaperId != null) {
+      await FirestoreService.incrementDownloadCount(wallpaperId);
     }
 
     if (context.mounted) {
