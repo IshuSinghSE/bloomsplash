@@ -15,19 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "1035240251094-6pn3skf21pu29q31rgtgtmbku0nvs0sd.apps.googleusercontent.com",
+          "client_id": "1035240251094-5mqmsvc2h0f6kbm1jicrujp700pk5qij.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.devindeed.bloomsplash",
-            "certificate_hash": "287231f01a0705da11fd96304e2114446202be8b"
-          }
-        },
-        {
-          "client_id": "1035240251094-lbk1boufojf1a6rb6ril4fcqo7jjjvt9.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.devindeed.bloomsplash",
-            "certificate_hash": "1df62ee623e413c7336a2503fa7dd15ab8fce156"
+            "certificate_hash": "2d4737628b7b3037586efda0ff6341313f1a1a84"
           }
         },
         {
@@ -51,7 +43,7 @@
               "client_id": "1035240251094-10g72p73oumh2vmf7tklrp9a2vnubbps.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.devindeed.bloomsplash"
+                "bundle_id": "com.example.flutterApplication1"
               }
             }
           ]
