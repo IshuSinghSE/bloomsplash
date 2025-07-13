@@ -38,7 +38,7 @@ class _DetailsContainerState extends State<DetailsContainer> {
       _isDownloading = true;
     });
     try {
-      await downloadWallpaper(context, image, wallpaperId: wallpaperId);
+      await downloadWallpaper(context, image, wallpaperId: wallpaperId, fileName: widget.wallpaper['name']);
       // Instantly update downloads count locally
       setState(() {
         final current = _wallpaperData ?? widget.wallpaper;

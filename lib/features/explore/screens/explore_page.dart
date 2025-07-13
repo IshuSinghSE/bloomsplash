@@ -36,12 +36,12 @@ class _ExplorePageState extends State<ExplorePage>
 
   Future<void> _loadWallpapersFromCache() async {
     try {
-      final box = await Hive.openBox('explore_wallpapers');
+      final box = await Hive.openBox('uploadedWallpapers');
       final cached = box.get('wallpapers', defaultValue: []);
       if (cached is List && cached.isNotEmpty) {
         setState(() {
           _wallpapers.clear();
-          _wallpapers.addAll(List<Map<String, dynamic>>.from(cached));
+          _wallpapers.addAll(cached.map((w) => Map<String, dynamic>.from(w)).toList());
           _isLoading = false;
         });
       } else {
@@ -131,7 +131,7 @@ class _ExplorePageState extends State<ExplorePage>
       });
       // Save updated wallpapers to cache
       try {
-        final box = await Hive.openBox('explore_wallpapers');
+        final box = await Hive.openBox('uploadedWallpapers');
         await box.put('wallpapers', _wallpapers);
       } catch (e) {
         debugPrint('Error saving wallpapers to cache: $e');
