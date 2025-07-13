@@ -193,8 +193,7 @@ jobs:
           update_existing: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install GitHub CLI
-        uses: cli/cli@v2
+    
       - name: Delete existing APK assets from release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
