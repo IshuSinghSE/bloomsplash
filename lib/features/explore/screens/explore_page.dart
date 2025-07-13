@@ -41,7 +41,8 @@ class _ExplorePageState extends State<ExplorePage>
       if (cached is List && cached.isNotEmpty) {
         setState(() {
           _wallpapers.clear();
-          _wallpapers.addAll(cached.map((w) => Map<String, dynamic>.from(w)).toList());
+          _wallpapers.addAll(List<Map<String, dynamic>>.from(cached));
+
           _isLoading = false;
         });
       } else {
@@ -88,12 +89,13 @@ class _ExplorePageState extends State<ExplorePage>
       setState(() {
         if (isRefresh) {
           final newWallpapers =
-              snapshot.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return {'id': doc.id, ...data};
-              })
-              .where((wallpaper) => wallpaper['status'] == 'approved')
-              .toList();
+              snapshot.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {'id': doc.id, ...data};
+                  })
+                  .where((wallpaper) => wallpaper['status'] == 'approved')
+                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               newWallpapers
@@ -105,12 +107,13 @@ class _ExplorePageState extends State<ExplorePage>
           }
         } else {
           final newWallpapers =
-              snapshot.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return {'id': doc.id, ...data};
-              })
-              .where((wallpaper) => wallpaper['status'] == 'approved')
-              .toList();
+              snapshot.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {'id': doc.id, ...data};
+                  })
+                  .where((wallpaper) => wallpaper['status'] == 'approved')
+                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               newWallpapers

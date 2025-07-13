@@ -6,8 +6,10 @@ import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:hive/hive.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
+import '../../../app/services/firebase/user_db.dart';
 
 enum WallpaperType { home, lock, both }
 
@@ -19,7 +21,7 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
     final formattedDate =
         '${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}${date.year}-${date.hour.toString().padLeft(2, '0')}${date.minute.toString().padLeft(2, '0')}${date.second.toString().padLeft(2, '0')}';
     // Use wallpaperId if provided, else use timestamp
-    final defaultFileName = fileName ?? 'wallpaper_${formattedDate}.jpg';
+    final defaultFileName = fileName ?? 'wallpaper_$formattedDate.jpg';
     resolvedFileName = defaultFileName;
 
     if (Platform.isAndroid) {
@@ -27,9 +29,9 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
       final bytes = url.startsWith('http')
           ? (await http.get(Uri.parse(url))).bodyBytes
           : (await rootBundle.load(url)).buffer.asUint8List();
-      final MethodChannel _channel = MethodChannel('com.bloomsplash/media');
+      final MethodChannel channel = MethodChannel('com.bloomsplash/media');
       // Pass bytes as Uint8List, which is mapped to ByteArray in Kotlin
-      final String? savedPath = await _channel.invokeMethod<String>('saveImageToPictures', {
+      final String? savedPath = await channel.invokeMethod<String>('saveImageToPictures', {
         'fileName': resolvedFileName,
         'bytes': bytes,
       });
@@ -143,6 +145,26 @@ Future<void> downloadWallpaper(BuildContext context, String url, {String? fileNa
     // Efficiently increment download count after successful download using Firebase
     if (wallpaperId != null) {
       await FirestoreService.incrementDownloadCount(wallpaperId);
+      // Fetch updated wallpaper data from Firebase using getImageDetailsFromFirestore
+      try {
+        final wallpaperData = await UserService().getImageDetailsFromFirestore(wallpaperId);
+        final newDownloads = wallpaperData?['downloads'] ?? wallpaperData?['download'] ?? 0;
+        final box = await Hive.openBox('uploadedWallpapers');
+        final wallpapers = box.get('wallpapers', defaultValue: []);
+        if (wallpapers is List) {
+          final updatedWallpapers = wallpapers.map((item) {
+            if (item is Map && item['id'] == wallpaperId) {
+              final updatedItem = Map<String, dynamic>.from(item);
+              updatedItem['downloads'] = newDownloads;
+              return updatedItem;
+            }
+            return item;
+          }).toList();
+          await box.put('wallpapers', updatedWallpapers);
+        }
+      } catch (e) {
+        debugPrint('Failed to update local cache for downloads: $e');
+      }
     }
 
     if (context.mounted) {
