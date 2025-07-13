@@ -1,25 +1,47 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle, PlatformException;
+import 'package:flutter/services.dart';
 import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:media_scanner/media_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:hive/hive.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
+import '../../../app/services/firebase/user_db.dart';
 
 enum WallpaperType { home, lock, both }
 
 Future<String> _getFilePath(BuildContext context, String url, {String? fileName}) async {
   try {
     Directory bloomsplashDir;
-  if (Platform.isLinux) {
+    String resolvedFileName;
+    final date = DateTime.now();
+    final formattedDate =
+        '${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}${date.year}-${date.hour.toString().padLeft(2, '0')}${date.minute.toString().padLeft(2, '0')}${date.second.toString().padLeft(2, '0')}';
+    // Use wallpaperId if provided, else use timestamp
+    final defaultFileName = fileName ?? 'wallpaper_$formattedDate.jpg';
+    resolvedFileName = defaultFileName;
+
+    if (Platform.isAndroid) {
+      // Use MediaStore via platform channel for Android
+      final bytes = url.startsWith('http')
+          ? (await http.get(Uri.parse(url))).bodyBytes
+          : (await rootBundle.load(url)).buffer.asUint8List();
+      final MethodChannel channel = MethodChannel('com.bloomsplash/media');
+      // Pass bytes as Uint8List, which is mapped to ByteArray in Kotlin
+      final String? savedPath = await channel.invokeMethod<String>('saveImageToPictures', {
+        'fileName': resolvedFileName,
+        'bytes': bytes,
+      });
+      if (savedPath == null || savedPath.isEmpty) {
+        throw Exception('Failed to save image to Pictures/BloomSplash');
+      }
+      return savedPath;
+    } else if (Platform.isLinux) {
       final homeDir = Platform.environment['HOME'] ?? Directory.current.path;
       bloomsplashDir = Directory('$homeDir/Downloads/BloomSplash');
-    } else if (Platform.isAndroid) {
-      final directory = Directory('/storage/emulated/0/Pictures/BloomSplash');
-      bloomsplashDir = directory;
     } else if (Platform.isMacOS || Platform.isWindows) {
       final downloadsDir = await getDownloadsDirectory();
       bloomsplashDir = Directory('${downloadsDir!.path}/BloomSplash');
@@ -28,42 +50,88 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
       bloomsplashDir = Directory('${directory.path}/BloomSplash');
     }
 
-    if (!await bloomsplashDir.exists()) {
-      await bloomsplashDir.create(recursive: true);
-    }
-
-    final date = DateTime.now();
-    final formattedDate =
-        '${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}${date.year}';
-    final defaultFileName = 'wallpaper_$formattedDate.jpg';
-    final resolvedFileName = fileName ?? defaultFileName;
-    final filePath = '${bloomsplashDir.path}/$resolvedFileName';
-
-    if (url.startsWith('http')) {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
-      } else {
-        throw Exception('Failed to download file: ${response.statusCode}');
+    if (!Platform.isAndroid) {
+      if (!await bloomsplashDir.exists()) {
+        await bloomsplashDir.create(recursive: true);
       }
-    } else {
-      final byteData = await rootBundle.load(url);
-      final file = File(filePath);
-      await file.writeAsBytes(byteData.buffer.asUint8List());
+      final filePath = '${bloomsplashDir.path}/$resolvedFileName';
+      if (url.startsWith('http')) {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final file = File(filePath);
+          await file.writeAsBytes(response.bodyBytes);
+        } else {
+          throw Exception('Failed to download file: ${response.statusCode}');
+        }
+      } else {
+        final byteData = await rootBundle.load(url);
+        final file = File(filePath);
+        await file.writeAsBytes(byteData.buffer.asUint8List());
+      }
+      return filePath;
     }
-
-    return filePath;
+    throw Exception('Failed to get file path: Unknown platform or error');
   } catch (e) {
     throw Exception('Failed to get file path: $e');
   }
 }
 
 Future<void> downloadWallpaper(BuildContext context, String url, {String? fileName, String? wallpaperId}) async {
-  try {
-    final filePath = await _getFilePath(context, url, fileName: fileName);
-    String directoryName;
+  // Request only necessary permission before download
+  bool permissionGranted = false;
+  if (Platform.isAndroid) {
+    // Check Android version
+    int sdkInt = 0;
+    try {
+      sdkInt = int.parse((await MethodChannel('com.bloomsplash/info').invokeMethod('getAndroidSdkInt')).toString());
+    } catch (_) {
+      // fallback: assume API 33+
+      sdkInt = 33;
+    }
+    if (sdkInt >= 33) {
+      // Android 13+ (API 33+): request photos permission only
+      var mediaStatus = await Permission.photos.status;
+      if (!mediaStatus.isGranted) {
+        mediaStatus = await Permission.photos.request();
+      }
+      permissionGranted = mediaStatus.isGranted;
+    } else {
+      // Older Android: request storage permission only
+      var storageStatus = await Permission.storage.status;
+      if (!storageStatus.isGranted) {
+        storageStatus = await Permission.storage.request();
+      }
+      permissionGranted = storageStatus.isGranted;
+    }
+  } else {
+    permissionGranted = true;
+  }
 
+  if (!permissionGranted) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Permission denied.\nPlease allow access to save wallpapers.',
+            style: TextStyle(fontSize: 12),
+          ),
+          action: SnackBarAction(
+            label: 'Grant',
+            textColor: Theme.of(context).colorScheme.inversePrimary,
+            onPressed: () async {
+              // Open app settings so user can grant permission
+              await openAppSettings();
+            },
+          ),
+        ),
+      );
+    }
+    return;
+  }
+
+  try {
+    await _getFilePath(context, url, fileName: fileName);
+    String directoryName;
     if (Platform.isLinux) {
       directoryName = 'BloomSplash';
     } else if (Platform.isAndroid) {
@@ -74,13 +142,29 @@ Future<void> downloadWallpaper(BuildContext context, String url, {String? fileNa
       directoryName = 'BloomSplash';
     }
 
-    if (Platform.isAndroid) {
-      await MediaScanner.loadMedia(path: filePath);
-    }
-
     // Efficiently increment download count after successful download using Firebase
     if (wallpaperId != null) {
       await FirestoreService.incrementDownloadCount(wallpaperId);
+      // Fetch updated wallpaper data from Firebase using getImageDetailsFromFirestore
+      try {
+        final wallpaperData = await UserService().getImageDetailsFromFirestore(wallpaperId);
+        final newDownloads = wallpaperData?['downloads'] ?? wallpaperData?['download'] ?? 0;
+        final box = await Hive.openBox('uploadedWallpapers');
+        final wallpapers = box.get('wallpapers', defaultValue: []);
+        if (wallpapers is List) {
+          final updatedWallpapers = wallpapers.map((item) {
+            if (item is Map && item['id'] == wallpaperId) {
+              final updatedItem = Map<String, dynamic>.from(item);
+              updatedItem['downloads'] = newDownloads;
+              return updatedItem;
+            }
+            return item;
+          }).toList();
+          await box.put('wallpapers', updatedWallpapers);
+        }
+      } catch (e) {
+        debugPrint('Failed to update local cache for downloads: $e');
+      }
     }
 
     if (context.mounted) {

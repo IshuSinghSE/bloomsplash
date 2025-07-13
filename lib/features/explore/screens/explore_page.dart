@@ -36,12 +36,13 @@ class _ExplorePageState extends State<ExplorePage>
 
   Future<void> _loadWallpapersFromCache() async {
     try {
-      final box = await Hive.openBox('explore_wallpapers');
+      final box = await Hive.openBox('uploadedWallpapers');
       final cached = box.get('wallpapers', defaultValue: []);
       if (cached is List && cached.isNotEmpty) {
+          final safeWallpapers = cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
         setState(() {
           _wallpapers.clear();
-          _wallpapers.addAll(List<Map<String, dynamic>>.from(cached));
+          _wallpapers.addAll(safeWallpapers);
           _isLoading = false;
         });
       } else {
@@ -88,12 +89,13 @@ class _ExplorePageState extends State<ExplorePage>
       setState(() {
         if (isRefresh) {
           final newWallpapers =
-              snapshot.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return {'id': doc.id, ...data};
-              })
-              .where((wallpaper) => wallpaper['status'] == 'approved')
-              .toList();
+              snapshot.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {'id': doc.id, ...data};
+                  })
+                  .where((wallpaper) => wallpaper['status'] == 'approved')
+                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               newWallpapers
@@ -105,12 +107,13 @@ class _ExplorePageState extends State<ExplorePage>
           }
         } else {
           final newWallpapers =
-              snapshot.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return {'id': doc.id, ...data};
-              })
-              .where((wallpaper) => wallpaper['status'] == 'approved')
-              .toList();
+              snapshot.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {'id': doc.id, ...data};
+                  })
+                  .where((wallpaper) => wallpaper['status'] == 'approved')
+                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               newWallpapers
@@ -131,7 +134,7 @@ class _ExplorePageState extends State<ExplorePage>
       });
       // Save updated wallpapers to cache
       try {
-        final box = await Hive.openBox('explore_wallpapers');
+        final box = await Hive.openBox('uploadedWallpapers');
         await box.put('wallpapers', _wallpapers);
       } catch (e) {
         debugPrint('Error saving wallpapers to cache: $e');

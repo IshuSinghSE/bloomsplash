@@ -21,6 +21,20 @@ All notable changes to this project will be documented in this file.
 
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+n## [v0.1.8] - 2025-07-13
+### Added
+- Downloads details in wallpaper view
+- Explicit license added to protect the app
+
+### Changed
+- Improved favorite button look (colored icon, better feedback)
+
+### Fixed
+- Guest logging issue (guests now handled correctly)
+
+### Security
+- License enforcement and protection
+
 ## [Unreleased]
 n## [0.1.5] - 2025-07-04
 ### Added
