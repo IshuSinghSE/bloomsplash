@@ -193,7 +193,23 @@ jobs:
           update_existing: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # The rest of the steps remain unchanged
+      - name: Install GitHub CLI
+        uses: cli/cli@v2
+      - name: Delete existing APK assets from release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION_NAME="${{ env.APP_VERSION_NAME }}"
+          REPO="${{ github.repository }}"
+          RELEASE_ID=$(gh api repos/$REPO/releases/tags/v$VERSION_NAME --jq '.id')
+          for apk_file in $(find ./apks -type f -name '*.apk'); do
+            asset_name=$(basename "$apk_file" | sed 's/^app/bloomsplash/')
+            asset_id=$(gh api repos/$REPO/releases/$RELEASE_ID/assets --jq ".[] | select(.name==\"$asset_name\") | .id")
+            if [ -n "$asset_id" ]; then
+              echo "Deleting existing asset $asset_name (ID: $asset_id)..."
+              gh api --method DELETE repos/$REPO/releases/assets/$asset_id
+            fi
+          done
       - name: Find and Upload APKs to Release
         run: |
           UPLOAD_URL="${{ steps.create_or_update_release.outputs.upload_url }}"
