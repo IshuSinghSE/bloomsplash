@@ -39,10 +39,10 @@ class _ExplorePageState extends State<ExplorePage>
       final box = await Hive.openBox('uploadedWallpapers');
       final cached = box.get('wallpapers', defaultValue: []);
       if (cached is List && cached.isNotEmpty) {
+          final safeWallpapers = cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
         setState(() {
           _wallpapers.clear();
-          _wallpapers.addAll(List<Map<String, dynamic>>.from(cached));
-
+          _wallpapers.addAll(safeWallpapers);
           _isLoading = false;
         });
       } else {
