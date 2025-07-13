@@ -242,12 +242,29 @@ class FirestoreService {
         if (id.isEmpty) {
           throw Exception('Delete failed: Wallpaper ID cannot be empty.');
         }
-        
         await _firestore.collection(_wallpapersCollection).doc(id).delete();
         log('Wallpaper deleted from Firestore: $id');
       },
       'Delete',
       itemId: id,
     );
+  }
+
+  /// Efficiently increment download count for a wallpaper (static for easy access)
+  static Future<void> incrementDownloadCount(String wallpaperId) async {
+    final docRef = FirebaseFirestore.instance.collection('wallpapers').doc(wallpaperId);
+    await docRef.update({
+      'downloads': FieldValue.increment(1),
+    });
+  }
+
+  static Future getWallpaperById(String wallpaperId) async {
+    final docRef = FirebaseFirestore.instance.collection('wallpapers').doc(wallpaperId);
+    final docSnapshot = await docRef.get();
+    if (docSnapshot.exists) {
+      return Wallpaper.fromJson(docSnapshot.data()!);
+    } else {
+      throw Exception('Wallpaper not found with ID: $wallpaperId');
+    }
   }
 }

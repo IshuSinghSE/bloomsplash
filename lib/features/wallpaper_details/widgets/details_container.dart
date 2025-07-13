@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import 'wallpaper_utils.dart';
 import 'metadata_box.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import '../../../core/constant/config.dart';
+import 'package:hive/hive.dart';
 
-class DetailsContainer extends StatelessWidget {
+
+class DetailsContainer extends StatefulWidget {
   final Map<String, dynamic> wallpaper;
   final bool showMetadata;
   final Animation<Offset> slideAnimation;
@@ -23,7 +26,63 @@ class DetailsContainer extends StatelessWidget {
   });
 
   @override
+  State<DetailsContainer> createState() => _DetailsContainerState();
+}
+
+class _DetailsContainerState extends State<DetailsContainer> {
+  bool _isDownloading = false;
+  Map<String, dynamic>? _wallpaperData;
+
+  Future<void> _handleDownload(BuildContext context, String image, String? wallpaperId) async {
+    setState(() {
+      _isDownloading = true;
+    });
+    try {
+      await downloadWallpaper(context, image, wallpaperId: wallpaperId, fileName: widget.wallpaper['name']);
+      // Instantly update downloads count locally
+      setState(() {
+        final current = _wallpaperData ?? widget.wallpaper;
+        final downloads = (current['downloads'] ?? current['download'] ?? 0);
+        final newDownloads = (downloads is int)
+            ? downloads + 1
+            : int.tryParse(downloads.toString()) != null
+                ? int.parse(downloads.toString()) + 1
+                : 1;
+        _wallpaperData = Map<String, dynamic>.from(current);
+        _wallpaperData!['downloads'] = newDownloads;
+
+        // Update Hive cache for this wallpaper
+        try {
+          // Open the box (adjust box name if needed)
+          final box = Hive.box('uploadedWallpapers');
+          // Find the wallpaper by id and update downloads
+          final id = _wallpaperData!['id'] ?? widget.wallpaper['id'];
+          final keys = box.keys.toList();
+          for (var key in keys) {
+            final item = box.get(key);
+            if (item is Map && item['id'] == id) {
+              final updated = Map<String, dynamic>.from(item);
+              updated['downloads'] = newDownloads;
+              box.put(key, updated);
+              break;
+            }
+          }
+        } catch (e) {
+          debugPrint('Failed to update Hive cache for downloads: $e');
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDownloading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final wallpaper = _wallpaperData ?? widget.wallpaper;
     final name = wallpaper['name'] ?? 'Untitled';
     final author = wallpaper['author'] ?? 'unknown author';
     final description = wallpaper['description'] ?? 'No description available';
@@ -33,7 +92,7 @@ class DetailsContainer extends StatelessWidget {
             : AppConfig.authorIconPath;
     final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
-    final download = wallpaper['download'] ?? '0';
+    final download = wallpaper['downloads']?.toString() ?? wallpaper['download']?.toString() ?? '0';
     final resolution = wallpaper['resolution'] ?? 'Unknown';
 
     return ClipRRect(
@@ -97,16 +156,37 @@ class DetailsContainer extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  buildCircularActionButton(Icons.download, 'Download', () {
-                    downloadWallpaper(context, image);
-                  }),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      buildCircularActionButton(
+                        Icons.download,
+                        'Download',
+                        _isDownloading
+                            ? null
+                            : () {
+                                _handleDownload(context, image, widget.wallpaper['id']);
+                              },
+                        disabled: _isDownloading,
+                      ),
+                      if (_isDownloading)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: const SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          ),
+                        ),
+                    ],
+                  ),
                   buildCircularActionButton(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    widget.isFavorite ? Icons.favorite : Icons.favorite_border,
                     'Like',
                     () {
-                      // Use the passed toggleFavorite callback for correct state update
-                      toggleFavorite();
+                      widget.toggleFavorite();
                     },
+                    iconColor: widget.isFavorite ? Color(0xFFE91E63) : Colors.white, // Deep pink
                   ),
                   buildCircularActionButton(Icons.image, 'Set', () {
                     showSetWallpaperDialog(context, image);
@@ -114,7 +194,7 @@ class DetailsContainer extends StatelessWidget {
                   buildCircularActionButton(
                     Icons.info_outline,
                     'Info',
-                    toggleMetadata,
+                    widget.toggleMetadata,
                   ),
                 ],
               ),
@@ -124,11 +204,11 @@ class DetailsContainer extends StatelessWidget {
                   AnimatedSize(
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
-                    child: SizedBox(height: showMetadata ? 60 : 0),
+                    child: SizedBox(height: widget.showMetadata ? 60 : 0),
                   ),
-                  if (showMetadata)
+                  if (widget.showMetadata)
                     SlideTransition(
-                      position: slideAnimation,
+                      position: widget.slideAnimation,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

@@ -7,6 +7,7 @@ import '../../../app/providers/favorites_provider.dart';
 import '../../../core/constant/config.dart';
 import '../../../core/utils/image_cache_utils.dart';
 import '../../../app/providers/auth_provider.dart';
+import 'package:hive/hive.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -15,7 +16,8 @@ class ExplorePage extends StatefulWidget {
   State<ExplorePage> createState() => _ExplorePageState();
 }
 
-class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClientMixin {
+class _ExplorePageState extends State<ExplorePage>
+    with AutomaticKeepAliveClientMixin {
   late final ScrollController _scrollController;
   final List<Map<String, dynamic>> _wallpapers = [];
   bool _isLoading = true;
@@ -29,7 +31,25 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    if (_wallpapers.isEmpty) {
+    _loadWallpapersFromCache();
+  }
+
+  Future<void> _loadWallpapersFromCache() async {
+    try {
+      final box = await Hive.openBox('uploadedWallpapers');
+      final cached = box.get('wallpapers', defaultValue: []);
+      if (cached is List && cached.isNotEmpty) {
+          final safeWallpapers = cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        setState(() {
+          _wallpapers.clear();
+          _wallpapers.addAll(safeWallpapers);
+          _isLoading = false;
+        });
+      } else {
+        _fetchWallpapers();
+      }
+    } catch (e) {
+      debugPrint('Error loading wallpapers from cache: $e');
       _fetchWallpapers();
     }
   }
@@ -68,32 +88,43 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
 
       setState(() {
         if (isRefresh) {
-          final newWallpapers = snapshot.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return {'id': doc.id, ...data};
-          }).toList();
+          final newWallpapers =
+              snapshot.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {'id': doc.id, ...data};
+                  })
+                  .where((wallpaper) => wallpaper['status'] == 'approved')
+                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
-          final uniqueNewWallpapers = newWallpapers
-              .where((wallpaper) => !existingIds.contains(wallpaper['id']))
-              .toList();
+          final uniqueNewWallpapers =
+              newWallpapers
+                  .where((wallpaper) => !existingIds.contains(wallpaper['id']))
+                  .toList();
           _wallpapers.insertAll(0, uniqueNewWallpapers);
           if (uniqueNewWallpapers.isNotEmpty) {
             _cacheNewWallpapers(uniqueNewWallpapers);
           }
         } else {
-          final newWallpapers = snapshot.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return {'id': doc.id, ...data};
-          }).toList();
+          final newWallpapers =
+              snapshot.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {'id': doc.id, ...data};
+                  })
+                  .where((wallpaper) => wallpaper['status'] == 'approved')
+                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
-          final uniqueNewWallpapers = newWallpapers
-              .where((wallpaper) => !existingIds.contains(wallpaper['id']))
-              .toList();
+          final uniqueNewWallpapers =
+              newWallpapers
+                  .where((wallpaper) => !existingIds.contains(wallpaper['id']))
+                  .toList();
           _wallpapers.addAll(uniqueNewWallpapers);
           if (snapshot.docs.isNotEmpty) {
             _lastDocument = snapshot.docs.last;
           }
-          if (uniqueNewWallpapers.isEmpty || snapshot.docs.length < _loadedWallpapers) {
+          if (uniqueNewWallpapers.isEmpty ||
+              snapshot.docs.length < _loadedWallpapers) {
             _hasReachedEnd = true;
           }
           if (uniqueNewWallpapers.isNotEmpty) {
@@ -101,6 +132,13 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
           }
         }
       });
+      // Save updated wallpapers to cache
+      try {
+        final box = await Hive.openBox('uploadedWallpapers');
+        await box.put('wallpapers', _wallpapers);
+      } catch (e) {
+        debugPrint('Error saving wallpapers to cache: $e');
+      }
     } catch (e) {
       debugPrint('Error fetching wallpapers: $e');
     } finally {
@@ -112,7 +150,9 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
   }
 
   void _onScroll() {
-    if (!_isLoadingMore && !_hasReachedEnd && _wallpapers.length >= _loadedWallpapers) {
+    if (!_isLoadingMore &&
+        !_hasReachedEnd &&
+        _wallpapers.length >= _loadedWallpapers) {
       final threshold = 6;
       final maxScroll = _scrollController.position.maxScrollExtent;
       final currentScroll = _scrollController.position.pixels;
@@ -130,7 +170,9 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
     await _fetchWallpapers();
   }
 
-  Future<void> _cacheNewWallpapers(List<Map<String, dynamic>> wallpapers) async {
+  Future<void> _cacheNewWallpapers(
+    List<Map<String, dynamic>> wallpapers,
+  ) async {
     try {
       final imageUrls = <String>[];
       for (final wallpaper in wallpapers) {
@@ -145,7 +187,9 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
       }
       if (imageUrls.isNotEmpty) {
         await cacheImages(imageUrls);
-        debugPrint('Cached ${imageUrls.length} new wallpaper images (thumbnails + full images)');
+        debugPrint(
+          'Cached ${imageUrls.length} new wallpaper images (thumbnails + full images)',
+        );
       }
     } catch (e) {
       debugPrint('Error caching new wallpapers: $e');
@@ -165,142 +209,159 @@ class _ExplorePageState extends State<ExplorePage> with AutomaticKeepAliveClient
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () => _fetchWallpapers(isRefresh: true),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _wallpapers.isEmpty
+        child:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _wallpapers.isEmpty
                 ? SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.7,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.image_not_supported_rounded,
-                              size: 70,
-                              color: Colors.grey,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.image_not_supported_rounded,
+                            size: 70,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No wallpapers found',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: Colors.grey[700]),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pull down to refresh',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+                : CustomScrollView(
+                  key: const PageStorageKey('explore_scroll'),
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.all(8.0),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                              childAspectRatio: 0.75,
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No wallpapers found',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: Colors.grey[700],
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Pull down to refresh',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[500],
-                                  ),
-                            ),
-                          ],
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final wallpaper = _wallpapers[index];
+                            return WallpaperCard(
+                              wallpaper: wallpaper,
+                              onFavoritePressed: () async {
+                                if (uid != null) {
+                                  await favoritesProvider
+                                      .toggleFavoriteWithSync(wallpaper, uid);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'You must be logged in to favorite.',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              imageBuilder: (context) {
+                                final String? thumbnailUrl =
+                                    wallpaper['thumbnail'];
+                                if (thumbnailUrl != null &&
+                                    thumbnailUrl.startsWith('http')) {
+                                  return CachedNetworkImage(
+                                    imageUrl: thumbnailUrl,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    useOldImageOnUrlChange: false,
+                                    placeholder:
+                                        (context, url) => Image.asset(
+                                          AppConfig.shimmerImagePath,
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                        ),
+                                    errorWidget:
+                                        (context, url, error) => const Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 50,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                  );
+                                } else {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                }
+                              },
+                            );
+                          },
+                          childCount: _wallpapers.length,
+                          addAutomaticKeepAlives: false,
+                          addRepaintBoundaries: true,
+                          addSemanticIndexes: false,
                         ),
                       ),
                     ),
-                  )
-                : CustomScrollView(
-                    key: const PageStorageKey('explore_scroll'),
-                    controller: _scrollController,
-                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.all(8.0),
-                        sliver: SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                            childAspectRatio: 0.75,
+                    if (_hasReachedEnd && _wallpapers.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 20.0,
+                            horizontal: 16.0,
                           ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final wallpaper = _wallpapers[index];
-                              return WallpaperCard(
-                                wallpaper: wallpaper,
-                                onFavoritePressed: () async {
-                                  if (uid != null) {
-                                    await favoritesProvider.toggleFavoriteWithSync(wallpaper, uid);
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('You must be logged in to favorite.')),
-                                    );
-                                  }
-                                },
-                                imageBuilder: (context) {
-                                  final String? thumbnailUrl = wallpaper['thumbnail'];
-                                  if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
-                                    return CachedNetworkImage(
-                                      imageUrl: thumbnailUrl,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      useOldImageOnUrlChange: false,
-                                      placeholder: (context, url) => Image.asset(
-                                        AppConfig.shimmerImagePath,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                      ),
-                                      errorWidget: (context, url, error) => const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 50,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    return const Center(
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        size: 50,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  }
-                                },
-                              );
-                            },
-                            childCount: _wallpapers.length,
-                            addAutomaticKeepAlives: false,
-                            addRepaintBoundaries: true,
-                            addSemanticIndexes: false,
-                          ),
-                        ),
-                      ),
-                      if (_hasReachedEnd && _wallpapers.isNotEmpty)
-                        SliverToBoxAdapter(
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-                            margin: const EdgeInsets.only(bottom: 80.0),
-                            child: Center(
-                              child: Text(
-                                'You\'ve explored everything! 🎉',
-                                style: TextStyle(
-                                  color: Colors.green[600],
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                          margin: const EdgeInsets.only(bottom: 80.0),
+                          child: Center(
+                            child: Text(
+                              'You\'ve explored everything! 🎉',
+                              style: TextStyle(
+                                color: Colors.green[600],
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
                         ),
-                      if (_isLoadingMore && !_hasReachedEnd)
-                        SliverToBoxAdapter(
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-                            margin: const EdgeInsets.only(bottom: 80.0),
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                      ),
+                    if (_isLoadingMore && !_hasReachedEnd)
+                      SliverToBoxAdapter(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16.0,
+                            horizontal: 16.0,
+                          ),
+                          margin: const EdgeInsets.only(bottom: 80.0),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
+                ),
       ),
     );
   }
