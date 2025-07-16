@@ -50,3 +50,10 @@ app.*.map.json
 *.deb
 *.json
 .venv
+
+# Release related
+*.apks
+*.jar
+*.apk
+*.aab
+/bloomsplash_apks/

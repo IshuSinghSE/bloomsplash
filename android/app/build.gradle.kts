@@ -70,15 +70,7 @@ flutter {
 }
 
 dependencies {
-    implementation("com.google.android.play:core:1.10.3") {
-        exclude(group = "com.google.android.play", module = "core-common")
-    }
+   implementation("com.google.android.play:review-ktx:2.0.1")
 }
 
-configurations.all {
-    resolutionStrategy {
-        force("com.google.android.play:core:1.10.3")
-        force("com.google.android.play:core-common:2.0.3")
-    }
-    exclude(group = "com.google.android.play", module = "core-common")
-}
+// Removed Play Core and Play Core Common exclusions and force rules for compatibility with targetSdkVersion 34

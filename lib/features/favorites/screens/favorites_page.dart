@@ -220,7 +220,7 @@ class FavoritesPage extends StatelessWidget {
                         final wallpaper = favoriteWallpapers[index];
                         final image = wallpaper['thumbnail'] ?? AppConfig.shimmerImagePath;
                         final author = wallpaper['author'] ?? 'Unknown';
-                        final title = wallpaper['title'] ?? 'Untitled';
+                        final title = wallpaper['name'] ?? 'Untitled';
 
                         return ClipRRect(
                           borderRadius: BorderRadius.circular(16),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constant/links.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -7,45 +9,81 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About & Legal'),
+        title: const Text('About & Policies'),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        children: const [
+        children: [
           _CustomExpansionTile(
             title: 'Privacy Policy',
             icon: Icons.privacy_tip_outlined,
             children: [
-              Text(
-                'Here is the Privacy Policy of the app. Please visit our website for the full document.',
+              const Text('Read our Privacy Policy for details on how we handle your data.'),
+              const SizedBox(height: 8),
+              _LinkButton(
+                text: 'View Privacy Policy',
+                url: AppLinks.privacyPolicy,
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _CustomExpansionTile(
             title: 'Terms & Conditions',
             icon: Icons.gavel_outlined,
             children: [
-              Text(
-                'Here are the Terms & Conditions of the app. Please visit our website for the full document.',
+              const Text('Please review our Terms & Conditions before using the app.'),
+              const SizedBox(height: 8),
+              _LinkButton(
+                text: 'View Terms & Conditions',
+                url: AppLinks.termsAndConditions,
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
+          _CustomExpansionTile(
+            title: 'Terms of Use',
+            icon: Icons.rule_folder_outlined,
+            children: [
+              const Text('By using BloomSplash, you agree to our Terms of Use and community guidelines.'),
+              const SizedBox(height: 8),
+              _LinkButton(
+                text: 'Request Data Deletion',
+                url: AppLinks.dataDeletion,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _CustomExpansionTile(
+            title: 'Contact Us',
+            icon: Icons.mail_outline,
+            children: [
+              const Text(
+                'We’re here to help!\n\n'
+                'For feedback, support, or any questions, reach out:\n'
+                'Email: devindeed.dev@gmail.com\n\n'
+                'We usually respond within 24–48 hours. Thank you for supporting BloomSplash!',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           _CustomExpansionTile(
             title: 'About',
             icon: Icons.info_outline,
             children: [
-              Text(
-                'This app is developed by BloomSplash Team.\n\n'
-                'Credits:\n'
-                '- Flutter & Dart\n'
-                '- Open source packages\n\n'
-                'All rights reserved.\n'
-                'See our website for full license details.',
+              const Text(
+                'BloomSplash is a modern, high-quality wallpaper application designed to inspire and personalize your device.\n\n'
+                'Our mission is to deliver a curated collection of original, beautiful wallpapers, making it easy for users to discover and set the perfect background for any mood or style.\n\n'
+                'Developed and maintained by the BloomSplash Team, we are committed to quality, privacy, and a seamless user experience.\n\n'
+                'Key Features:\n'
+                '- Handpicked, high-resolution wallpapers\n'
+                '- Fast, secure, and privacy-focused\n'
+                '- Powered by Flutter, Firebase, and Appwrite\n\n'
+                'BloomSplash is built with open-source technologies and the support of a passionate community.\n\n'
+                'For more information, licensing, or to contribute, please visit our website or contact us.\n\n'
+                '© 2025 BloomSplash. All rights reserved.',
               ),
             ],
           ),
@@ -106,6 +144,43 @@ class _CustomExpansionTile extends StatelessWidget {
                 ))
             .toList(),
       ),
+    );
+  }
+}
+
+/// A simple button that opens a URL in the browser.
+class _LinkButton extends StatelessWidget {
+  final String text;
+  final String url;
+
+  const _LinkButton({required this.text, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      icon: const Icon(Icons.open_in_new, size: 18),
+      label: Text(text),
+      onPressed: () async {
+        final uri = Uri.tryParse(url);
+        if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid or unsupported link.')),
+          );
+          return;
+        }
+        try {
+          final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (!launched) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not open the link.')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error opening link: $e')),
+          );
+        }
+      },
     );
   }
 }

@@ -14,21 +14,42 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.bloomsplash/media").setMethodCallHandler { call, result ->
-            if (call.method == "saveImageToPictures") {
-                val fileName = call.argument<String>("fileName") ?: "wallpaper.jpg"
-                val bytes = call.argument<ByteArray>("bytes")
-                if (bytes == null) {
-                    result.error("NO_BYTES", "No image bytes provided", null)
-                    return@setMethodCallHandler
+            when (call.method) {
+                "saveImageToPictures" -> {
+                    val fileName = call.argument<String>("fileName") ?: "wallpaper.jpg"
+                    val bytes = call.argument<ByteArray>("bytes")
+                    if (bytes == null) {
+                        result.error("NO_BYTES", "No image bytes provided", null)
+                        return@setMethodCallHandler
+                    }
+                    val savedPath = saveImageToPictures(applicationContext, fileName, bytes)
+                    if (savedPath != null) {
+                        result.success(savedPath)
+                    } else {
+                        result.error("SAVE_FAILED", "Failed to save image", null)
+                    }
                 }
-                val savedPath = saveImageToPictures(applicationContext, fileName, bytes)
-                if (savedPath != null) {
-                    result.success(savedPath)
-                } else {
-                    result.error("SAVE_FAILED", "Failed to save image", null)
+                "readBytesFromContentUri" -> {
+                    val uriString = call.argument<String>("uri")
+                    if (uriString == null) {
+                        result.error("NO_URI", "No URI provided", null)
+                        return@setMethodCallHandler
+                    }
+                    try {
+                        val uri = android.net.Uri.parse(uriString)
+                        val inputStream = applicationContext.contentResolver.openInputStream(uri)
+                        if (inputStream != null) {
+                            val bytes = inputStream.readBytes()
+                            inputStream.close()
+                            result.success(bytes)
+                        } else {
+                            result.error("READ_FAILED", "Failed to open input stream for URI", null)
+                        }
+                    } catch (e: Exception) {
+                        result.error("READ_FAILED", "Failed to read bytes from URI: ${e.message}", null)
+                    }
                 }
-            } else {
-                result.notImplemented()
+                else -> result.notImplemented()
             }
         }
     }

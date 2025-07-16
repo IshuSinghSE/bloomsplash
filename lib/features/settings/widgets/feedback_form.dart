@@ -83,10 +83,19 @@ class _FeedbackFormState extends State<FeedbackForm> {
     try {
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfo.androidInfo;
-        deviceData = androidInfo.data;
+        deviceData = {
+          'model': androidInfo.model,
+          'manufacturer': androidInfo.manufacturer,
+          'brand': androidInfo.brand,
+          'osVersion': androidInfo.version.release,
+        };
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
-        deviceData = iosInfo.data;
+        deviceData = {
+          'model': iosInfo.utsname.machine,
+          'systemName': iosInfo.systemName,
+          'systemVersion': iosInfo.systemVersion,
+        };
       }
     } catch (_) {}
     return {

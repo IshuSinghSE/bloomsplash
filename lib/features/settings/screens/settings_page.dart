@@ -9,6 +9,7 @@ import '../../dashboard/screens/my_uploads_page.dart' deferred as my_uploads_pag
 import '../../../app/providers/favorites_provider.dart';
 import '../../../app/services/cache_service.dart'; // Import the new service
 import '../widgets/settings_tile.dart'; // Import the new widget
+import 'package:in_app_review/in_app_review.dart';
 import '../widgets/feedback_form.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -125,6 +126,7 @@ class _SettingsPageState extends State<SettingsPage>
   Widget build(BuildContext context) {
     var preferencesBox = Hive.box('preferences');
     var userData = preferencesBox.get('userData', defaultValue: {});
+    final isAdmin = userData['isAdmin'] ?? false;
 
     return Stack(
       children: [
@@ -288,7 +290,7 @@ class _SettingsPageState extends State<SettingsPage>
                   ),
                 ),
 
-                if (userData['email'] == "ishu.111636@gmail.com") ...[
+                if (isAdmin) ...[
                   SettingsTile(
                     icon: Icons.dashboard,
                     title: 'Admin Dashboard',
@@ -372,8 +374,6 @@ class _SettingsPageState extends State<SettingsPage>
 
                 const Divider(),
 
-                // Grouped legal and info section
-
                 // New tiles for rating and feedback
                 SettingsTile(
                   icon: Icons.star_border,
@@ -381,8 +381,21 @@ class _SettingsPageState extends State<SettingsPage>
                   subtitle: 'Let others know what you think',
                   type: SettingsTileType.action,
                   disabled: _isProcessing,
-                  onTap: () {
-                    // TODO: Implement rating functionality
+                  onTap: () async {
+                    final inAppReview = InAppReview.instance;
+                    if (await inAppReview.isAvailable()) {
+                      await inAppReview.requestReview();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('You can update your review on the Play Store.'),
+                        ),
+                      );
+                      await inAppReview.openStoreListing(
+                        appStoreId: null,
+                        microsoftStoreId: null,
+                      );
+                    }
                   },
                 ),
                 SettingsTile(
