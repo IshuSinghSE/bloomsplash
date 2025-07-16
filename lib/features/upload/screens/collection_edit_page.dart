@@ -42,7 +42,10 @@ class _CollectionEditPageState extends State<CollectionEditPage> {
 
   Future<void> _pickAndUploadCoverImage() async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      requestFullMetadata: true,
+    );
     if (image == null) return;
     setState(() { _isUploadingCover = true; });
     final file = File(image.path);
@@ -60,7 +63,10 @@ class _CollectionEditPageState extends State<CollectionEditPage> {
 
   Future<void> _pickAndUploadWallpaper() async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      requestFullMetadata: true,
+    );
     if (image == null) return;
     setState(() { _isUploadingWallpaper = true; });
     final file = File(image.path);

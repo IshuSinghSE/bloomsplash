@@ -3,8 +3,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import '../../../app/services/firebase/firebase_storage.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
@@ -38,87 +36,49 @@ class _UploadPageState extends State<UploadPage> {
     return await img_utils.resizeAndFixImage(imageFile);
   }
 
-
- 
   Future<void> _pickImage() async {
     setState(() {
-      _isLoading = true; // Show loading indicator
+      _isLoading = true;
     });
-
-    final androidInfo = await DeviceInfoPlugin().androidInfo;
-    PermissionStatus status;
-
-    // Check Android version
-    if (androidInfo.version.sdkInt >= 33) {
-      // Request READ_MEDIA_IMAGES for Android 13+
-      status = await Permission.photos.request();
-    } else {
-      // Request READ_EXTERNAL_STORAGE for Android 12 and below
-      status = await Permission.storage.request();
-    }
-
-    if (status.isGranted) {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-      setState(() {
-        _isLoading = false; // Hide loading indicator immediately after picker opens
-      });
-
-      if (pickedFile != null) {
-        File selectedFile = File(pickedFile.path);
-        debugPrint("Selected file path: ${selectedFile.path}");
-        // Check file size before processing
-        final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
-        if (selectedFile.lengthSync() > maxFileSize) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image should be less than 4 MB.')),
-          );
-          setState(() {
-            _selectedImage = null;
-            _termsAccepted = false;
-            _showImageSizeError = true;
-          });
-          return;
-        }
-        // Fix the orientation of the image
-        selectedFile = await _fixImageOrientation(selectedFile);
-        debugPrint("Fixed image orientation: ${selectedFile.path}");
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      requestFullMetadata: true, // Ensures Photo Picker is used on Android 13+
+    );
+    setState(() {
+      _isLoading = false;
+    });
+    if (pickedFile != null) {
+      File selectedFile = File(pickedFile.path);
+      debugPrint("Selected file path: ${selectedFile.path}");
+      // Check file size before processing
+      final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
+      if (selectedFile.lengthSync() > maxFileSize) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image should be less than 4 MB.')),
+        );
         setState(() {
-          _selectedImage = selectedFile;
-          _showImageSizeError = false;
+          _selectedImage = null;
+          _termsAccepted = false;
+          _showImageSizeError = true;
         });
+        return;
       }
-    } else if (status.isDenied) {
+      // Fix the orientation of the image
+      selectedFile = await _fixImageOrientation(selectedFile);
+      debugPrint("Fixed image orientation: ${selectedFile.path}");
       setState(() {
-        _isLoading = false; // Hide loading indicator
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Storage permission is required to pick an image.'),
-        ),
-      );
-    } else if (status.isPermanentlyDenied) {
-      setState(() {
-        _isLoading = false; // Hide loading indicator
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enable storage permission from settings.'),
-        ),
-      );
-      await openAppSettings(); // Opens app settings for the user to enable permissions
-    } else {
-      setState(() {
-        _isLoading = false; // Hide loading indicator
+        _selectedImage = selectedFile;
+        _showImageSizeError = false;
       });
     }
   }
 
   Future<void> _pickMultipleImages() async {
     final picker = ImagePicker();
-    final pickedFiles = await picker.pickMultiImage();
-
+    final pickedFiles = await picker.pickMultiImage(
+      requestFullMetadata: true, // Use Photo Picker for multi-image
+    );
     setState(() {
       _selectedImages = pickedFiles.map((file) => File(file.path)).toList();
     });
@@ -131,75 +91,48 @@ class _UploadPageState extends State<UploadPage> {
       });
 
       try {
-        debugPrint("Starting image upload process...");
-
-        // Check file size before processing
-        final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
-        if (_selectedImage != null && _selectedImage!.lengthSync() > maxFileSize) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image should be less than 4 MB.')),
-          );
-          setState(() {
-            _isUploading = false;
-          });
-          return;
-        }
-
         // Check for duplicates
         final isDuplicate = await isDuplicateWallpaper(_selectedImage!);
         if (isDuplicate) {
-          debugPrint("Duplicate wallpaper detected.");
+          debugPrint("Duplicate wallpaper detected for image: ${_selectedImage!.path}");
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Duplicate wallpaper detected!')),
+            const SnackBar(content: Text('Duplicate image. Upload skipped.')),
           );
-          setState(() {
-            _isUploading = false; // Hide loading indicator
-          });
-          return;
+          return; // Skip upload for duplicate images
         }
 
         // Upload the file to Firebase Storage
-        debugPrint("Uploading image to Firebase Storage...");
         final result = await uploadFileToFirebase(_selectedImage!);
 
         if (result == null) {
-          throw Exception('Failed to upload images');
+          throw Exception('Failed to upload image: ${_selectedImage!.path}');
         }
-
-        debugPrint("Image uploaded successfully. Firebase result: $result");
 
         // Extract URLs, size, and resolution
         final originalUrl = result['originalUrl'];
         final thumbnailUrl = result['thumbnailUrl'];
         final originalSize = result['originalSize'];
         final originalResolution = result['originalResolution'];
-        debugPrint(
-          "Extracted image details: originalUrl=$originalUrl, thumbnailUrl=$thumbnailUrl",
-        );
 
         // Generate a unique ID for the document
-        final id =  generateUuid();
-        debugPrint("Generated unique ID for wallpaper: $id");
-
-        // Compute perceptual hash for the uploaded image
-        debugPrint("Computing perceptual hash...");
+        final id = const Uuid().v4();
         final imageHash = await img_utils.computeImageHash(_selectedImage!);
-        debugPrint("Perceptual hash computed: $imageHash");
 
-        // Extract dominant colors from the webp thumbnail image returned by the API (local file)
-        debugPrint("Extracting dominant colors from local webp thumbnail...");
+        // Extract dominant colors from the thumbnail image
         List<String> colors = [];
         try {
-          // Use the local webp thumbnail file path returned from uploadFileToFirebase
-          final localWebpPath = result['localThumbnailPath'];
-          if (localWebpPath != null && File(localWebpPath).existsSync()) {
-            final thumbFile = File(localWebpPath);
-            colors = await extractDominantColors(thumbFile);
-            // Optionally delete the local webp after palette extraction
-            thumbFile.deleteSync();
+          File thumbFile;
+          if (thumbnailUrl.startsWith('http')) {
+            final tempDir = Directory.systemTemp;
+            final tempFile = File('${tempDir.path}/thumb_${DateTime.now().millisecondsSinceEpoch}.jpg');
+            final response = await HttpClient().getUrl(Uri.parse(thumbnailUrl));
+            final res = await response.close();
+            await res.pipe(tempFile.openWrite());
+            thumbFile = tempFile;
           } else {
-            debugPrint('Local webp thumbnail not found for palette extraction.');
+            thumbFile = File(thumbnailUrl);
           }
+          colors = await extractDominantColors(thumbFile);
         } catch (e) {
           debugPrint('Color extraction failed: $e');
         }

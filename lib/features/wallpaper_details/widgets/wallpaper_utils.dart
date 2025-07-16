@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:hive/hive.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
@@ -13,7 +12,33 @@ import '../../../app/services/firebase/user_db.dart';
 
 enum WallpaperType { home, lock, both }
 
-Future<String> _getFilePath(BuildContext context, String url, {String? fileName}) async {
+// Helper to copy from content URI to app cache directory and return File
+Future<File> _copyContentUriToFile(BuildContext context, String contentUri, String fileName) async {
+  final cacheDir = await getTemporaryDirectory();
+  final file = File('${cacheDir.path}/$fileName');
+  final uri = Uri.parse(contentUri);
+  final byteData = await _readBytesFromContentUri(context, uri);
+  await file.writeAsBytes(byteData);
+  return file;
+}
+
+// Helper to read bytes from a content URI using platform channel
+Future<List<int>> _readBytesFromContentUri(BuildContext context, Uri uri) async {
+  final MethodChannel channel = const MethodChannel('com.bloomsplash/media');
+  try {
+    final List<dynamic> bytes = await channel.invokeMethod('readBytesFromContentUri', {'uri': uri.toString()});
+    return bytes.cast<int>();
+  } catch (e) {
+    debugPrint('[BloomSplash] Failed to read bytes from content URI: $e');
+    throw Exception('Failed to read bytes from content URI: $e');
+  }
+}
+
+Future<String> _getFilePath(
+  BuildContext context,
+  String url, {
+  String? fileName,
+}) async {
   try {
     Directory bloomsplashDir;
     String resolvedFileName;
@@ -26,19 +51,38 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
 
     if (Platform.isAndroid) {
       // Use MediaStore via platform channel for Android
-      final bytes = url.startsWith('http')
-          ? (await http.get(Uri.parse(url))).bodyBytes
-          : (await rootBundle.load(url)).buffer.asUint8List();
-      final MethodChannel channel = MethodChannel('com.bloomsplash/media');
-      // Pass bytes as Uint8List, which is mapped to ByteArray in Kotlin
-      final String? savedPath = await channel.invokeMethod<String>('saveImageToPictures', {
-        'fileName': resolvedFileName,
-        'bytes': bytes,
-      });
-      if (savedPath == null || savedPath.isEmpty) {
-        throw Exception('Failed to save image to Pictures/BloomSplash');
+      final bytes =
+          url.startsWith('http')
+              ? (await http.get(Uri.parse(url))).bodyBytes
+              : (await rootBundle.load(url)).buffer.asUint8List();
+      try {
+        final MethodChannel channel = MethodChannel('com.bloomsplash/media');
+        final String? savedPath = await channel.invokeMethod<String>(
+          'saveImageToPictures',
+          {'fileName': resolvedFileName, 'bytes': bytes},
+        );
+        if (savedPath == null || savedPath.isEmpty) {
+          debugPrint('[BloomSplash] Failed to save image: empty path returned from MethodChannel');
+          throw Exception('Failed to save image to Pictures/BloomSplash');
+        }
+        // If savedPath is a content URI, copy to app cache and return real file path
+        if (savedPath.startsWith('content://')) {
+          final file = await _copyContentUriToFile(context, savedPath, resolvedFileName);
+          return file.path;
+        }
+        return savedPath;
+      } catch (e) {
+        debugPrint('[BloomSplash] Error using MethodChannel com.bloomsplash/media: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving image: MediaStore integration not available. ($e)'),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        throw Exception('MediaStore integration not available: $e');
       }
-      return savedPath;
     } else if (Platform.isLinux) {
       final homeDir = Platform.environment['HOME'] ?? Directory.current.path;
       bloomsplashDir = Directory('$homeDir/Downloads/BloomSplash');
@@ -76,58 +120,13 @@ Future<String> _getFilePath(BuildContext context, String url, {String? fileName}
   }
 }
 
-Future<void> downloadWallpaper(BuildContext context, String url, {String? fileName, String? wallpaperId}) async {
-  // Request only necessary permission before download
-  bool permissionGranted = false;
-  if (Platform.isAndroid) {
-    // Check Android version
-    int sdkInt = 0;
-    try {
-      sdkInt = int.parse((await MethodChannel('com.bloomsplash/info').invokeMethod('getAndroidSdkInt')).toString());
-    } catch (_) {
-      // fallback: assume API 33+
-      sdkInt = 33;
-    }
-    if (sdkInt >= 33) {
-      // Android 13+ (API 33+): request photos permission only
-      var mediaStatus = await Permission.photos.status;
-      if (!mediaStatus.isGranted) {
-        mediaStatus = await Permission.photos.request();
-      }
-      permissionGranted = mediaStatus.isGranted;
-    } else {
-      // Older Android: request storage permission only
-      var storageStatus = await Permission.storage.status;
-      if (!storageStatus.isGranted) {
-        storageStatus = await Permission.storage.request();
-      }
-      permissionGranted = storageStatus.isGranted;
-    }
-  } else {
-    permissionGranted = true;
-  }
-
-  if (!permissionGranted) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Permission denied.\nPlease allow access to save wallpapers.',
-            style: TextStyle(fontSize: 12),
-          ),
-          action: SnackBarAction(
-            label: 'Grant',
-            textColor: Theme.of(context).colorScheme.inversePrimary,
-            onPressed: () async {
-              // Open app settings so user can grant permission
-              await openAppSettings();
-            },
-          ),
-        ),
-      );
-    }
-    return;
-  }
+Future<void> downloadWallpaper(
+  BuildContext context,
+  String url, {
+  String? fileName,
+  String? wallpaperId,
+}) async {
+  // No permission required for download on Android 13+ and modern platforms
 
   try {
     await _getFilePath(context, url, fileName: fileName);
@@ -147,19 +146,23 @@ Future<void> downloadWallpaper(BuildContext context, String url, {String? fileNa
       await FirestoreService.incrementDownloadCount(wallpaperId);
       // Fetch updated wallpaper data from Firebase using getImageDetailsFromFirestore
       try {
-        final wallpaperData = await UserService().getImageDetailsFromFirestore(wallpaperId);
-        final newDownloads = wallpaperData?['downloads'] ?? wallpaperData?['download'] ?? 0;
+        final wallpaperData = await UserService().getImageDetailsFromFirestore(
+          wallpaperId,
+        );
+        final newDownloads =
+            wallpaperData?['downloads'] ?? wallpaperData?['download'] ?? 0;
         final box = await Hive.openBox('uploadedWallpapers');
         final wallpapers = box.get('wallpapers', defaultValue: []);
         if (wallpapers is List) {
-          final updatedWallpapers = wallpapers.map((item) {
-            if (item is Map && item['id'] == wallpaperId) {
-              final updatedItem = Map<String, dynamic>.from(item);
-              updatedItem['downloads'] = newDownloads;
-              return updatedItem;
-            }
-            return item;
-          }).toList();
+          final updatedWallpapers =
+              wallpapers.map((item) {
+                if (item is Map && item['id'] == wallpaperId) {
+                  final updatedItem = Map<String, dynamic>.from(item);
+                  updatedItem['downloads'] = newDownloads;
+                  return updatedItem;
+                }
+                return item;
+              }).toList();
           await box.put('wallpapers', updatedWallpapers);
         }
       } catch (e) {
@@ -267,12 +270,9 @@ Future<void> setWallpaper(
   WallpaperType type,
   String url,
 ) async {
-  String result;
-  bool goToHome = false; // Set to true or false based on your requirement
-  String target = 'Unknown'; // Default value for target
-
+  String result = '';
+  String target = 'Unknown';
   try {
-    // Determine the wallpaper location
     int wallpaperLocation;
     switch (type) {
       case WallpaperType.home:
@@ -285,46 +285,37 @@ Future<void> setWallpaper(
         break;
       case WallpaperType.both:
         wallpaperLocation = AsyncWallpaper.BOTH_SCREENS;
-        target = 'Both';
+        target = 'Both Screens';
         break;
     }
-
-    // Use the same logic as _downloadWallpaper to handle URL or asset
     final filePath = await _getFilePath(context, url);
-
-    // Ensure the file exists
     final file = File(filePath);
     if (!await file.exists()) {
-      throw Exception('Wallpaper file does not exist at $filePath');
+      result = 'Wallpaper file does not exist.';
+    } else {
+      final success = await AsyncWallpaper.setWallpaperFromFile(
+        filePath: file.path,
+        wallpaperLocation: wallpaperLocation,
+        goToHome: false,
+        toastDetails: ToastDetails.success(),
+        errorToastDetails: ToastDetails.error(),
+      );
+      if (success) {
+        result = 'Wallpaper set to $target successfully!';
+      } else {
+        result = 'Failed to set wallpaper to $target.';
+      }
     }
-
-    // Set the wallpaper
-    result =
-        await AsyncWallpaper.setWallpaperFromFile(
-              filePath: file.path,
-              wallpaperLocation: wallpaperLocation,
-              goToHome: goToHome,
-              toastDetails: ToastDetails.success(),
-              errorToastDetails: ToastDetails.error(),
-            )
-            ? 'Wallpaper set to $target'
-            : 'Failed to set wallpaper.';
-  } on PlatformException {
-    result = 'Failed to set wallpaper.';
+  } on PlatformException catch (e) {
+    result = 'Platform error: $e';
   } catch (e) {
     result = 'Error: $e';
   }
-
-  // Show SnackBar for success or failure
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          result == 'Wallpaper set'
-              ? 'Wallpaper set to successfully!'
-              : 'Failed to set wallpaper: $result',
-        ),
-        duration: const Duration(seconds: 2),
+        content: Text(result),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
