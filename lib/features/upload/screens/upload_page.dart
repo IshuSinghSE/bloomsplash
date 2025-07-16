@@ -363,11 +363,11 @@ class _UploadPageState extends State<UploadPage> {
   @override
   Widget build(BuildContext context) {
     var preferencesBox = Hive.box('preferences');
-    final userData = Map<String, dynamic>.from(preferencesBox.get('userData', defaultValue: {})); // Explicitly cast to Map<String, dynamic>
-    final userEmail = userData['email'] ?? '';
+    var userData = preferencesBox.get('userData', defaultValue: {});
+    final isAdmin = userData['isAdmin'] ?? false;
 
     // Restrict access to the page
-    if (userEmail != "ishu.111636@gmail.com") {
+    if (!isAdmin) {
       return Scaffold(
         body: Center(
           child: Text(
