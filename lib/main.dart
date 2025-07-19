@@ -5,11 +5,26 @@ import 'app/config/firebase_options.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'app.dart';
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // You can handle background messages here (logging, analytics, etc.)
+  debugPrint('Handling a background message: ${message.messageId}');
+  await FirebaseAnalytics.instance.logEvent(
+    name: 'background_notification_received',
+    parameters: {
+      'message_id': message.messageId ?? '',
+      'title': message.notification?.title ?? '',
+      'body': message.notification?.body ?? '',
+      'data': message.data.toString(),
+    },
+  );
+}
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // Perform all initialization before showing the app

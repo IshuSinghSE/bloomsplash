@@ -1,4 +1,4 @@
-const String imageOptimizationApi = 'https://image-optimization-sooty.vercel.app/convert?quality=60';
+const String imageOptimizationApi = 'https://image-optimization-sooty.vercel.app/convert?quality=80&format=webp';
 
 // For Android emulator, old server:
 // const String imageOptimizationApi = 'http://10.0.2.2:8000/convert';

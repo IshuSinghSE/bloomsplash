@@ -20,6 +20,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
     
     kotlinOptions {
@@ -73,11 +74,16 @@ dependencies {
     implementation("com.google.android.play:review-ktx:2.0.1")
     // Use Firebase BOM for version management
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+
+    // Add Firebase dependencies
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-appcheck")
     implementation("com.google.firebase:firebase-perf")
+    implementation("com.google.firebase:firebase-messaging")
+    // Dependency for Firebase In-App Messaging/notifications
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }
-// Removed Play Core and Play Core Common exclusions and force rules for compatibility with targetSdkVersion 34
+
