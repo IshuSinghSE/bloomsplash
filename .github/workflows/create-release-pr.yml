@@ -1,0 +1,35 @@
+name: Auto Create PR to Main
+
+on:
+  push:
+    branches:
+      - 'release/v*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request to Main
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: ${{ github.ref_name }} # the release branch name like release/v0.1.9
+          title: |
+            Release ${{ github.ref_name }} : (#${{ github.run_number }})
+          body: |
+            ## 🚀 What’s new in this release:
+
+            - [ ] Please update this section with changelog or feature summary.
+            - Auto-generated from CI when `release/v*` branch is pushed.
+            - Triggered by commit: `${{ github.sha }}`
+
+          draft: false
+          delete-branch: false

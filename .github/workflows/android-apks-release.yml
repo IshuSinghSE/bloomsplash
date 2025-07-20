@@ -227,3 +227,11 @@ jobs:
             fi
           done
         shell: bash
+
+      - name: Add automerge label to PR
+        if: github.event_name == 'push'
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: automerge
+
