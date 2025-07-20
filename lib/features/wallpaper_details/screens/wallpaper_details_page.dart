@@ -105,7 +105,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
             ),
             if (_showButtons)
               Positioned(
-                top: MediaQuery.of(context).padding.top,
+                top: MediaQuery.paddingOf(context).top + 8,
                 left: 16,
                 child: AnimatedOpacity(
                   opacity: _showButtons ? 1.0 : 0.0,
@@ -131,7 +131,7 @@ class _WallpaperDetailsPageState extends State<WallpaperDetailsPage> {
               ),
             if (_showButtons)
               Positioned(
-                top: MediaQuery.of(context).padding.top,
+                top: MediaQuery.paddingOf(context).top + 8,
                 right: 16,
                 child: AnimatedOpacity(
                   opacity: _showButtons ? 1.0 : 0.0,

@@ -284,7 +284,7 @@ class _ExplorePageState extends State<ExplorePage>
                 ? SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.7,
+                    height: MediaQuery.sizeOf(context).height * 0.7,
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
