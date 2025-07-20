@@ -8,6 +8,7 @@ import '../../../core/constant/config.dart';
 import '../../../core/utils/image_cache_utils.dart';
 import '../../../app/providers/auth_provider.dart';
 import 'package:hive/hive.dart';
+import '../../shared/widgets/fade_placeholder_image.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -23,7 +24,7 @@ class _ExplorePageState extends State<ExplorePage>
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _hasReachedEnd = false;
-  final int _loadedWallpapers = 10;
+  final int _loadedWallpapers = 20;
   DocumentSnapshot? _lastDocument;
 
   @override
@@ -31,12 +32,17 @@ class _ExplorePageState extends State<ExplorePage>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map && args['refresh'] == true) {
-        _fetchWallpapers(isRefresh: true);
+        await _fetchWallpapers(isRefresh: true);
       } else {
-        _loadWallpapersFromCache();
+        await _loadWallpapersFromCache();
+        if (_wallpapers.isNotEmpty) {
+          await _fetchWallpapers(isRefresh: true);
+        } else {
+          await _fetchWallpapers();
+        }
       }
     });
   }
@@ -46,7 +52,8 @@ class _ExplorePageState extends State<ExplorePage>
       final box = await Hive.openBox('uploadedWallpapers');
       final cached = box.get('wallpapers', defaultValue: []);
       if (cached is List && cached.isNotEmpty) {
-          final safeWallpapers = cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        final safeWallpapers =
+            cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
         setState(() {
           _wallpapers.clear();
           _wallpapers.addAll(safeWallpapers);
@@ -68,6 +75,13 @@ class _ExplorePageState extends State<ExplorePage>
   }
 
   Future<void> _fetchWallpapers({bool isRefresh = false}) async {
+    if (isRefresh) {
+      setState(() {
+        _hasReachedEnd = false;
+        _lastDocument = null;
+      });
+    }
+
     try {
       Query query = FirebaseFirestore.instance
           .collection('wallpapers')
@@ -130,8 +144,9 @@ class _ExplorePageState extends State<ExplorePage>
           if (snapshot.docs.isNotEmpty) {
             _lastDocument = snapshot.docs.last;
           }
-          if (uniqueNewWallpapers.isEmpty ||
-              snapshot.docs.length < _loadedWallpapers) {
+          // Only set _hasReachedEnd if the returned docs are less than the limit AND no new wallpapers were added
+          if (snapshot.docs.length < _loadedWallpapers &&
+              uniqueNewWallpapers.isEmpty) {
             _hasReachedEnd = true;
           }
           if (uniqueNewWallpapers.isNotEmpty) {
@@ -157,16 +172,23 @@ class _ExplorePageState extends State<ExplorePage>
   }
 
   void _onScroll() {
-    if (!_isLoadingMore &&
-        !_hasReachedEnd &&
-        _wallpapers.length >= _loadedWallpapers) {
-      final threshold = 6;
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final currentScroll = _scrollController.position.pixels;
-      final itemHeight = maxScroll / (_wallpapers.length / 2);
-      if (maxScroll - currentScroll <= threshold * itemHeight) {
-        _loadMoreWallpapers();
+    if (_hasReachedEnd || _isLoadingMore || _wallpapers.length < _loadedWallpapers) return;
+
+    final threshold = 6;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    final itemHeight = maxScroll / (_wallpapers.length / 2);
+    if (maxScroll - currentScroll <= threshold * itemHeight) {
+      // If lastDocument is null or last fetch returned less than _loadedWallpapers, we are at the end
+      if (_lastDocument == null || _wallpapers.length % _loadedWallpapers != 0) {
+        if (!_hasReachedEnd) {
+          setState(() {
+            _hasReachedEnd = true;
+          });
+        }
+        return;
       }
+      _loadMoreWallpapers();
     }
   }
 
@@ -218,7 +240,46 @@ class _ExplorePageState extends State<ExplorePage>
         onRefresh: () => _fetchWallpapers(isRefresh: true),
         child:
             _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? CustomScrollView(
+                  key: const PageStorageKey('explore_shimmer_scroll'),
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.all(8.0),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                              childAspectRatio: 0.75,
+                            ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return WallpaperCard(
+                              wallpaper: {
+                                'title': 'Loading...',
+                                'author': '....',
+                                'isFavorite': false,
+                                'thumbnail': AppConfig.shimmerImagePath,
+                                'url': '',
+                                'status': 'approved',
+                              },
+                              onFavoritePressed: () {},
+                              imageBuilder: (context) => FadePlaceholderImage(path: AppConfig.shimmerImagePath),
+                            );
+                          },
+                          childCount: 8, // Show 8 shimmer placeholders
+                          addAutomaticKeepAlives: false,
+                          addRepaintBoundaries: true,
+                          addSemanticIndexes: false,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
                 : _wallpapers.isEmpty
                 ? SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -287,31 +348,22 @@ class _ExplorePageState extends State<ExplorePage>
                                 }
                               },
                               imageBuilder: (context) {
-                                final String? thumbnailUrl =
-                                    wallpaper['thumbnail'];
-                                if (thumbnailUrl != null &&
-                                    thumbnailUrl.startsWith('http')) {
+                                final String? thumbnailUrl = wallpaper['thumbnail'];
+                                if (thumbnailUrl != null && thumbnailUrl.startsWith('http')) {
                                   return CachedNetworkImage(
                                     imageUrl: thumbnailUrl,
                                     fit: BoxFit.cover,
                                     width: double.infinity,
                                     height: double.infinity,
                                     useOldImageOnUrlChange: false,
-                                    placeholder:
-                                        (context, url) => Image.asset(
-                                          AppConfig.shimmerImagePath,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          height: double.infinity,
-                                        ),
-                                    errorWidget:
-                                        (context, url, error) => const Center(
-                                          child: Icon(
-                                            Icons.broken_image,
-                                            size: 50,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
+                                    placeholder: (context, url) => FadePlaceholderImage(path: AppConfig.shimmerImagePath),
+                                    errorWidget: (context, url, error) => const Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                   );
                                 } else {
                                   return const Center(
@@ -353,20 +405,7 @@ class _ExplorePageState extends State<ExplorePage>
                           ),
                         ),
                       ),
-                    if (_isLoadingMore && !_hasReachedEnd)
-                      SliverToBoxAdapter(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16.0,
-                            horizontal: 16.0,
-                          ),
-                          margin: const EdgeInsets.only(bottom: 80.0),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
+                    // Removed loading indicator when scrolling
                   ],
                 ),
       ),

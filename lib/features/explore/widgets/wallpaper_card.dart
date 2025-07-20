@@ -127,7 +127,7 @@ class _WallpaperCardState extends State<WallpaperCard> {
                             ),
                             Flexible(
                               child: Text(
-                                widget.wallpaper['author'] ?? 'Unknown Author',
+                                widget.wallpaper['author'] ?? 'Unknown',
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 12,

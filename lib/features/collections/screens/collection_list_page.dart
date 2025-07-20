@@ -130,18 +130,15 @@ class _CollectionListPageState extends State<CollectionListPage> {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: GestureDetector(
                           onTap: () async {
-                            final wallpapers = await _collectionService
+                            await _collectionService
                                 .getWallpapersForCollection(collection);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => CollectionDetailPage(
+                                  collection: collection,
                                   title: collection.name,
                                   author: collection.createdBy,
-                                  wallpapers: wallpapers.map((w) => w.toJson()).toList(),
-                                  // Remove these parameters to avoid bottom nav in detail page
-                                  // showBottomNav: widget.showBottomNav,
-                                  // currentNavIndex: widget.currentNavIndex,
                                 ),
                               ),
                             );
