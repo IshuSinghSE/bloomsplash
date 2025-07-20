@@ -31,7 +31,14 @@ class _ExplorePageState extends State<ExplorePage>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    _loadWallpapersFromCache();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['refresh'] == true) {
+        _fetchWallpapers(isRefresh: true);
+      } else {
+        _loadWallpapersFromCache();
+      }
+    });
   }
 
   Future<void> _loadWallpapersFromCache() async {

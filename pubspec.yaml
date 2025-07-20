@@ -1,7 +1,7 @@
 name: bloomsplash
 description: "A beautiful wallpaper application"
 publish_to: "none"
-version: 0.1.9+3
+version: 0.2.0+4
 license: "AGPL-3.0"
 
 environment:
@@ -44,6 +44,7 @@ dependencies:
   firebase_auth: ^5.5.2
   firebase_app_check: ^0.3.2+5
   firebase_analytics: ^11.4.6
+  firebase_messaging: ^15.2.9
 
 
   # --- Utilities ---
@@ -66,13 +67,15 @@ dependencies:
 
   # --- In-App Review ---
   in_app_review: ^2.0.10
+  flutter_local_notifications: ^19.3.1
 
 
 flutter_icons:
         android: true
-        ios: true
+        ios: false
         remove_alpha_ios: true
-        image_path: "assets/icons/ic_launcher_monochrome.png"
+        icon: "assets/icons/ic_launcher.png"
+        image_path: "assets/icons/ic_launcher.png"
         adaptive_icon_background: "#FFFFFF" # Only for Android 8.0+
         adaptive_icon_foreground: "assets/icons/ic_launcher.png" # Only for Android 8.0+
         adaptive_icon_monochrome: "assets/icons/ic_launcher_monochrome.png" # Only for Android 8.0+
