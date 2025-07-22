@@ -1,0 +1,59 @@
+name: Update GitHub Release Notes and Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update-release:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract PR Data
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const tag = pr.head.ref.replace("release/", "");
+            core.setOutput("tag", tag);
+            core.setOutput("title", pr.title);
+            core.setOutput("body", pr.body);
+
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.pr.outputs.tag }}
+          name: ${{ steps.pr.outputs.title }}
+          body: ${{ steps.pr.outputs.body }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-changelog:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Append to CHANGELOG.md
+        run: |
+          echo -e "\n\n## 🚀 ${{ github.event.pull_request.title }}\n\n${{ github.event.pull_request.body }}" >> CHANGELOG.md
+
+      - name: Commit updated CHANGELOG
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git checkout ${{ github.event.pull_request.head.ref }}
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): update from PR #${{ github.event.pull_request.number }}"
+          git push

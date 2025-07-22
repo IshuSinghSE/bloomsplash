@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../wallpaper_details/screens/wallpaper_details_page.dart';
 import '../../../core/utils/image_cache_utils.dart';
 import '../../../core/constant/config.dart';
+import '../../shared/widgets/fade_placeholder_image.dart';
 
 class FavoritesPage extends StatelessWidget {
   final bool showAppBar;
@@ -208,7 +209,8 @@ class FavoritesPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: GridView.builder(
-                      padding: const EdgeInsets.all(8.0),
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 100.0),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
@@ -221,7 +223,6 @@ class FavoritesPage extends StatelessWidget {
                         final image = wallpaper['thumbnail'] ?? AppConfig.shimmerImagePath;
                         final author = wallpaper['author'] ?? 'Unknown';
                         final title = wallpaper['name'] ?? 'Untitled';
-
                         return ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: GestureDetector(
@@ -236,30 +237,16 @@ class FavoritesPage extends StatelessWidget {
                             child: Stack(
                               children: [
                                 if (image.startsWith('http'))
-                                   CachedNetworkImage(
+                                  CachedNetworkImage(
                                     imageUrl: image,
                                     fit: BoxFit.cover,
                                     width: double.infinity,
                                     height: double.infinity,
-                                    placeholder: (context, url) => Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    errorWidget: (context, url, error) {
-                                      return Image.asset(
-                                        AppConfig.shimmerImagePath,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                      );
-                                    },
-                                    )
+                                    placeholder: (context, url) => FadePlaceholderImage(path: AppConfig.shimmerImagePath),
+                                    errorWidget: (context, url, error) => FadePlaceholderImage(path: AppConfig.shimmerImagePath),
+                                  )
                                 else
-                                  Image.asset(
-                                    image,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                  ),
+                                  FadePlaceholderImage(path: image),
                                 Positioned.fill(
                                   child: Container(
                                     decoration: BoxDecoration(
@@ -337,8 +324,9 @@ class FavoritesPage extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
-                  const SizedBox(height: 70),
+                    ),
+                  
+                  
                 ],
               ),
             ),

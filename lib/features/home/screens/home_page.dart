@@ -8,6 +8,7 @@ import '../../explore/screens/explore_page.dart' deferred as explore_page;
 import '../../favorites/screens/favorites_page.dart' deferred as favorites_page;
 import '../../settings/screens/settings_page.dart' deferred as settings_page;
 import '../../upload/screens/upload_page.dart' deferred as upload_page;
+import '../../search/screens/search_page.dart' as search_page;
 
 class HomePage extends StatefulWidget {
   final Box preferencesBox;
@@ -122,6 +123,13 @@ class _HomePageState extends State<HomePage> {
           systemNavigationBarIconBrightness: Brightness.light,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search, size: 28, color: Colors.white),
+            tooltip: 'Search',
+            onPressed: () async {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => search_page.SearchPage()));
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(

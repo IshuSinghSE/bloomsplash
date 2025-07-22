@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../shared/widgets/fade_placeholder_image.dart';
 import '../../../app/services/firebase/collection_db.dart';
 import '../../../../models/collection_model.dart';
 import 'collection_detail_page.dart'; // Import the collection wallpapers page
@@ -57,13 +58,14 @@ class _CollectionsPageState extends State<CollectionsPage> {
         onRefresh: _fetchCollections,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(0.0, 0, 0, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Only show sections with non-empty collections
               if (_collections.isNotEmpty)
                 _buildCollectionSection('All Collections', _collections),
-              
+
               if (proCollections.isNotEmpty)
                 _buildCollectionSection('Pro Collections', proCollections),
               
@@ -72,8 +74,6 @@ class _CollectionsPageState extends State<CollectionsPage> {
               
               if (premiumCollections.isNotEmpty)
                 _buildCollectionSection('Premium Collections', premiumCollections),
-              
-              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -157,19 +157,15 @@ class _CollectionsPageState extends State<CollectionsPage> {
               itemBuilder: (context, i) {
                 final collection = collections[i];
                 return GestureDetector(
-                  onTap: () async {
-                    final wallpapers = await _collectionService
-                        .getWallpapersForCollection(collection);
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => CollectionDetailPage(
-                              title: collection.name,
-                              author: collection.createdBy,
-                              wallpapers:
-                                  wallpapers.map((w) => w.toJson()).toList(),
-                            ),
+                        builder: (context) => CollectionDetailPage(
+                          title: collection.name,
+                          author: collection.createdBy,
+                          collection: collection,
+                        ),
                       ),
                     );
                   },
@@ -202,8 +198,8 @@ class _CollectionsPageState extends State<CollectionsPage> {
                                   imageUrl: collection.coverImage,
                                   fit: BoxFit.cover,
                                   alignment: Alignment.center,
-                                  placeholder: (context, url) => Container(color: Colors.grey[700]),
-                                  errorWidget: (context, url, error) => Container(color: Colors.grey[900]),
+                                  placeholder: (context, url) => FadePlaceholderImage(path: 'assets/images/shimmer.webp'),
+                                  errorWidget: (context, url, error) => FadePlaceholderImage(path: 'assets/images/shimmer.webp'),
                                 ),
                               ),
                             ),

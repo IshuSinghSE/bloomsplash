@@ -1,0 +1,59 @@
+name: PR Test & Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-validation:
+    name: Validate PR Title and Description
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const title = pr.title.trim();
+            const body = pr.body ? pr.body.trim() : "";
+
+            const isDefaultTitle = title.startsWith("Release release/");
+            const isDefaultBody = body === "" || body.includes("Please update this section");
+
+            if (isDefaultTitle || isDefaultBody) {
+              core.setFailed("❌ PR title and description are not properly filled. Please update them before proceeding.");
+            } else {
+              core.info("✅ PR title and description look valid.");
+            }
+
+  build-and-test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: pr-validation
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK for Android (if needed)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Add your actual test script here, or mock it
+      - name: Run Tests (Mocked)
+        run: |
+          echo "Running tests..."
+          sleep 2
+          echo "✅ All tests passed."

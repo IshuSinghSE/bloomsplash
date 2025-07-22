@@ -1,0 +1,29 @@
+name: Auto Create PR to Main
+
+on:
+  push:
+    branches:
+      - 'release/v*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Use full history
+
+      - name: Create Pull Request to Main (GitHub CLI)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }} : (#${{ github.run_number }})" \
+            --body "## 🚀 What’s new in this release:\n\n- [ ] Please update this section with changelog or feature summary.\n- Auto-generated from CI when \`release/v*\` branch is pushed.\n- Triggered by commit: \`${{ github.sha }}\`"
