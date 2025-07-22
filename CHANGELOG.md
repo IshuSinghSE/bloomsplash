@@ -60,3 +60,23 @@ n## [0.1.5] - 2025-07-04
 
 ## [v0.1.3] - 2025-06-26
 - Added: Analytics feature
+
+## [v0.2.0] - 2025-07-20
+### Added
+- Firebase Cloud Messaging (FCM) integration for new wallpaper notifications
+- Native system notifications using flutter_local_notifications
+- Notification tap navigates to Explore page and triggers refresh
+- Background notification analytics logging
+- Improved adaptive and monochrome launcher icons
+
+### Changed
+- Notification icon and app icon updated for better visibility
+- Gradle build updated to enable core library desugaring
+- Refined notification workflow and icon usage
+
+### Fixed
+- Notification delivery and tap handling in foreground/background
+- Icon rendering issues for monochrome and notification icons
+
+### Security
+- Updated dependencies for improved security and compatibility
