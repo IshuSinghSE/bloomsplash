@@ -229,9 +229,10 @@ jobs:
         shell: bash
 
       - name: Add automerge label to PR
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request'
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           labels: automerge
+          number: ${{ github.event.pull_request.number }}
 
