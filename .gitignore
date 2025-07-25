@@ -57,3 +57,7 @@ app.*.map.json
 *.apk
 *.aab
 /bloomsplash_apks/
+
+# Fastlane related
+android/fastlane/report.xml
+android/fastlane/metadata/android/en-US/changelogs/
