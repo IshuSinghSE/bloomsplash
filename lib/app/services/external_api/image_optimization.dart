@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../../core/constant/api_routes.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 
 Future<List<int>> convertImageToWebp(File imageFile,) async {
@@ -22,18 +21,4 @@ Future<List<int>> convertImageToWebp(File imageFile,) async {
   }
 
   return await streamedResponse.stream.toBytes();
-}
-
-Future<File?> compressAndResizeImage(File file) async {
-  final result = await FlutterImageCompress.compressWithFile(
-    file.absolute.path,
-    minWidth: 1080,
-    minHeight: 1920,
-    quality: 100,
-    format: CompressFormat.webp,
-  );
-  if (result == null) return null;
-  final outFile = File('${file.parent.path}/converted_${file.uri.pathSegments.last}.webp');
-  await outFile.writeAsBytes(result);
-  return outFile;
 }

@@ -3,6 +3,7 @@ default_platform(:android)
 platform :android do
   desc "Deploy to Google Play Closed Testing"
   lane :closed_release do
+    release_notes = ENV['PLAY_RELEASE_NOTES'] || "No release notes provided."
     upload_to_play_store(
       track: 'alpha',
       package_name: 'com.devindeed.bloomsplash',
@@ -11,6 +12,9 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
+      release_notes: {
+        'en-US' => release_notes
+      }
     )
   end
 end

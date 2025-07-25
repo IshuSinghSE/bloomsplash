@@ -33,6 +33,8 @@ jobs:
           tag_name: ${{ steps.pr.outputs.tag }}
           name: ${{ steps.pr.outputs.title }}
           body: ${{ steps.pr.outputs.body }}
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -1,0 +1,57 @@
+name: Deploy to Google Play
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    name: Build & Deploy to Google Play
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ needs.setup.outputs.flutter_version }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build release bundle
+        run: flutter build appbundle
+
+      - name: Decode Play Store service account
+        run: |
+          echo "${{ secrets.PLAYSTORE_JSON_KEY }}" | base64 -d > android/fastlane/google-play-key.json
+
+      - name: Setup Ruby & Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: |
+          cd android
+          bundle init
+          echo "gem 'fastlane'" >> Gemfile
+          bundle install
+
+      - name: Set Play Store release notes
+        run: |
+          echo "PLAY_RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "${{ github.event.release.body }}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Deploy to Play Store
+        run: |
+          cd android
+          bundle exec fastlane closed_release
+        env:
+          PLAY_RELEASE_NOTES: ${{ env.PLAY_RELEASE_NOTES }}
