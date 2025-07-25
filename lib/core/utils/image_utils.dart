@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 /// Get image resolution as a string (e.g., '1920x1080')
 Future<String> getImageResolution(File file) async {
@@ -11,52 +11,51 @@ Future<String> getImageResolution(File file) async {
   return '${image.width}x${image.height}';
 }
 
-/// Resize an image file with custom width, height, quality, and format.
-/// Returns a new File with the processed image (jpg or png). WebP is not supported in Dart image package.
+/// Resize and fix orientation of an image file.
+/// Returns a new File with the processed image (PNG format).
 Future<File> resizeAndFixImage(
   File file, {
   int? targetWidth,
   int? targetHeight,
   String? outputPath,
   bool maintainAspectRatio = false,
-  int quality = 85,
-  String format = 'jpg', // 'jpg', 'png', 'webp'
 }) async {
-  // Only resize if needed
-  if (targetWidth != null || targetHeight != null) {
-    int resizeWidth = targetWidth ?? 0;
-    int resizeHeight = targetHeight ?? 0;
-    CompressFormat compressFormat;
-    String ext;
-    if (format == 'jpg' || format == 'jpeg') {
-      compressFormat = CompressFormat.jpeg;
-      ext = 'jpg';
-    } else if (format == 'png') {
-      compressFormat = CompressFormat.png;
-      ext = 'png';
-    } else if (format == 'webp') {
-      compressFormat = CompressFormat.webp;
-      ext = 'webp';
-    } else {
-      throw Exception('Unsupported format: $format. Use "jpg", "png", or "webp".');
+  final bytes = await file.readAsBytes();
+  int? width = targetWidth;
+  int? height = targetHeight;
+  if (maintainAspectRatio && (targetWidth != null || targetHeight != null)) {
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+    final originalWidth = image.width;
+    final originalHeight = image.height;
+    if (targetWidth != null && targetHeight != null) {
+      final widthRatio = targetWidth / originalWidth;
+      final heightRatio = targetHeight / originalHeight;
+      final scale = widthRatio < heightRatio ? widthRatio : heightRatio;
+      width = (originalWidth * scale).round();
+      height = (originalHeight * scale).round();
+    } else if (targetWidth != null) {
+      width = targetWidth;
+      height = (originalHeight * (targetWidth / originalWidth)).round();
+    } else if (targetHeight != null) {
+      height = targetHeight;
+      width = (originalWidth * (targetHeight / originalHeight)).round();
     }
-    final result = await FlutterImageCompress.compressWithFile(
-      file.absolute.path,
-      minWidth: resizeWidth,
-      minHeight: resizeHeight,
-      quality: quality,
-      format: compressFormat,
-    );
-    if (result == null) throw Exception('Image compression failed');
-    String outPath = outputPath ?? file.path.replaceFirst(RegExp(r'\.(jpg|jpeg|png|webp)$'), '_processed.$ext');
-    if (!outPath.endsWith('.$ext')) outPath += '.$ext';
-    final outFile = File(outPath);
-    await outFile.writeAsBytes(result);
-    return outFile;
-  } else {
-    // No resize needed, return original file
-    return file;
   }
+  final codec = await ui.instantiateImageCodec(
+    bytes,
+    targetWidth: width,
+    targetHeight: height,
+  );
+  final frame = await codec.getNextFrame();
+  final image = frame.image;
+  final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+  final Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+  final outFile = File(outputPath ?? file.path.replaceFirst('.jpg', '_processed.png'));
+  await outFile.writeAsBytes(pngBytes);
+  return outFile;
 }
 
 /// Compute perceptual hash (pHash) of an image file (8x8 grayscale, returns 64-bit string)
