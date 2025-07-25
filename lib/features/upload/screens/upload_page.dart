@@ -1,7 +1,7 @@
+import 'package:bloomsplash/core/constant/config.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import '../../../app/services/firebase/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
@@ -31,11 +31,6 @@ class _UploadPageState extends State<UploadPage> {
   bool _showBulkOptions = false; // Track whether to show bulk options
   bool _showImageSizeError = false; // Track image size error state
 
-  Future<File> _fixImageOrientation(File imageFile) async {
-    // Use the new util for resizing and orientation fix
-    return await img_utils.resizeAndFixImage(imageFile);
-  }
-
   Future<void> _pickImage() async {
     setState(() {
       _isLoading = true;
@@ -64,9 +59,7 @@ class _UploadPageState extends State<UploadPage> {
         });
         return;
       }
-      // Fix the orientation of the image
-      selectedFile = await _fixImageOrientation(selectedFile);
-      debugPrint("Fixed image orientation: ${selectedFile.path}");
+      // Do NOT compress or re-encode the original image. Just set as selected.
       setState(() {
         _selectedImage = selectedFile;
         _showImageSizeError = false;
@@ -152,8 +145,8 @@ class _UploadPageState extends State<UploadPage> {
           category: 'Uncategorized',
           tags: [],
           colors: colors,
-          author: userData['displayName'] ?? 'Unknown',
-          authorImage: userData['photoUrl'] ?? '',
+          author: userData['isAdmin'] == true ? 'bloomsplash' : (userData['displayName'] ?? 'Unknown'),
+          authorImage: userData['isAdmin'] == true ? AppConfig.adminImagePath : (userData['photoUrl'] ?? AppConfig.authorIconPath),
           description: '',
           isPremium: false,
           isAIgenerated: false,
@@ -161,6 +154,7 @@ class _UploadPageState extends State<UploadPage> {
           createdAt: DateTime.now().toIso8601String(),
           license: 'free-commercial',
           hash: imageHash,
+          collectionId: null, // Set to null or empty if not in any collection
         );
         debugPrint("Wallpaper object created successfully.");
 
@@ -256,8 +250,8 @@ class _UploadPageState extends State<UploadPage> {
             category: 'Uncategorized',
             tags: [],
             colors: colors,
-            author: userData['displayName'] ?? 'Unknown',
-            authorImage: userData['photoUrl'] ?? '',
+            author: userData['isAdmin'] == true ? 'bloomsplash' : (userData['displayName'] ?? 'Unknown'),
+            authorImage: userData['isAdmin'] == true ? AppConfig.adminImagePath : (userData['photoUrl'] ?? AppConfig.authorIconPath),
             description: '',
             isPremium: false,
             isAIgenerated: false,
@@ -265,6 +259,7 @@ class _UploadPageState extends State<UploadPage> {
             createdAt: DateTime.now().toIso8601String(),
             license: 'free-commercial',
             hash: imageHash,
+            collectionId: null, // Set to null or empty if not in any collection
           );
 
           // Add wallpaper to Firestore
@@ -296,7 +291,17 @@ class _UploadPageState extends State<UploadPage> {
   @override
   Widget build(BuildContext context) {
     var preferencesBox = Hive.box('preferences');
-    var userData = preferencesBox.get('userData', defaultValue: {});
+    var userDataRaw = preferencesBox.get('userData', defaultValue: {});
+    Map<String, dynamic> userData;
+    if (userDataRaw is Map<String, dynamic>) {
+      userData = userDataRaw;
+    } else if (userDataRaw is Map) {
+      userData = Map<String, dynamic>.from(
+        userDataRaw.map((key, value) => MapEntry(key.toString(), value)),
+      );
+    } else {
+      userData = {};
+    }
     final isAdmin = userData['isAdmin'] ?? false;
 
     // Restrict access to the page

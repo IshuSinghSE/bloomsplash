@@ -6,7 +6,6 @@ import '../../shared/widgets/shared_widgets.dart';
 import '../../../core/constant/config.dart';
 import 'package:hive/hive.dart';
 
-
 class DetailsContainer extends StatefulWidget {
   final Map<String, dynamic> wallpaper;
   final bool showMetadata;
@@ -33,19 +32,29 @@ class _DetailsContainerState extends State<DetailsContainer> {
   bool _isDownloading = false;
   Map<String, dynamic>? _wallpaperData;
 
-  Future<void> _handleDownload(BuildContext context, String image, String? wallpaperId) async {
+  Future<void> _handleDownload(
+    BuildContext context,
+    String image,
+    String? wallpaperId,
+  ) async {
     setState(() {
       _isDownloading = true;
     });
     try {
-      await downloadWallpaper(context, image, wallpaperId: wallpaperId, fileName: widget.wallpaper['name']);
+      await downloadWallpaper(
+        context,
+        image,
+        wallpaperId: wallpaperId,
+        fileName: widget.wallpaper['name'],
+      );
       // Instantly update downloads count locally
       setState(() {
         final current = _wallpaperData ?? widget.wallpaper;
         final downloads = (current['downloads'] ?? current['download'] ?? 0);
-        final newDownloads = (downloads is int)
-            ? downloads + 1
-            : int.tryParse(downloads.toString()) != null
+        final newDownloads =
+            (downloads is int)
+                ? downloads + 1
+                : int.tryParse(downloads.toString()) != null
                 ? int.parse(downloads.toString()) + 1
                 : 1;
         _wallpaperData = Map<String, dynamic>.from(current);
@@ -92,7 +101,10 @@ class _DetailsContainerState extends State<DetailsContainer> {
             : AppConfig.authorIconPath;
     final image = wallpaper['image'] ?? AppConfig.shimmerImagePath;
     final size = wallpaper['size'] ?? 'Unknown';
-    final download = wallpaper['downloads']?.toString() ?? wallpaper['download']?.toString() ?? '0';
+    final download =
+        wallpaper['downloads']?.toString() ??
+        wallpaper['download']?.toString() ??
+        '0';
     final resolution = wallpaper['resolution'] ?? 'Unknown';
 
     return ClipRRect(
@@ -115,7 +127,8 @@ class _DetailsContainerState extends State<DetailsContainer> {
                     backgroundImage:
                         authorImage.startsWith('http')
                             ? NetworkImage(authorImage)
-                            : AssetImage(authorImage) as ImageProvider,
+                            : AssetImage(AppConfig.adminImagePath)
+                                as ImageProvider,
                     radius: 24,
                     onBackgroundImageError: (_, __) {
                       debugPrint('Error loading author image: $authorImage');
@@ -165,8 +178,12 @@ class _DetailsContainerState extends State<DetailsContainer> {
                         _isDownloading
                             ? null
                             : () {
-                                _handleDownload(context, image, widget.wallpaper['id']);
-                              },
+                              _handleDownload(
+                                context,
+                                image,
+                                widget.wallpaper['id'],
+                              );
+                            },
                         disabled: _isDownloading,
                       ),
                       if (_isDownloading)
@@ -175,7 +192,10 @@ class _DetailsContainerState extends State<DetailsContainer> {
                           child: const SizedBox(
                             width: 36,
                             height: 36,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                     ],
@@ -186,7 +206,10 @@ class _DetailsContainerState extends State<DetailsContainer> {
                     () {
                       widget.toggleFavorite();
                     },
-                    iconColor: widget.isFavorite ? Color(0xFFE91E63) : Colors.white, // Deep pink
+                    iconColor:
+                        widget.isFavorite
+                            ? Color(0xFFE91E63)
+                            : Colors.white, // Deep pink
                   ),
                   buildCircularActionButton(Icons.image, 'Set', () {
                     showSetWallpaperDialog(context, image);

@@ -9,7 +9,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'app.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // You can handle background messages here (logging, analytics, etc.)
   debugPrint('Handling a background message: ${message.messageId}');
   await FirebaseAnalytics.instance.logEvent(
     name: 'background_notification_received',

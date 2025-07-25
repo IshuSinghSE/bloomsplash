@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:bloomsplash/core/constant/config.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../../../app/services/firebase/wallpaper_db.dart';
@@ -21,8 +23,30 @@ class MyUploadsPage extends StatefulWidget {
   State<MyUploadsPage> createState() => _MyUploadsPageState();
 }
 
-class _MyUploadsPageState extends State<MyUploadsPage>
-    with SingleTickerProviderStateMixin {
+class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProviderStateMixin {
+  String _formatDateTime(String isoString) {
+    try {
+      final date = DateTime.tryParse(isoString);
+      if (date == null) return '';
+      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
+  }
+  String _selectedStatus = 'approved';
+
+  Icon _statusIcon(String status, {double size = 28}) {
+    switch (status) {
+      case 'approved':
+        return Icon(Icons.check_circle, color: Colors.green, size: size);
+      case 'pending':
+        return Icon(Icons.hourglass_top, color: Colors.orange, size: size);
+      case 'rejected':
+        return Icon(Icons.cancel, color: Colors.red, size: size);
+      default:
+        return Icon(Icons.help_outline, color: Colors.grey, size: size);
+    }
+  }
   final FirestoreService _firestoreService = FirestoreService();
   final ScrollController _scrollController = ScrollController();
   List<Wallpaper> _uploadedWallpapers = [];
@@ -92,6 +116,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                   (wallpaperJson) =>
                       Wallpaper.fromJson(json.decode(wallpaperJson)),
                 )
+                .where((w) => w.status == _selectedStatus)
                 .toList();
         _isLoading = false;
       });
@@ -132,6 +157,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
       final result = await _firestoreService.getPaginatedWallpapers(
         limit: _lazyLoadBatchSize,
         lastDocument: isRefresh ? null : _lastDocument,
+        status: _selectedStatus,
       );
 
       setState(() {
@@ -655,8 +681,8 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                       size: uploadedSize ?? 0,
                       resolution: uploadedResolution ?? '',
                       category: categoryController.text.trim(),
-                      author: 'admin', // Replace with actual user if available
-                      authorImage: '',
+                      author: 'bloomsplash', // Replace with actual user if available
+                      authorImage: AppConfig.adminImagePath,
                       description: descController.text.trim(),
                       likes: 0,
                       tags: tagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
@@ -668,6 +694,7 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                       isPremium: false,
                       isAIgenerated: false,
                       hash: '',
+                      collectionId: '',
                     );
                     await FirestoreService().addImageDetailsToFirestore(newWallpaper);
                     setState(() {
@@ -696,6 +723,52 @@ class _MyUploadsPageState extends State<MyUploadsPage>
       child: Scaffold(
         appBar: AppBar(
           title: const Text('My Uploads'),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: PopupMenuButton<String>(
+                icon: _statusIcon(_selectedStatus, size: 28),
+                onSelected: (val) {
+                  setState(() {
+                    _selectedStatus = val;
+                    _fetchWallpapers(isRefresh: true, forceFetch: true);
+                  });
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'approved',
+                    child: Row(
+                      children: [
+                        _statusIcon('approved', size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Approved'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'pending',
+                    child: Row(
+                      children: [
+                        _statusIcon('pending', size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Pending'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'rejected',
+                    child: Row(
+                      children: [
+                        _statusIcon('rejected', size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Rejected'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           bottom: TabBar(
             controller: _tabController,
             tabs: const [Tab(text: 'Wallpapers'), Tab(text: 'Collections')],
@@ -714,28 +787,37 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                     itemCount: _uploadedWallpapers.length,
                     itemBuilder: (context, i) {
                       final wallpaper = _uploadedWallpapers[i];
-                      return ListTile(
-                        leading:
-                            (wallpaper.thumbnailUrl.isNotEmpty)
-                                ? Image.network(
-                                  wallpaper.thumbnailUrl,
-                                  width: 56,
-                                  height: 56,
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ListTile(
+                          leading: wallpaper.thumbnailUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: wallpaper.thumbnailUrl,
+                                  width: 48,
+                                  height: 48,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => const SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                  ),
+                                  errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 48),
                                 )
-                                : const Icon(Icons.image),
-                        title: Text(wallpaper.name),
-                        subtitle: Text(wallpaper.category),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                      EditWallpaperPage(wallpaper: wallpaper),
-                            ),
-                          );
-                        },
+                              : const Icon(Icons.image, size: 48),
+                          title: Text(wallpaper.name),
+                          subtitle: Text(_formatDateTime(wallpaper.createdAt)),
+                          trailing: _statusIcon(wallpaper.status, size: 22),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        EditWallpaperPage(wallpaper: wallpaper),
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   ),
@@ -755,18 +837,24 @@ class _MyUploadsPageState extends State<MyUploadsPage>
                           return ListTile(
                             leading:
                                 collection.coverImage.isNotEmpty
-                                    ? Image.network(
-                                      collection.coverImage,
-                                      width: 56,
-                                      height: 56,
-                                      fit: BoxFit.cover,
+                                    ? CachedNetworkImage(
+                                        imageUrl: collection.coverImage,
+                                        width: 56,
+                                        height: 56,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => const SizedBox(
+                                          width: 56,
+                                          height: 56,
+                                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                        ),
+                                        errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 56),
                                     )
                                     : const Icon(Icons.collections),
                             title: Text(collection.name),
                             subtitle: Text(collection.description),
                             onTap: () async {
                               final wallpapers = await CollectionService()
-                                  .getWallpapersForCollection(collection);
+                                  .getWallpapersForCollection(collection.id);
                               final updated = await Navigator.push(
                                 context,
                                 MaterialPageRoute(

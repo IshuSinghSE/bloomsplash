@@ -94,36 +94,39 @@ class CollectionService {
     }
   }
 
-  // Fetch wallpapers for a collection
-  Future<List<Wallpaper>> getWallpapersForCollection(
-    Collection collection,
-  ) async {
-    if (collection.wallpaperIds.isEmpty) return [];
-    final snapshot =
-        await _firestore
-            .collection(_wallpaperPath)
-            .where('id', whereIn: collection.wallpaperIds)
-            .get();
+  // Fetch wallpapers for a collection using collectionId field
+  Future<List<Wallpaper>> getWallpapersForCollection(String collectionId) async {
+    final snapshot = await _firestore
+        .collection(_wallpaperPath)
+        .where('collectionId', isEqualTo: collectionId)
+        .get();
     return snapshot.docs.map((doc) => Wallpaper.fromJson(doc.data())).toList();
   }
 
-  // Add a wallpaper to a collection
+  // Add a wallpaper to a collection by updating its collectionId field
   Future<void> addWallpaperToCollection(
     String collectionId,
     String wallpaperId,
   ) async {
-    await _firestore.collection(_collectionPath).doc(collectionId).update({
-      'wallpaperIds': FieldValue.arrayUnion([wallpaperId]),
+    await _firestore.collection(_wallpaperPath).doc(wallpaperId).update({
+      'collectionId': collectionId,
     });
   }
 
-  // Remove a wallpaper from a collection
+  // Remove a wallpaper from a collection by clearing its collectionId field
   Future<void> removeWallpaperFromCollection(
-    String collectionId,
     String wallpaperId,
   ) async {
-    await _firestore.collection(_collectionPath).doc(collectionId).update({
-      'wallpaperIds': FieldValue.arrayRemove([wallpaperId]),
+    await _firestore.collection(_wallpaperPath).doc(wallpaperId).update({
+      'collectionId': null,
     });
+  }
+  // Fetch wallpapers not in any collection (for Explore page)
+  Future<List<Wallpaper>> getWallpapersNotInAnyCollection() async {
+    final snapshot = await _firestore
+        .collection(_wallpaperPath)
+        .where('collectionId', isNull: true)
+        .get();
+    return snapshot.docs.map((doc) => Wallpaper.fromJson(doc.data())).toList();
   }
 }

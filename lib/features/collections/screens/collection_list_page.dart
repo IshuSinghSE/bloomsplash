@@ -131,7 +131,7 @@ class _CollectionListPageState extends State<CollectionListPage> {
                         child: GestureDetector(
                           onTap: () async {
                             await _collectionService
-                                .getWallpapersForCollection(collection);
+                                .getWallpapersForCollection(collection.id);
                             Navigator.push(
                               context,
                               MaterialPageRoute(

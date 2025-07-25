@@ -9,4 +9,5 @@ class AppConfig {
   static const String avatarIconPath = 'assets/images/avatar.webp';
   static const String welcomeImagePath = 'assets/images/welcome.webp';
   static const String shimmerImagePath = 'assets/images/shimmer.webp';
+  static const String adminImagePath = 'assets/images/admin.webp';
 }

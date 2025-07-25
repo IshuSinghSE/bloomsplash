@@ -38,11 +38,8 @@ class _ExplorePageState extends State<ExplorePage>
         await _fetchWallpapers(isRefresh: true);
       } else {
         await _loadWallpapersFromCache();
-        if (_wallpapers.isNotEmpty) {
-          await _fetchWallpapers(isRefresh: true);
-        } else {
-          await _fetchWallpapers();
-        }
+        // Always fetch new wallpapers from Firestore on app launch
+        await _fetchWallpapers(isRefresh: true);
       }
     });
   }
@@ -85,21 +82,14 @@ class _ExplorePageState extends State<ExplorePage>
     try {
       Query query = FirebaseFirestore.instance
           .collection('wallpapers')
+          .where('status', isEqualTo: 'approved')
+          .where('collectionId', isNull: true)
           .orderBy('createdAt', descending: true)
           .limit(_loadedWallpapers);
 
       QuerySnapshot snapshot;
       if (isRefresh) {
-        if (_wallpapers.isNotEmpty) {
-          final newestWallpaper = _wallpapers.first;
-          if (newestWallpaper['createdAt'] != null) {
-            query = FirebaseFirestore.instance
-                .collection('wallpapers')
-                .orderBy('createdAt', descending: true)
-                .where('createdAt', isGreaterThan: newestWallpaper['createdAt'])
-                .limit(50);
-          }
-        }
+        // Always fetch the latest wallpapers from Firestore, ignore cache and pagination
         snapshot = await query.get();
       } else if (_lastDocument == null) {
         snapshot = await query.get();
@@ -108,45 +98,35 @@ class _ExplorePageState extends State<ExplorePage>
       }
 
       setState(() {
+        final fetchedWallpapers = snapshot.docs
+            .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              return {'id': doc.id, ...data};
+            })
+            .where((wallpaper) => wallpaper['status'] == 'approved')
+            .toList();
+
+        // Remove any cached wallpapers that no longer exist in Firestore
+        final fetchedIds = fetchedWallpapers.map((w) => w['id']).toSet();
+        _wallpapers.removeWhere((w) => !fetchedIds.contains(w['id']));
+
         if (isRefresh) {
-          final newWallpapers =
-              snapshot.docs
-                  .map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    return {'id': doc.id, ...data};
-                  })
-                  .where((wallpaper) => wallpaper['status'] == 'approved')
-                  .toList();
-          final existingIds = _wallpapers.map((w) => w['id']).toSet();
-          final uniqueNewWallpapers =
-              newWallpapers
-                  .where((wallpaper) => !existingIds.contains(wallpaper['id']))
-                  .toList();
-          _wallpapers.insertAll(0, uniqueNewWallpapers);
-          if (uniqueNewWallpapers.isNotEmpty) {
-            _cacheNewWallpapers(uniqueNewWallpapers);
+          // On refresh, fully replace _wallpapers with fetchedWallpapers
+          _wallpapers
+            ..clear()
+            ..addAll(fetchedWallpapers);
+          if (fetchedWallpapers.isNotEmpty) {
+            _cacheNewWallpapers(fetchedWallpapers);
           }
         } else {
-          final newWallpapers =
-              snapshot.docs
-                  .map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    return {'id': doc.id, ...data};
-                  })
-                  .where((wallpaper) => wallpaper['status'] == 'approved')
-                  .toList();
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
-              newWallpapers
-                  .where((wallpaper) => !existingIds.contains(wallpaper['id']))
-                  .toList();
+              fetchedWallpapers.where((w) => !existingIds.contains(w['id'])).toList();
           _wallpapers.addAll(uniqueNewWallpapers);
           if (snapshot.docs.isNotEmpty) {
             _lastDocument = snapshot.docs.last;
           }
-          // Only set _hasReachedEnd if the returned docs are less than the limit AND no new wallpapers were added
-          if (snapshot.docs.length < _loadedWallpapers &&
-              uniqueNewWallpapers.isEmpty) {
+          if (snapshot.docs.length < _loadedWallpapers) {
             _hasReachedEnd = true;
           }
           if (uniqueNewWallpapers.isNotEmpty) {
@@ -172,22 +152,13 @@ class _ExplorePageState extends State<ExplorePage>
   }
 
   void _onScroll() {
-    if (_hasReachedEnd || _isLoadingMore || _wallpapers.length < _loadedWallpapers) return;
+    if (_hasReachedEnd || _isLoadingMore) return;
 
     final threshold = 6;
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.position.pixels;
-    final itemHeight = maxScroll / (_wallpapers.length / 2);
+    final itemHeight = maxScroll / ((_wallpapers.length > 0 ? _wallpapers.length : 1) / 2);
     if (maxScroll - currentScroll <= threshold * itemHeight) {
-      // If lastDocument is null or last fetch returned less than _loadedWallpapers, we are at the end
-      if (_lastDocument == null || _wallpapers.length % _loadedWallpapers != 0) {
-        if (!_hasReachedEnd) {
-          setState(() {
-            _hasReachedEnd = true;
-          });
-        }
-        return;
-      }
       _loadMoreWallpapers();
     }
   }

@@ -9,7 +9,7 @@ Future<String> computeImageHash(File imageFile) async {
  
 /// Function to check for duplicate wallpapers
   Future<bool> isDuplicateWallpaper(File newImage) async {
-    final newImageHash = computeImageHash(newImage);
+    final newImageHash = await computeImageHash(newImage);
 
     // Fetch existing hashes from Firestore
     final firestoreService = FirestoreService();
@@ -23,4 +23,5 @@ Future<String> computeImageHash(File imageFile) async {
     }
     return false; // No duplicates
   }
+
 

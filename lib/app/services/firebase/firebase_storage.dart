@@ -33,23 +33,16 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     // Resize and fix orientation for wallpaper and thumbnail
     // For wallpaper (main image): 1400x3100 (maintain aspect ratio)
 
-    // For thumbnail: 800x1420 (maintain aspect ratio)
-    final thumbnailFile = await img_utils.resizeAndFixImage(
-      file,
-      targetWidth: 800,
-      targetHeight: 1420,
-      outputPath: '${file.parent.path}/thumbnail_$fileName.png',
-      maintainAspectRatio: true,
-    );
+    // For thumbnail: use external API to convert and compress to WebP
+    final webpBytes = await convertImageToWebp(file);
     debugPrint(
-      'Thumbnail png file size: \n  ${thumbnailFile.lengthSync()} bytes \n  ${(thumbnailFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
+      'Thumbnail webp bytes size: \n  ${webpBytes.length} bytes \n  ${(webpBytes.length / (1024 * 1024)).toStringAsFixed(2)} MB',
     );
 
-    // Convert thumbnail to webp using external API
-    if (!thumbnailFile.existsSync() || thumbnailFile.lengthSync() == 0) {
-      throw Exception('Thumbnail file is missing or empty');
-    }
-    final webpBytes = await convertImageToWebp(thumbnailFile);
+    // Save webpBytes to a temp file for palette extraction
+    final tempDir = await getTemporaryDirectory();
+    final tempWebpFile = File('${tempDir.path}/thumb_${DateTime.now().millisecondsSinceEpoch}.webp');
+    await tempWebpFile.writeAsBytes(webpBytes);
 
     // Upload original and thumbnail (webp) to Firebase Storage
     final uploadTasks = [
@@ -65,8 +58,8 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     log('Thumbnail URL: $thumbnailUrl');
 
     // Clean up temporary files
-    thumbnailFile.deleteSync();
-    // Do NOT delete thumbnailWebpFile here, return its path for palette extraction
+    tempWebpFile.deleteSync();
+    // Do NOT delete tempWebpFile here, return its path for palette extraction
 
     return {
       'originalUrl': originalUrl,
@@ -74,7 +67,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       'originalSize': originalSize,
       'originalResolution': originalResolution,
       'localThumbnailPath':
-          thumbnailFile.path, // Add local webp path for palette extraction
+          tempWebpFile.path, // Add local webp path for palette extraction
     };
   } catch (e) {
     log('Error uploading file: $e');
