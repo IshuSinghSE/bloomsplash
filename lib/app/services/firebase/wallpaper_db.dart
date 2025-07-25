@@ -100,7 +100,8 @@ class FirestoreService {
     required String author,
     required String authorImage,
     required String description,
-    required List<String> tags, // Add the tags parameter
+    required List<String> tags,
+    required String status,
   }) async {
     await _executeFirestoreOperation(
       () async {
@@ -120,7 +121,8 @@ class FirestoreService {
           'author': author,
           'authorImage': authorImage,
           'description': description,
-          'tags': tags, // Include tags in the update
+          'tags': tags,
+          'status': status,
         });
         log('Image details updated in Firestore successfully: $id');
       },
@@ -161,6 +163,7 @@ class FirestoreService {
   Future<Map<String, dynamic>> getPaginatedWallpapers({
     required int limit,
     DocumentSnapshot? lastDocument,
+    String status = 'approved',
   }) async {
     return _executeFirestoreOperation(
       () async {
@@ -168,12 +171,13 @@ class FirestoreService {
           throw Exception('Pagination failed: Limit must be greater than 0.');
         }
         
-        if (limit > 50) {
-          throw Exception('Pagination failed: Limit cannot exceed 50 items per request.');
+        if (limit > 20) {
+          throw Exception('Pagination failed: Limit cannot exceed 20 items per request.');
         }
         
         Query query = _firestore
             .collection('wallpapers')
+            .where('status', isEqualTo: status)
             .orderBy('createdAt', descending: true)
             .limit(limit);
 
@@ -225,10 +229,17 @@ class FirestoreService {
   Future<List<Wallpaper>> getAllWallpapers() async {
     return _executeFirestoreOperation(
       () async {
-        final querySnapshot = await _firestore.collection(_wallpapersCollection).get();
-        return querySnapshot.docs
+        // Query for wallpapers where collectionId is null (not in any collection)
+        final querySnapshot = await _firestore
+            .collection(_wallpapersCollection)
+            .where('collectionId', isNull: true)
+            .get();
+        // If you want to also exclude wallpapers with empty string collectionId, filter in Dart:
+        final wallpapers = querySnapshot.docs
             .map((doc) => Wallpaper.fromJson(doc.data()))
+            .where((w) => w.collectionId == null || w.collectionId == '')
             .toList();
+        return wallpapers;
       },
       'Fetch',
       fallbackValue: <Wallpaper>[],

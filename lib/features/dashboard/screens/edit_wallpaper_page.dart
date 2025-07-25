@@ -27,7 +27,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
   late TextEditingController _orientationController;
   late TextEditingController _resolutionController;
   late TextEditingController _licenseController;
-  late TextEditingController _statusController;
+  String _statusValue = 'approved';
 
   String _selectedTab = 'Thumbnail'; // Default to "Thumbnail"
   late CacheManager _cacheManager; // Custom cache manager instance
@@ -44,7 +44,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
     _orientationController = TextEditingController(text: widget.wallpaper.orientation);
     _resolutionController = TextEditingController(text: widget.wallpaper.resolution);
     _licenseController = TextEditingController(text: widget.wallpaper.license);
-    _statusController = TextEditingController(text: widget.wallpaper.status);
+    _statusValue = widget.wallpaper.status;
 
     _cacheManager = CacheManager(
       Config(
@@ -53,8 +53,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
         maxNrOfCacheObjects: 50, // Maximum number of cached objects
       ),
     );
-
-    _loadThumbnail(); // Only load thumbnail initially
+    // Do not load thumbnail here
   }
 
   Future<void> _loadThumbnail() async {
@@ -86,8 +85,11 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
     });
     if (tab == 'Original') {
       _loadOriginal();
+    } else if (tab == 'Thumbnail') {
+      if (_cachedImages['Thumbnail'] == null) {
+        _loadThumbnail();
+      }
     }
-    // Thumbnail is loaded in initState
   }
 
   File? _getCachedImage(String tab) {
@@ -143,6 +145,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
         authorImage: widget.wallpaper.authorImage,
         description: widget.wallpaper.description,
         tags: widget.wallpaper.tags,
+        status: _statusValue,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,20 +162,21 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
   Future<void> _saveChanges() async {
     if (_formKey.currentState!.validate()) {
       try {
-        await _firestoreService.updateImageDetailsInFirestore(
-          id: widget.wallpaper.id,
-          name: _nameController.text,
-          imageUrl: widget.wallpaper.imageUrl,
-          thumbnailUrl: widget.wallpaper.thumbnailUrl,
-          downloads: widget.wallpaper.downloads,
-          size: widget.wallpaper.size.toString(),
-          resolution: _resolutionController.text,
-          category: _categoryController.text,
-          author: widget.wallpaper.author,
-          authorImage: widget.wallpaper.authorImage,
-          description: _descriptionController.text,
-          tags: _tagsController.text.split(',').map((tag) => tag.trim()).toList(),
-        );
+            await _firestoreService.updateImageDetailsInFirestore(
+              id: widget.wallpaper.id,
+              name: _nameController.text,
+              imageUrl: widget.wallpaper.imageUrl,
+              thumbnailUrl: widget.wallpaper.thumbnailUrl,
+              downloads: widget.wallpaper.downloads,
+              size: widget.wallpaper.size.toString(),
+              resolution: _resolutionController.text,
+              category: _categoryController.text,
+              author: widget.wallpaper.author,
+              authorImage: widget.wallpaper.authorImage,
+              description: _descriptionController.text,
+              tags: _tagsController.text.split(',').map((tag) => tag.trim()).toList(),
+              status: _statusValue,
+            );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Wallpaper updated successfully!')),
         );
@@ -226,6 +230,8 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
   @override
   Widget build(BuildContext context) {
     final cachedImage = _getCachedImage(_selectedTab);
+    final isLoading = (_selectedTab == 'Thumbnail' && _cachedImages['Thumbnail'] == null) ||
+                      (_selectedTab == 'Original' && _cachedImages['Original'] == null);
 
     return Scaffold(
       appBar: AppBar(
@@ -290,7 +296,7 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
                       )
                     : null,
               ),
-              child: cachedImage == null
+              child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : null,
             ),
@@ -360,9 +366,17 @@ class _EditWallpaperPageState extends State<EditWallpaperPage> {
                     controller: _licenseController,
                     decoration: const InputDecoration(labelText: 'License'),
                   ),
-                  TextFormField(
-                    controller: _statusController,
+                  DropdownButtonFormField<String>(
+                    value: _statusValue,
                     decoration: const InputDecoration(labelText: 'Status'),
+                    items: const [
+                      DropdownMenuItem(value: 'approved', child: Text('Approved')),
+                      DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                      DropdownMenuItem(value: 'rejected', child: Text('Rejected')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _statusValue = val);
+                    },
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(

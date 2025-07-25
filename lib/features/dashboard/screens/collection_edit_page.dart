@@ -220,7 +220,6 @@ class _CollectionEditPageState extends State<CollectionEditPage> {
                     try {
                       await CollectionService().removeWallpaperFromCollection(
                         widget.collection.id,
-                        wallpaper.id,
                       );
                       
                       if (mounted) {

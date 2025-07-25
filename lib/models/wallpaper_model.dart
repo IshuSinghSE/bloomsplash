@@ -20,6 +20,7 @@ class Wallpaper {
   final String createdAt;
   final String license;
   final String hash;
+  final String? collectionId; // null or empty if not in any collection
 
   Wallpaper({
     required this.id,
@@ -43,6 +44,7 @@ class Wallpaper {
     required this.createdAt,
     required this.license,
     required this.hash,
+    this.collectionId,
   });
 
   factory Wallpaper.fromJson(Map<String, dynamic> json) {
@@ -68,6 +70,7 @@ class Wallpaper {
       createdAt: json['createdAt'] ?? '',
       license: json['license'] ?? '',
       hash: json['hash'] ?? '',
+      collectionId: json['collectionId'],
     );
   }
 
@@ -94,6 +97,7 @@ class Wallpaper {
       'createdAt': createdAt,
       'license': license,
       'hash': hash,
+      'collectionId': collectionId,
     };
   }
 }

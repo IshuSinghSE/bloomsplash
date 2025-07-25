@@ -189,7 +189,7 @@ jobs:
           tag_name: v${{ env.APP_VERSION_NAME }}
           name: Release ${{ env.APP_VERSION_NAME }}
           draft: false
-          prerelease: false
+          prerelease: true
           update_existing: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

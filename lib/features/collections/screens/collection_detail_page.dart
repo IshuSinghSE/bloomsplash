@@ -41,7 +41,7 @@ class CollectionDetailPage extends StatelessWidget {
 
   Future<List<Map<String, dynamic>>> _fetchWallpapers() async {
     final service = CollectionService();
-    final wallpapers = await service.getWallpapersForCollection(collection);
+    final wallpapers = await service.getWallpapersForCollection(collection.id);
     return wallpapers.map((w) => w.toJson()).toList();
   }
 
