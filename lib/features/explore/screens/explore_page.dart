@@ -91,6 +91,7 @@ class _ExplorePageState extends State<ExplorePage>
             _cacheNewWallpapers(fetchedWallpapers);
           }
         } else {
+          // On paginated load, only add new wallpapers, never remove existing
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               fetchedWallpapers.where((w) => !existingIds.contains(w['id'])).toList();
