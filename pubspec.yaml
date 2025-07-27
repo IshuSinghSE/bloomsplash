@@ -1,7 +1,7 @@
 name: bloomsplash
 description: "A beautiful wallpaper application"
 publish_to: "none"
-version: 0.2.2+6
+version: 0.2.3+7
 license: "AGPL-3.0"
 
 environment:
@@ -29,7 +29,7 @@ dependencies:
       ref: main
 
   # --- Permissions & Device Info ---
-  permission_handler: ^12.0.0+1
+  permission_handler: ^12.0.1
   device_info_plus: ^11.3.3
   google_api_availability: ^5.0.1
   media_scanner: ^2.2.0
@@ -63,6 +63,8 @@ dependencies:
   # --- In-App Review & Notifications ---
   in_app_review: ^2.0.10
   flutter_local_notifications: ^19.3.1
+  csv: ^6.0.0
+  file_picker: ^10.2.0
 
 
 dev_dependencies:

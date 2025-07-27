@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarColor: Color(0xCC18141C),
           systemNavigationBarIconBrightness: Brightness.light,
         ),
         actions: [

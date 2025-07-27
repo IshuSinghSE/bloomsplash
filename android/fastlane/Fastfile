@@ -3,7 +3,14 @@ default_platform(:android)
 platform :android do
   desc "Deploy to Google Play Closed Testing"
   lane :closed_release do
+    pubspec = YAML.load_file("../../pubspec.yaml")
+    version_string = pubspec["version"] # e.g., "1.0.0+6"
+    version_code = version_string.split("+").last.to_i
+
     release_notes = ENV['PLAY_RELEASE_NOTES'] || "No release notes provided."
+    sh "mkdir -p metadata/android/en-US/changelogs"
+    File.write("metadata/android/en-US/changelogs/#{version_code}.txt", release_notes)
+
     upload_to_play_store(
       track: 'alpha',
       package_name: 'com.devindeed.bloomsplash',
@@ -12,9 +19,6 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
-      release_notes: {
-        'en-US' => release_notes
-      }
     )
   end
 end

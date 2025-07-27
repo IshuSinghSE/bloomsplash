@@ -37,6 +37,21 @@ class CollectionService {
   }
 
   // Fetch all collections
+
+  Future<List<Collection>> getCollectionsPaginated({required int limit, String? lastId}) async {
+    Query query = _firestore.collection(_collectionPath).orderBy('createdAt', descending: true).limit(limit);
+    if (lastId != null) {
+      // Get the last document snapshot for pagination
+      final lastDocSnap = await _firestore.collection(_collectionPath).doc(lastId).get();
+      if (lastDocSnap.exists) {
+        query = query.startAfterDocument(lastDocSnap);
+      }
+    }
+    final querySnap = await query.get();
+    return querySnap.docs.map((doc) => Collection.fromJson(doc.data() as Map<String, dynamic>)).toList();
+  }
+
+  // Fetch all collections
   Future<List<Collection>> getAllCollections() async {
     final query = await _firestore.collection(_collectionPath).get();
     return query.docs.map((doc) => Collection.fromJson(doc.data())).toList();

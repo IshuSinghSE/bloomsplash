@@ -3,6 +3,7 @@ name: Deploy to Google Play
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   build-and-release:

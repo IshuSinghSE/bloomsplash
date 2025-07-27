@@ -1,0 +1,6 @@
+🖼️ Wallpaper editing improved: Status field is now a dropdown for easy selection.
+⚡ Thumbnails load only when selected, reducing initial load time.
+⏳ Loading indicator for thumbnails appears only after user interaction.
+🎨 UI/UX optimizations for a faster, smoother experience.
+🐞 Bug fixes & performance improvements.
+Thanks for blooming with us 🌱

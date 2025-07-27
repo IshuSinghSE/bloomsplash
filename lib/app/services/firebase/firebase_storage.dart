@@ -9,14 +9,16 @@ import '../external_api/image_optimization.dart';
 
 final storageRef = FirebaseStorage.instance.ref();
 
-Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
+Future<Map<String, dynamic>?> uploadFileToFirebase(
+  File file, {
+  Function(double progress)? onProgress,
+}) async {
   try {
     // Check file size before processing
     final maxFileSize = 4 * 1024 * 1024; // 4 MB in bytes
     if (file.lengthSync() > maxFileSize) {
       debugPrint(
-
-        'Image file size is too large: \n  [33m[1m${file.lengthSync()} bytes (max 4 MB)[0m',
+        'Image file size is too large: \n  \u001b[33m\u001b[1m${file.lengthSync()} bytes (max 4 MB)\u001b[0m',
       );
       throw Exception('Image file size exceeds 4 MB.');
     }
@@ -28,10 +30,6 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     // Get original image size and resolution
     final originalSize = file.lengthSync();
     final originalResolution = await img_utils.getImageResolution(file);
-    final originalBytes = await file.readAsBytes();
-
-    // Resize and fix orientation for wallpaper and thumbnail
-    // For wallpaper (main image): 1400x3100 (maintain aspect ratio)
 
     // For thumbnail: use external API to convert and compress to WebP
     final webpBytes = await convertImageToWebp(file);
@@ -44,12 +42,27 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
     final tempWebpFile = File('${tempDir.path}/thumb_${DateTime.now().millisecondsSinceEpoch}.webp');
     await tempWebpFile.writeAsBytes(webpBytes);
 
-    // Upload original and thumbnail (webp) to Firebase Storage
-    final uploadTasks = [
-      originalRef.putData(originalBytes),
-      thumbnailRef.putData(Uint8List.fromList(webpBytes)),
-    ];
-    await Future.wait(uploadTasks);
+    // Upload original image with progress
+    final originalUploadTask = originalRef.putFile(file);
+    if (onProgress != null) {
+      originalUploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
+        // Map to 0-0.5 for original upload
+        onProgress(progress * 0.5);
+      });
+    }
+    await originalUploadTask;
+
+    // Upload thumbnail (webp) with progress
+    final thumbUploadTask = thumbnailRef.putData(Uint8List.fromList(webpBytes));
+    if (onProgress != null) {
+      thumbUploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
+        // Map to 0.5-1.0 for thumbnail upload
+        onProgress(0.5 + progress * 0.5);
+      });
+    }
+    await thumbUploadTask;
 
     final originalUrl = await originalRef.getDownloadURL();
     final thumbnailUrl = await thumbnailRef.getDownloadURL();
@@ -66,8 +79,7 @@ Future<Map<String, dynamic>?> uploadFileToFirebase(File file) async {
       'thumbnailUrl': thumbnailUrl,
       'originalSize': originalSize,
       'originalResolution': originalResolution,
-      'localThumbnailPath':
-          tempWebpFile.path, // Add local webp path for palette extraction
+      'localThumbnailPath': tempWebpFile.path,
     };
   } catch (e) {
     log('Error uploading file: $e');
