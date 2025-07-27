@@ -33,37 +33,15 @@ class _ExplorePageState extends State<ExplorePage>
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      if (args is Map && args['refresh'] == true) {
-        await _fetchWallpapers(isRefresh: true);
-      } else {
-        await _loadWallpapersFromCache();
-        // Always fetch new wallpapers from Firestore on app launch
-        await _fetchWallpapers(isRefresh: true);
-      }
+      // final args = ModalRoute.of(context)?.settings.arguments;
+      // Always fetch new wallpapers from Firestore on app launch, do not show cache first
+      await _fetchWallpapers(isRefresh: true);
     });
   }
 
-  Future<void> _loadWallpapersFromCache() async {
-    try {
-      final box = await Hive.openBox('uploadedWallpapers');
-      final cached = box.get('wallpapers', defaultValue: []);
-      if (cached is List && cached.isNotEmpty) {
-        final safeWallpapers =
-            cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        setState(() {
-          _wallpapers.clear();
-          _wallpapers.addAll(safeWallpapers);
-          _isLoading = false;
-        });
-      } else {
-        _fetchWallpapers();
-      }
-    } catch (e) {
-      debugPrint('Error loading wallpapers from cache: $e');
-      _fetchWallpapers();
-    }
-  }
+  // Future<void> _loadWallpapersFromCache() async {
+  //   // No-op: cache loading is not used for initial display anymore
+  // }
 
   @override
   void dispose() {
@@ -106,10 +84,6 @@ class _ExplorePageState extends State<ExplorePage>
             .where((wallpaper) => wallpaper['status'] == 'approved')
             .toList();
 
-        // Remove any cached wallpapers that no longer exist in Firestore
-        final fetchedIds = fetchedWallpapers.map((w) => w['id']).toSet();
-        _wallpapers.removeWhere((w) => !fetchedIds.contains(w['id']));
-
         if (isRefresh) {
           // On refresh, fully replace _wallpapers with fetchedWallpapers
           _wallpapers
@@ -119,6 +93,7 @@ class _ExplorePageState extends State<ExplorePage>
             _cacheNewWallpapers(fetchedWallpapers);
           }
         } else {
+          // On paginated load, only add new wallpapers, never remove existing
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               fetchedWallpapers.where((w) => !existingIds.contains(w['id'])).toList();

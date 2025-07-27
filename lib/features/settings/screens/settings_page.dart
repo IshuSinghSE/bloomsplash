@@ -11,6 +11,8 @@ import '../../../app/services/cache_service.dart'; // Import the new service
 import '../widgets/settings_tile.dart'; // Import the new widget
 import 'package:in_app_review/in_app_review.dart';
 import '../widgets/feedback_form.dart';
+import '../widgets/bulk_upload_tile.dart';
+import 'bulk_upload_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -80,22 +82,26 @@ class _SettingsPageState extends State<SettingsPage>
       _isClearingCache = true;
     });
 
-    final success = await CacheService.clearCache();
-
-    if (mounted) {
-      if (success) {
-        await _updateCacheSize(); // Recalculate cache size after clearing
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image cache cleared successfully!')),
-        );
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to clear cache!')));
+    try {
+      final success = await CacheService.clearCache();
+      if (mounted) {
+        if (success) {
+          await _updateCacheSize(); // Recalculate cache size after clearing
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image cache cleared successfully!')),
+          );
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Failed to clear cache!')));
+        }
       }
-      setState(() {
-        _isClearingCache = false;
-      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isClearingCache = false;
+        });
+      }
     }
   }
 
@@ -114,12 +120,14 @@ class _SettingsPageState extends State<SettingsPage>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to log out: $e')));
+      }
+    } finally {
+      if (mounted) {
         setState(() {
           _isLoggingOut = false;
         });
       }
     }
-    // Note: We don't set _isLoggingOut to false here because the page will be popped
   }
 
   @override
@@ -203,7 +211,7 @@ class _SettingsPageState extends State<SettingsPage>
                                   : const CircleAvatar(
                                     radius: 46,
                                     backgroundImage: AssetImage(
-                                      'assets/avatar/Itsycal.webp',
+                                      'assets/images/avatar.webp',
                                     ),
                                   ),
                         ),
@@ -273,7 +281,7 @@ class _SettingsPageState extends State<SettingsPage>
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                             ).copyWith(
-                              overlayColor: MaterialStateProperty.all(
+                              overlayColor: WidgetStateProperty.all(
                                 const Color.fromARGB(
                                   255,
                                   253,
@@ -303,6 +311,16 @@ class _SettingsPageState extends State<SettingsPage>
                         context,
                         MaterialPageRoute(
                           builder: (context) => my_uploads_page.MyUploadsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  BulkUploadTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BulkUploadPage(),
                         ),
                       );
                     },

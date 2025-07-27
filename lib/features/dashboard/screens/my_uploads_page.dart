@@ -62,7 +62,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
   List<Collection> _collections = [];
   bool _isLoadingCollections = true;
 
-  static const int _lazyLoadBatchSize = 15;
+  static const int _lazyLoadBatchSize = 10;
 
   @override
   void initState() {
@@ -168,26 +168,19 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
         } else {
           _uploadedWallpapers.addAll(newWallpapers);
         }
-        if (newWallpapers.length < _lazyLoadBatchSize) {
+        if (newWallpapers.isEmpty || newWallpapers.length < _lazyLoadBatchSize) {
           _hasMore = false;
         }
-        _isLoading = false;
-        _isLoadingMore = false;
       });
 
       await _saveWallpapersToLocal(_uploadedWallpapers);
       await _cacheImages();
     } catch (e) {
       debugPrint('Error fetching uploaded wallpapers: $e');
+    } finally {
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
-      });
-      // Retry mechanism
-      Future.delayed(const Duration(seconds: 3), () {
-        if (!_isLoading && !_isLoadingMore) {
-          _fetchWallpapers(isRefresh: isRefresh, forceFetch: forceFetch);
-        }
       });
     }
   }
@@ -226,7 +219,7 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
             cached,
           ).map((e) => Collection.fromJson(e)).toList();
     }
-    final collections = await CollectionService().getAllCollections();
+    final collections = await CollectionService().getCollectionsPaginated(limit: 10);
     setState(() {
       _collections = collections;
       _isLoadingCollections = false;
@@ -307,70 +300,103 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
         ElevatedButton.icon(
           icon: const Icon(Icons.add_photo_alternate),
           label: const Text('Upload Wallpaper'),
-          onPressed:
-              isUploading
-                  ? null
-                  : () async {
-                    final picker = ImagePicker();
-                    final image = await picker.pickImage(
-                      source: ImageSource.gallery,
+          onPressed: isUploading
+              ? null
+              : () async {
+                  // Get userData from Hive preferences
+                  var preferencesBox = await Hive.openBox('preferences');
+                  var userDataRaw = preferencesBox.get('userData', defaultValue: {});
+                  Map<String, dynamic> userData;
+                  if (userDataRaw is Map<String, dynamic>) {
+                    userData = userDataRaw;
+                  } else if (userDataRaw is Map) {
+                    userData = Map<String, dynamic>.from(
+                      userDataRaw.map((key, value) => MapEntry(key.toString(), value)),
                     );
-                    if (image == null) return;
-                    setState(() {
-                      isUploading = true;
-                    });
-                    final file = File(image.path);
-                    final result = await custom_storage.uploadFileToFirebase(
-                      file,
-                    );
-                    if (result != null &&
-                        result['originalUrl'] != null &&
-                        result['thumbnailUrl'] != null) {
-                      final newWallpaper = Wallpaper(
-                        id: generateUuid(),
-                        name: 'New Wallpaper',
-                        imageUrl: result['originalUrl'],
-                        thumbnailUrl: result['thumbnailUrl'],
-                        downloads: 0,
-                        size: result['originalSize'] ?? 0,
-                        resolution:
-                            result['originalResolution']?.toString() ?? '',
-                        category: '',
-                        author: 'admin',
-                        authorImage: '',
-                        description: '',
-                        likes: 0,
-                        tags: [],
-                        colors: [],
-                        orientation: '',
-                        license: '',
-                        status: 'active',
-                        createdAt: DateTime.now().toIso8601String(),
-                        isPremium: false,
-                        isAIgenerated: false,
-                        hash: '',
-                      );
-                      await FirestoreService().addImageDetailsToFirestore(
-                        newWallpaper,
-                      );
-                      availableWallpapers.add(newWallpaper);
-                      setState(() {
-                        isUploading = false;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Wallpaper uploaded!')),
-                      );
-                    } else {
-                      setState(() {
-                        isUploading = false;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Failed to upload wallpaper.'),
-                        ),
-                      );
+                  } else {
+                    userData = {};
+                  }
+                  final isAdmin = userData['isAdmin'] ?? false;
+                  final picker = ImagePicker();
+                  final image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    requestFullMetadata: true,
+                  );
+                  if (image == null) return;
+                  setState(() {
+                    isUploading = true;
+                  });
+                  final file = File(image.path);
+                  final result = await custom_storage.uploadFileToFirebase(file);
+                  if (result != null &&
+                      result['originalUrl'] != null &&
+                      result['thumbnailUrl'] != null) {
+                    // Compute hash and extract colors, set author fields
+                    final now = DateTime.now();
+                    String hash = '';
+                    List<String> colors = [];
+                    try {
+                      // If you have a hash utility, use it here
+                      // hash = await computeImageHash(file);
+                    } catch (e) {
+                      debugPrint('Hash computation failed: $e');
                     }
-                  },
+                    try {
+                      File thumbFile = file;
+                      colors = await extractDominantColors(thumbFile);
+                    } catch (e) {
+                      debugPrint('Color extraction failed: $e');
+                    }
+                    final newWallpaper = Wallpaper(
+                      id: now.millisecondsSinceEpoch.toString(),
+                      name: 'untitled',
+                      imageUrl: result['originalUrl'],
+                      thumbnailUrl: result['thumbnailUrl'],
+                      downloads: 0,
+                      likes: 0,
+                      size: result['originalSize'] ?? 0,
+                      resolution: result['originalResolution']?.toString() ?? '',
+                      orientation: 'portrait',
+                      category: 'Uncategorized',
+                      tags: [],
+                      colors: colors,
+                      author: isAdmin == true
+                          ? 'bloomsplash'
+                          : (userData['displayName'] ?? 'Unknown'),
+                      authorImage: isAdmin == true
+                          ? AppConfig.adminImagePath
+                          : (userData['photoUrl'] ?? AppConfig.authorIconPath),
+                      description: '',
+                      isPremium: false,
+                      isAIgenerated: false,
+                      status: 'approved',
+                      createdAt: now.toIso8601String(),
+                      license: 'free-commercial',
+                      hash: hash,
+                      collectionId: collection?.id ?? '',
+                    );
+                    await FirestoreService().addImageDetailsToFirestore(newWallpaper);
+                    if (collection != null) {
+                      await CollectionService().addWallpaperToCollection(collection.id, newWallpaper.id);
+                    }
+                    availableWallpapers.add(newWallpaper);
+                    setState(() {
+                      isUploading = false;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Wallpaper uploaded!')),
+                    );
+                  } else {
+                    setState(() {
+                      isUploading = false;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Failed to upload wallpaper.'),
+                      ),
+                    );
+                  }
+                },
         ),
       ],
     );
@@ -672,29 +698,59 @@ class _MyUploadsPageState extends State<MyUploadsPage> with SingleTickerProvider
                       );
                       return;
                     }
+                    // Get userData from Hive preferences
+                    var preferencesBox = await Hive.openBox('preferences');
+                    var userDataRaw = preferencesBox.get('userData', defaultValue: {});
+                    Map<String, dynamic> userData;
+                    if (userDataRaw is Map<String, dynamic>) {
+                      userData = userDataRaw;
+                    } else if (userDataRaw is Map) {
+                      userData = Map<String, dynamic>.from(
+                        userDataRaw.map((key, value) => MapEntry(key.toString(), value)),
+                      );
+                    } else {
+                      userData = {};
+                    }
+                    final isAdmin = userData['isAdmin'] ?? false;
+                    final now = DateTime.now();
+                    String hash = '';
+                    List<String> colors = [];
+                    try {
+                      // If you have a hash utility, use it here
+                      // import '../../core/utils/hash_utils.dart' as hash_utils;
+                      // hash = await hash_utils.computeImageHash(File(uploadedThumbnailUrl!));
+                    } catch (e) {
+                      debugPrint('Hash computation failed: $e');
+                    }
+                    try {
+                      File thumbFile = File(uploadedThumbnailUrl!);
+                      colors = await extractDominantColors(thumbFile);
+                    } catch (e) {
+                      debugPrint('Color extraction failed: $e');
+                    }
                     final newWallpaper = Wallpaper(
-                      id: generateUuid(),
-                      name: nameController.text.trim(),
+                      id: now.millisecondsSinceEpoch.toString(),
+                      name: nameController.text.trim().isNotEmpty ? nameController.text.trim() : 'untitled',
                       imageUrl: uploadedOriginalUrl!,
                       thumbnailUrl: uploadedThumbnailUrl!,
                       downloads: 0,
+                      likes: 0,
                       size: uploadedSize ?? 0,
                       resolution: uploadedResolution ?? '',
-                      category: categoryController.text.trim(),
-                      author: 'bloomsplash', // Replace with actual user if available
-                      authorImage: AppConfig.adminImagePath,
-                      description: descController.text.trim(),
-                      likes: 0,
+                      orientation: 'portrait',
+                      category: categoryController.text.trim().isNotEmpty ? categoryController.text.trim() : 'Uncategorized',
                       tags: tagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-                      colors: [],
-                      orientation: '',
-                      license: '',
-                      status: 'active',
-                      createdAt: DateTime.now().toIso8601String(),
+                      colors: colors,
+                      author: isAdmin == true ? 'bloomsplash' : (userData['displayName'] ?? 'Unknown'),
+                      authorImage: isAdmin == true ? AppConfig.adminImagePath : (userData['photoUrl'] ?? AppConfig.authorIconPath),
+                      description: descController.text.trim(),
                       isPremium: false,
                       isAIgenerated: false,
-                      hash: '',
-                      collectionId: '',
+                      status: 'approved',
+                      createdAt: now.toIso8601String(),
+                      license: 'free-commercial',
+                      hash: hash,
+                      collectionId: null,
                     );
                     await FirestoreService().addImageDetailsToFirestore(newWallpaper);
                     setState(() {
