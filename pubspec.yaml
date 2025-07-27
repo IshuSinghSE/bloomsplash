@@ -1,7 +1,7 @@
 name: bloomsplash
 description: "A beautiful wallpaper application"
 publish_to: "none"
-version: 0.2.2+6
+version: 0.2.3+7
 license: "AGPL-3.0"
 
 environment:
