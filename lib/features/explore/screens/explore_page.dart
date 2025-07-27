@@ -33,8 +33,6 @@ class _ExplorePageState extends State<ExplorePage>
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // final args = ModalRoute.of(context)?.settings.arguments;
-      // Always fetch new wallpapers from Firestore on app launch, do not show cache first
       await _fetchWallpapers(isRefresh: true);
     });
   }
@@ -93,7 +91,6 @@ class _ExplorePageState extends State<ExplorePage>
             _cacheNewWallpapers(fetchedWallpapers);
           }
         } else {
-          // On paginated load, only add new wallpapers, never remove existing
           final existingIds = _wallpapers.map((w) => w['id']).toSet();
           final uniqueNewWallpapers =
               fetchedWallpapers.where((w) => !existingIds.contains(w['id'])).toList();
