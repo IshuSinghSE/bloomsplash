@@ -1,25 +1,47 @@
+
 # BloomSplash
+
+<p align="center">
+  <a href="https://bloomsplash.app" target="_blank"><img src="https://img.shields.io/badge/Website-BloomSplash-blue?style=for-the-badge" alt="Website"></a>
+  <a href="https://play.google.com/store/apps/details?id=com.devindeed.bloomsplash" target="_blank"><img src="https://img.shields.io/badge/Play%20Store-Download-green?style=for-the-badge&logo=google-play" alt="Play Store"></a>
+  <a href="https://github.com/IshuSinghSE/bloomsplash/releases" target="_blank"><img src="https://img.shields.io/badge/GitHub-Releases-black?style=for-the-badge&logo=github" alt="GitHub Releases"></a>
+</p>
+
+---
+
+## Overview
+
+BloomSplash is a modular, multi-platform wallpaper app built for performance, scalability, and maintainability. It leverages Appwrite, Firebase, and Cloudflare for a robust backend and global delivery.
+
+**Links for Collaborators:**
+- [Website](https://bloomsplash.app)
+- [Play Store](https://play.google.com/store/apps/details?id=com.devindeed.bloomsplash)
+- [GitHub Releases](https://github.com/IshuSinghSE/bloomsplash/releases) *(private repo access required)*
+
+---
 
 ## Architecture Plan
 
-**Use Appwrite for:**
+**Appwrite:**
 - Wallpaper image storage (safe, scalable, free)
 - Wallpaper metadata (Database)
 - Future functions (e.g. moderation, approval, API logic)
 
-**Use Firebase for:**
+**Firebase:**
 - Authentication (Google, Apple, etc.)
 - Notifications (FCM)
 - Analytics, Performance, Crashlytics
 - Release & app distribution (if using Firebase App Distribution)
 
-**Use Cloudflare as CDN provider:**
+**Cloudflare CDN:**
 - Serve wallpaper images globally with low latency and high reliability.
 
-By adding Cloudflare as the CDN, we ensure fast and reliable delivery of images to users worldwide.
+---
 
 ## Rules
 1. Always ensure high-quality and original content is uploaded.
+
+---
 
 # Project Folder Structure
 
