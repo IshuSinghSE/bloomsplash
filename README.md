@@ -58,13 +58,7 @@
 
 ---
 
-<div align="left">
+<div align="center">
   <sub>Made with ❤️ by Ishu Singh &middot; <a href="mailto:ishu.111636@gmail.com">Contact</a></sub>
-
-  <a href="https://github.com/IshuSinghSE/bloomsplash/actions">
-    <img src="https://github.com/IshuSinghSE/bloomsplash/actions/workflows/android-apks-release.yml/badge.svg" alt="Build Status" height="16" align="right" style="margin-top:-12px;" />
-  </a>
-
 </div>
 
-  <!-- 3D Rounded Badges -->
