@@ -1,17 +1,6 @@
 
 
 <div align="center">
-  <!-- 3D Rounded Badges -->
-  <a href="https://github.com/IshuSinghSE/bloomsplash/releases">
-    <img src="https://img.shields.io/github/v/release/IshuSinghSE/bloomsplash?label=version&style=for-the-badge" alt="Version" height="32" />
-  </a>
-  <a href="https://github.com/IshuSinghSE/bloomsplash/actions">
-    <img src="https://github.com/IshuSinghSE/bloomsplash/actions/workflows/test.yml/badge.svg" alt="Build Status" height="36" />
-  </a>
-  <a href="https://play.google.com/store/apps/details?id=com.devindeed.bloomsplash">
-    <img src="https://img.shields.io/badge/downloads-10%2B-blue?style=for-the-badge" alt="Downloads" height="32" />
-  </a>
-  <br><br>
  <a href="https://bloomsplash.theishu.xyz">
   <img src="docs/banner.webp" alt="BloomSplash Banner" width="520" style="border-radius:18px; box-shadow:0 4px 32px rgba(0,0,0,0.10); margin-bottom:16px;">
   </a>
@@ -71,4 +60,11 @@
 
 <div align="left">
   <sub>Made with ❤️ by Ishu Singh &middot; <a href="mailto:ishu.111636@gmail.com">Contact</a></sub>
+
+  <a href="https://github.com/IshuSinghSE/bloomsplash/actions">
+    <img src="https://github.com/IshuSinghSE/bloomsplash/actions/workflows/android-apks-release.yml/badge.svg" alt="Build Status" height="16" align="right" style="margin-top:-12px;" />
+  </a>
+
 </div>
+
+  <!-- 3D Rounded Badges -->
