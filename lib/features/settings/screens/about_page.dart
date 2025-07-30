@@ -79,8 +79,7 @@ class AboutPage extends StatelessWidget {
                 'Developed and maintained by the BloomSplash Team, we are committed to quality, privacy, and a seamless user experience.\n\n'
                 'Key Features:\n'
                 '- Handpicked, high-resolution wallpapers\n'
-                '- Fast, secure, and privacy-focused\n'
-                '- Powered by Flutter, Firebase, and Appwrite\n\n'
+                '- Fast, secure, and privacy-focused\n\n'
                 'BloomSplash is built with open-source technologies and the support of a passionate community.\n\n'
                 'For more information, licensing, or to contribute, please visit our website or contact us.\n\n'
                 '© 2025 BloomSplash. All rights reserved.',
