@@ -110,7 +110,7 @@
   - Estimated Time: 1 week
 
 - [x] **AI-powered tagging system**
-  - Status: Not Started
+  - Status: Done
   - Priority: Low
   - Description: Automatically suggest tags for uploaded wallpapers
   - Estimated Time: 3 weeks
