@@ -314,7 +314,7 @@
   - Description: Track popular wallpapers and user preferences
 
 - [x] **Performance metrics dashboard**
-  - Status: Not Started
+  - Status: Done
   - Priority: Low
   - Description: Monitor app performance and usage statistics
 
