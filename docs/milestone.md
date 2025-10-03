@@ -233,7 +233,7 @@
   - Description: Set up TestFlight/Play Console beta testing
 
 - [x] **Performance monitoring setup**
-  - Status: Not Started
+  - Status: Done
   - Priority: Medium
   - Description: Integrate Firebase Crashlytics and Analytics
 
