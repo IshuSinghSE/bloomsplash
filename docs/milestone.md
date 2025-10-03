@@ -179,7 +179,7 @@
   - Files: `lib/features/explore/screens/explore_page.dart`
 
 - [x] **Add image compression pipeline**
-  - Status: Not Started
+  - Status: Done
   - Priority: Medium
   - Description: Compress images before upload to reduce storage costs
 
