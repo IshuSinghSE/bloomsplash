@@ -1,122 +1,64 @@
-# BloomSplash
-
-## Architecture Plan
-
-**Use Appwrite for:**
-- Wallpaper image storage (safe, scalable, free)
-- Wallpaper metadata (Database)
-- Future functions (e.g. moderation, approval, API logic)
-
-**Use Firebase for:**
-- Authentication (Google, Apple, etc.)
-- Notifications (FCM)
-- Analytics, Performance, Crashlytics
-- Release & app distribution (if using Firebase App Distribution)
-
-**Use Cloudflare as CDN provider:**
-- Serve wallpaper images globally with low latency and high reliability.
-
-By adding Cloudflare as the CDN, we ensure fast and reliable delivery of images to users worldwide.
-
-## Rules
-1. Always ensure high-quality and original content is uploaded.
-
-# Project Folder Structure
-
-This project follows a modular folder structure to ensure scalability and maintainability. Below is an overview of the key folders and their purposes:
-
-## Folder Structure
-
-#### `app/`
-
-### **1. `core` Folder**
-- **Themes and Styles:**
-  - Colors, typography, and other design-related constants.
-  - Example: app_colors.dart, `core/themes/app_text_styles.dart`.
-
-- **Utilities:**
-  - Helper functions, extensions, and reusable logic.
-  - Example: `core/utils/utils.dart`.
-
-- **Constants:**
-  - Static configurations, such as API endpoints, asset paths, or app-wide constants.
-  - Example: config.dart.
-
-- **Error Handling:**
-  - Custom error classes or global error handlers.
-
-### **2. `app` Folder**
-- **Providers:**
-  - State management logic using `Provider`, `Riverpod`, or any other state management library.
-  - Example: favorites_provider.dart, `app/providers/auth_provider.dart`.
-
-- **Services:**
-  - Firebase services, API clients, or other backend-related logic.
-  - Example: firebase_firestore_service.dart, `app/services/firebase_storage_service.dart`.
-
-- **Constants:**
-  - App-specific constants, such as dummy data or localized strings.
-  - Example: data.dart.
-
-- **Routing:**
-  - Centralized routing logic for navigation between screens.
-  - Example: `app/routes/app_routes.dart`.
 
 
-### **How to Use Both Folders Together**
-The `core` folder provides foundational utilities and configurations, while the `app` folder handles app-specific logic. Here's an example of how they work together:
+<div align="center">
+ <a href="https://bloomsplash.theishu.xyz">
+  <img src="docs/banner.webp" alt="BloomSplash Banner" width="520" style="border-radius:18px; box-shadow:0 4px 32px rgba(0,0,0,0.10); margin-bottom:16px;">
+  </a>
+  
+  <h3 style="font-size:1.3rem; font-weight:400; color:#00bcd4; margin-bottom:0px;">Refresh your screen. Recharge your vibe.</h3>
 
+  <a href="https://play.google.com/store/apps/details?id=com.devindeed.bloomsplash">
+    <img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" width="220" style="margin-top:10px;" />
+  </a>  
+  <br>
+  <a href="https://bloomsplash.theishu.xyz" style="margin-right:10px; font-weight:500; hover:text-decoration:underline;">Visit Website</a>
+  &middot;
+  <a href="https://github.com/IshuSinghSE/bloomsplash/releases" style="margin-left:10px;font-weight:500; hover:text-decoration:underline;">See Releases</a>
 
-### **Best Practices**
-1. **Keep `core` Generic:**
-   - Avoid adding app-specific logic to `core`. It should only contain reusable and generic utilities.
+</div>
 
-2. **Use `app` for App-Specific Logic:**
-   - Place app-specific logic, such as providers and services, in the `app` folder.
-
-3. **Organize by Feature:**
-   - For feature-specific code (e.g., screens, widgets, models), create separate folders under `features`.
-
-4. **Centralize Imports:**
-   - Use `export` files to simplify imports. For example:
-     ```dart
-     // filepath: core/themes/themes.dart
-     export 'app_colors.dart';
-     export 'app_text_styles.dart';
-     ```
-
-     Then, import all themes with:
-     ```dart
-     import 'package:your_project_name/core/themes/themes.dart';
-     ```
 
 ---
 
-#### `features/`
-Contains feature-specific code, organized by functionality.
-- **`home/`**: Code related to the home screen.
-- **`favorites/`**: Code for managing and displaying favorite wallpapers.
-- **`upload/`**: Code for uploading wallpapers.
-- **`settings/`**: Code for the settings page.
-- **`wallpaper_details/`**: Code for displaying wallpaper details.
+<div align="left">
+  <p style="font-size:1.15rem; max-width:600px; margin:0 auto;">
+    <strong>BloomSplash</strong> is your destination for handpicked, high-resolution wallpapers that transform your device into a canvas of beauty.<br>
+    Whether you love minimalism, abstract art, vibrant landscapes, or moody aesthetics — we've got a splash of everything you need.
+  </p>
+</div>
 
-#### `models/`
-Defines data models used throughout the app, such as `Wallpaper`, `Collection`, and `User`.
+---
 
-## Additional Folders
-### `assets/`
-Holds static assets such as images, icons, and fonts.
+<div align="left">
+  <h3 style="font-size:1.15rem; margin-bottom:8px;">🌄 Key Features</h3>
+  <ul style="list-style:none; padding:0; font-size:1.08rem; line-height:1.7;">
+    <li>• 100+ curated HD wallpapers</li>
+    <li>• Aesthetic collections updated weekly</li>
+    <li>• Light & dark UI modes</li>
+    <li>• One-tap wallpaper preview and apply</li>
+    <li>• Works perfectly on all screen sizes</li>
+  </ul>
+</div>
 
-### `test/`
-Contains unit and widget tests for the app.
+---
 
-### `web/`, `windows/`, `macos/`, `linux/`, `android/`, `ios/`
-Platform-specific code for Flutter's multi-platform support.
+<div align="left">
+  <h3 style="font-size:1.15rem; margin-bottom:8px;">💫 Why BloomSplash?</h3>
+  <p style="font-size:1.08rem; max-width:600px; margin:0 auto;">
+    Your device deserves art. We blend design and personalization into a seamless, elegant experience that makes every glance at your phone feel inspiring.
+  </p>
+</div>
 
-## Example Usage
+<div align="left">
+  <h3 style="font-size:1.15rem; margin-bottom:8px;">🎯 Lightweight. Fast. Ad-light. Beautiful.</h3>
+  <p style="font-size:1.08rem; max-width:600px; margin:0 auto;">
+    Download BloomSplash and turn your home screen into a mood board of visual joy.
+  </p>
+</div>
 
-- **Adding a new feature**: Create a new folder under `features/` and include all related screens, widgets, and logic.
-- **Reusing a utility**: Add it to `core/utils/` for shared usage across the app.
-- **Defining a new model**: Add it to `models/` and ensure it includes `toJson` and `fromJson` methods for serialization.
+---
 
-This structure ensures a clean separation of concerns and makes the app easy to navigate and extend.
+<div align="center">
+  <sub>Made with ❤️ by Ishu Singh &middot; <a href="mailto:ishu.111636@gmail.com">Contact</a></sub>
+</div>
+
